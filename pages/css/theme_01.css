@@ -1,7 +1,14 @@
 body {
-    background-color:black;
-    color:white;
-    font-size: 16px;
+    margin : auto;
+    padding : 0px;
+    background-color : black;
+    color : white;
+    font-size : 16px;
+    text-align : center;
+}
+
+#main-content-div {
     padding : 10px;
-    text-align:center;
+    background-color : dark-grey;
+    width : 800px;
 }
