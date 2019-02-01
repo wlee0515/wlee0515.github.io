@@ -106,21 +106,84 @@
             }
         }
 
+        function drawImageCenteredAt(iCtx, iImage, iCenterX, iCenterY, iWidth, iHeight) {
+
+            var wDBCornerX = iCenterX - iWidth / 2;
+            var wDBCornerY = iCenterY - iHeight / 2;
+
+            iCtx.drawImage(iImage, wDBCornerX, wDBCornerY, iWidth, iHeight);
+        }
+
+        function drawRectCenteredAt(iCtx, iCenterX, iCenterY, iWidth, iHeight) {
+
+            iCtx.fillRect(iCenterX - iWidth / 2, iCenterY - iHeight / 2, iWidth, iHeight);
+
+        }
+
+        function drawTextCenteredAt(iCtx, iCenterX, iCenterY, iText) {
+
+            iCtx.textAlign = "center";
+            iCtx.textBaseline = "middle";
+            iCtx.fillText(iText, iCenterX, iCenterY);
+
+        }
+        
+        function drawLabelTextAt(iCtx, iCenterX, iCenterY, iText, iBackColor, iTextColor) {
+
+            iCtx.fillStyle = iBackColor;
+            drawRectCenteredAt(iCtx, iCenterX, iCenterY, iCtx.measureText(iText).width + 20, parseInt(iCtx.font) + 10);
+            iCtx.fillStyle = iTextColor;
+            drawTextCenteredAt(iCtx, iCenterX, iCenterY, iText);
+
+        }
+
         function renderCanvas() {
+            var wIconSize = 100;
+
             if (null == gFunctionalMapObject) {
                 return;
             }
 
             var wCanvas = document.getElementById("map-canvas");
 
-            if (null != wCanvas) {
-                wCanvas.height = wCanvas.parentElement.clientHeight - 2;
-                wCanvas.width = wCanvas.parentElement.clientWidth - 2;
-            }
-
-            if (null == gFunctionalMapObject) {
+            if (null == wCanvas) {
                 return;
             }
+            
+            var wImage_db = document.getElementById("img-database");
+
+            if (null == wImage_db) {
+                return;
+            }
+            
+            var wImage_user = document.getElementById("img-user");
+
+            if (null == wImage_user) {
+                return;
+            }
+            
+
+            var wCtx = wCanvas.getContext("2d");
+
+            if (null == wCtx) {
+                return;
+            }
+
+            var wCanvasHeight = wCanvas.height;
+            var wCanvasWidth = wCanvas.width;
+
+            var wCanvasCenterX = wCanvasWidth / 2;
+            var wCanvasCenterY = wCanvasHeight / 2;
+
+            drawImageCenteredAt(wCtx, wImage_db, wCanvasCenterX, wCanvasCenterY, wIconSize, wIconSize);
+
+            wCtx.font = "20pt Arial";
+            var wDatabaseName = "Database getting bigger ";
+            drawLabelTextAt(wCtx, wCanvasCenterX, wCanvasCenterY, wDatabaseName, "white", "black");
+
+            drawImageCenteredAt(wCtx, wImage_user,0, 0, wIconSize, wIconSize);
+
+
         }
 
         function init() {
@@ -153,6 +216,7 @@
                 }
             }
             loadObjToTextArea();
+            renderCanvas();
         }
 
 
@@ -202,6 +266,10 @@
             <input type="button" value="Save" onclick="saveObject()" />
             <input type="file" id="FileInput" size="50" onchange="loadJSON()">
         </div>
+    </div>
+    <div id="imageLibrary" style="display:block;">
+        <img id="img-database" src="./images/database-icon.png">
+        <img id="img-user" src="./images/user-icon.png">
     </div>
 </body>
 </html>
