@@ -1,29 +1,28 @@
 {
-  "DataBaseList" : [
+  "DataBaseList": [
     {
-      "label" : "China-Mobile User Event Data",
-      
-      "sources" : [
-        "Cell Phone Provider",
+      "label": "China-Mobile User Event Data",
+
+      "sources": [
+        "Cell Phone Provider"
       ],
-      
-      "users" : [
+
+      "users": [
         {
-          "label" : "Agent 2",
-          "actions" : [
+          "label": "Agent 2",
+          "actions": [
             "Search for user",
             "Calculate phone Users",
           ]
         },
         {
-          "label" : "Agent 2",
-          "actions" : [
+          "label": "Agent 2",
+          "actions": [
             "Search for user",
-            "Calculate phone Users",
+            "Calculate phone Users"
           ]
-        },
-      ],
-    },
-    
+        }
+      ]
+    }
   ]
 }
