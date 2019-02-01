@@ -1,166 +1,207 @@
 <!DOCTYPE html>
 <html>
 <head>
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <meta name="apple-mobile-web-app-capable" content="yes" />
-  <title>Functional Map Generator</title>
-  <link rel="stylesheet" type="text/css" href="../../css/theme_01.css">
-  <style>
-
-    #map-canvas-div {
-      width : calc(100% - 20px);
-      height : 500px;
-    }
-
-    #map-textarea-div{
-      width : 100%;
-    }
-
-    #map-textarea{
-      width : calc(100% - 20px);
-      height : 300px;
-      overflow : scroll;
-    }
-
-  </style>
-  <script type="text/javascript">
-    var wInitialFile = "./functionalmap.json"
-    var gFunctionalMapObject = null;
-
-    function download(filename, text) {
-      var element = document.createElement('a');
-      element.setAttribute('href', 'data:text/plain;charset=utf-8,' + encodeURIComponent(text));
-      element.setAttribute('download', filename);
-
-      element.style.display = 'none';
-      document.body.appendChild(element);
-
-      element.click();
-
-      document.body.removeChild(element);
-    }
-
-    function runObject() {
-      var wTextArea = document.getElementById("map-textarea");
-      if (null != wTextArea) {
-        var wObj = JSON.parse(wTextArea.value);
-        if (null != wObj) {
-          gFunctionalMapObject = wObj;
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="apple-mobile-web-app-capable" content="yes" />
+    <title>Functional Map Generator</title>
+    <link rel="stylesheet" type="text/css" href="../../css/theme_01.css">
+    <style>
+        #map-canvas-div
+        {
+            width: calc(100% - 20px);
+            height: 500px;
         }
-      }
-    }
 
-    function saveObject() {
-      if (null != gFunctionalMapObject) {
-        download("FunctionalMap.json", JSON.stringify(gFunctionalMapObject,null,2));
-      }
-      else {
-        alert("Functional Map Objet is null")
-      }
-    }
+        #map-textarea-div
+        {
+            width: 100%;
+        }
 
-    function loadJSON() {
+        #map-textarea
+        {
+            width: calc(100% - 20px);
+            height: 300px;
+            overflow: scroll;
+        }
+    </style>
+    <script type="text/javascript">
+        var wInitialFile = "./functionalmap.json"
+        var gFunctionalMapObject = null;
 
-      if (!window.FileReader) return; // Browser is not compatible
+        function download(filename, text) {
+            var element = document.createElement('a');
+            element.setAttribute('href', 'data:text/plain;charset=utf-8,' + encodeURIComponent(text));
+            element.setAttribute('download', filename);
 
-      var wFile = document.getElementById("FileInput");
-      var txt = "";
-      if ('files' in wFile) {
-        if (wFile.files.length == 0) {
-          txt = "Select one or more files.";
-        } else {
+            element.style.display = 'none';
+            document.body.appendChild(element);
 
+            element.click();
 
-          var reader = new FileReader();
+            document.body.removeChild(element);
+        }
 
-          reader.onload = function (evt) {
-            if (evt.target.readyState != 2) return;
-            if (evt.target.error) {
-              alert('Error while reading file');
-              return;
+        function runObject() {
+            var wTextArea = document.getElementById("map-textarea");
+            if (null != wTextArea) {
+                var wObj = JSON.parse(wTextArea.value);
+                if (null != wObj) {
+                    gFunctionalMapObject = wObj;
+                }
             }
-
-            var wObj = JSON.parse(evt.target.result);
-            if (null != wObj) {
-              gFunctionalMapObject = wObj;
-            }
-
             loadObjToTextArea();
-
-          };
-
-          reader.readAsText(wFile.files[0]);
         }
-      }
-      ;
-    }
 
-    function loadObjToTextArea() {
+        function saveObject() {
+            if (null != gFunctionalMapObject) {
+                download("FunctionalMap.json", JSON.stringify(gFunctionalMapObject, null, 2));
+            }
+            else {
+                alert("Functional Map Objet is null")
+            }
+        }
 
-      var wTextArea = document.getElementById("map-textarea");
+        function loadJSON() {
 
-      if (null != wTextArea) {
-        wTextArea.value = JSON.stringify(gFunctionalMapObject, null, 2);
-      }
-    }
+            if (!window.FileReader) return; // Browser is not compatible
 
-    function init() {
-      resize();
+            var wFile = document.getElementById("FileInput");
+            var txt = "";
+            if ('files' in wFile) {
+                if (wFile.files.length == 0) {
+                    txt = "Select one or more files.";
+                } else {
 
-      gFunctionalMapObject = {
-        Database: {
-          label: "China-Mobile User Event Data",
-          sources: [
-            "Source 1",
-            "Source 2"
-          ],
-          users: [
-            {
-              label: "User01",
-              actions: [
-                "act1",
-                "act2"
-              ]
-            },
-            {
-              label: "User02",
-              actions: [
-                "act1",
-                "act2"
-              ]
+
+                    var reader = new FileReader();
+
+                    reader.onload = function (evt) {
+                        if (evt.target.readyState != 2) return;
+                        if (evt.target.error) {
+                            alert('Error while reading file');
+                            return;
+                        }
+
+                        var wObj = JSON.parse(evt.target.result);
+                        if (null != wObj) {
+                            gFunctionalMapObject = wObj;
+                        }
+
+                        loadObjToTextArea();
+
+                    };
+
+                    reader.readAsText(wFile.files[0]);
+                }
+            }
+            ;
+        }
+
+        function loadObjToTextArea() {
+
+            var wTextArea = document.getElementById("map-textarea");
+
+            if (null != wTextArea) {
+                wTextArea.value = JSON.stringify(gFunctionalMapObject, null, 2);
+            }
+        }
+
+        function renderCanvas() {
+            if (null == gFunctionalMapObject) {
+                return;
             }
 
-          ]
+            var wCanvas = document.getElementById("map-canvas");
+
+            if (null != wCanvas) {
+                wCanvas.height = wCanvas.parentElement.clientHeight - 2;
+                wCanvas.width = wCanvas.parentElement.clientWidth - 2;
+            }
+
+            if (null == gFunctionalMapObject) {
+                return;
+            }
         }
-      }
-      
-    }
+
+        function init() {
+            resize();
+
+            gFunctionalMapObject = {
+                Database: {
+                    label: "China-Mobile User Event Data",
+                    sources: [
+                      "Source 1",
+                      "Source 2"
+                    ],
+                    users: [
+                      {
+                          label: "User01",
+                          actions: [
+                            "act1",
+                            "act2"
+                          ]
+                      },
+                      {
+                          label: "User02",
+                          actions: [
+                            "act1",
+                            "act2"
+                          ]
+                      }
+
+                    ]
+                }
+            }
+            loadObjToTextArea();
+        }
 
 
-    function resize() {
-      var wCanvas = document.getElementById("map-canvas");
+        function resize() {
+            var wCanvas = document.getElementById("map-canvas");
 
-      if (null != wCanvas) {
-        wCanvas.height = wCanvas.parentElement.clientHeight - 2;
-        wCanvas.width = wCanvas.parentElement.clientWidth - 2;
-      }
-    }
+            if (null != wCanvas) {
+                wCanvas.height = wCanvas.parentElement.clientHeight - 2;
+                wCanvas.width = wCanvas.parentElement.clientWidth - 2;
+            }
+        }
 
-  </script>
+    </script>
 </head>
 <body onload="init()" onresize="resize()">
-  <div id="main-content-div">
-    <h1>Software Dev's Functional Map Generator</h1>
-    <div id="map-canvas-div">
-      <canvas id="map-canvas" style="border:1px solid #999"></canvas>
-    </div>
-    <div id"map-textarea-div">
-      <textarea id="map-textarea"></textarea>
-      </br>
+    <div id="main-content-div">
+        <h1>Software Dev's Functional Map Generator</h1>
+        <div id="map-canvas-div">
+            <canvas id="map-canvas" style="border: 1px solid #999"></canvas>
+        </div>
+        <div class="navbar">
+            <div class="navbar-menu">
+                <label class="nav-option-tab option-01" for="nav-tab-01">Database</label>
+                <label class="nav-option-tab option-02" for="nav-tab-02">User</label>
+                <label class="nav-option-tab option-03" for="nav-tab-03">Action</label>
+            </div>
+
+            <div class="nav-display">
+                <input class="nav-option-radio-bt" id="nav-tab-01" type="radio" name="navmenu" checked="checked">
+                <div class="nav-option-display option-01">
+                    Thiis some text for Rad 1
+                </div>
+                <input class="nav-option-radio-bt" id="nav-tab-02" type="radio" name="navmenu">
+                <div class="nav-option-display option-02">
+                    Thiis some text for Rad 2
+                </div>
+                <input class="nav-option-radio-bt" id="nav-tab-03" type="radio" name="navmenu">
+                <div class="nav-option-display option-03">
+                    Thiis some text for Rad 3
+                </div>
+            </div>
+        </div>
+        <div id="map-textarea-div">
+            <textarea id="map-textarea"></textarea>
+            </br>
       <input type="button" value="Run" onclick="runObject()" />
-      <input type="button" value="Save" onclick="saveObject()"/>
-      <input type="file" id="FileInput" size="50" onchange="loadJSON()">
+            <input type="button" value="Save" onclick="saveObject()" />
+            <input type="file" id="FileInput" size="50" onchange="loadJSON()">
+        </div>
     </div>
-  </div>
 </body>
 </html>
