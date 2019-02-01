@@ -5,11 +5,13 @@
     <meta name="apple-mobile-web-app-capable" content="yes" />
     <title>Functional Map Generator</title>
     <link rel="stylesheet" type="text/css" href="../../css/theme_01.css">
+    <script src="./databasemap.js" ></script>
     <style>
         #map-canvas-div
         {
-            width: calc(100% - 20px);
+            width: 100%;
             height: 500px;
+            background-color: white;
         }
 
         #map-textarea-div
@@ -26,7 +28,7 @@
     </style>
     <script type="text/javascript">
         var wInitialFile = "./functionalmap.json"
-        var gFunctionalMapObject = null;
+        var gFunctionalMapObject = new DatabaseMap("Database");
 
         function download(filename, text) {
             var element = document.createElement('a');
@@ -138,7 +140,8 @@
         }
 
         function renderCanvas() {
-            var wIconSize = 100;
+            var wIconSize = 75;
+            var wUserRadius = 150;
 
             if (null == gFunctionalMapObject) {
                 return;
@@ -175,48 +178,78 @@
             var wCanvasCenterX = wCanvasWidth / 2;
             var wCanvasCenterY = wCanvasHeight / 2;
 
+            var wDatabaseName = Database_getDatabaseName(gFunctionalMapObject);
+            var wDatabaseSourceList = Database_getSourceList(gFunctionalMapObject);
+            var wDatabaseUserList = Database_getUserList(gFunctionalMapObject);
+
+            wCtx.clearRect(0, 0, wCanvasWidth, wCanvasHeight);
+
+            wCtx.font = "10pt Arial";
+
+            if (0 != wDatabaseSourceList.length) {
+                var wSubDBIconSize = wIconSize * 0.75;
+                var wBaseY = wSubDBIconSize;
+                for (var i = 0; i < wDatabaseSourceList.length; ++i) {
+                    var w = wAngleOff + i * wUserIconAngle;
+                    var wCenterX = wBaseY;
+                    var wCenterY = wBaseY + Math.floor(i/2) * (wBaseY + 30);
+
+                    if (1 == i % 2) {
+                        wCenterX = wCanvasWidth - wBaseY;
+                    }
+
+                    drawImageCenteredAt(wCtx, wImage_db, wCenterX, wCenterY, wSubDBIconSize, wSubDBIconSize);
+                    drawLabelTextAt(wCtx, wCenterX, wCenterY + wSubDBIconSize / 2 + parseInt(wCtx.font), wDatabaseSourceList[i], "white", "black");
+
+                }
+
+            }
+
+            if (0 != wDatabaseUserList.length) {
+
+                var wUserIconAngle = 2*Math.PI/wDatabaseUserList.length;
+                var wAngleOff = wUserIconAngle/2;
+
+                for (var i = 0; i < wDatabaseUserList.length; ++i) {
+                    var wAngle = wAngleOff + i* wUserIconAngle;
+                    var wCenterX = Math.cos(wAngle)*wUserRadius + wCanvasCenterX;
+                    var wCenterY = Math.sin(wAngle)*wUserRadius + wCanvasCenterY;
+
+                    drawImageCenteredAt(wCtx, wImage_user, wCenterX, wCenterY, wIconSize, wIconSize);
+                    drawLabelTextAt(wCtx, wCenterX, wCenterY + wIconSize / 2 + parseInt(wCtx.font), wDatabaseUserList[i], "white", "black");
+
+                }
+            
+            }
+
             drawImageCenteredAt(wCtx, wImage_db, wCanvasCenterX, wCanvasCenterY, wIconSize, wIconSize);
-
-            wCtx.font = "20pt Arial";
-            var wDatabaseName = "Database getting bigger ";
-            drawLabelTextAt(wCtx, wCanvasCenterX, wCanvasCenterY, wDatabaseName, "white", "black");
-
-            drawImageCenteredAt(wCtx, wImage_user,0, 0, wIconSize, wIconSize);
-
-
+            drawLabelTextAt(wCtx, wCanvasCenterX, wCanvasCenterY + wIconSize / 2 + parseInt(wCtx.font), wDatabaseName, "white", "black");
         }
 
         function init() {
             resize();
+            Database_changeLabel(gFunctionalMapObject, "China-Mobile User Data");
 
-            gFunctionalMapObject = {
-                Database: {
-                    label: "China-Mobile User Event Data",
-                    sources: [
-                      "Source 1",
-                      "Source 2"
-                    ],
-                    users: [
-                      {
-                          label: "User01",
-                          actions: [
-                            "act1",
-                            "act2"
-                          ]
-                      },
-                      {
-                          label: "User02",
-                          actions: [
-                            "act1",
-                            "act2"
-                          ]
-                      }
+            Database_addSource(gFunctionalMapObject, "Call List");
+            Database_editSource(gFunctionalMapObject, "Call List", "Call Center");
+            Database_addSource(gFunctionalMapObject, "Call List");
+            Database_removeSource(gFunctionalMapObject, "Call List");
 
-                    ]
-                }
-            }
+            Database_addUser(gFunctionalMapObject, "China-Mobile User Event Data");
+            Database_addUser(gFunctionalMapObject, "User01");
+            Database_editUserLabel(gFunctionalMapObject, "China-Mobile User Event Data", "User02");
+            Database_removeUser(gFunctionalMapObject, "User03");
+            Database_addUser(gFunctionalMapObject, "User03");
+
+            Database_addUserAction(gFunctionalMapObject, "User01", "buy");
+            Database_addUserAction(gFunctionalMapObject, "User01", "sell");
+            Database_editUserAction(gFunctionalMapObject, "User01", "buy", "buy-All");
+            Database_removeUserAction(gFunctionalMapObject, "User01", "buy");
+            Database_addUserAction(gFunctionalMapObject, "User01", "buy-again");
+ 
             loadObjToTextArea();
-            renderCanvas();
+
+            setInterval( renderCanvas, 30);
         }
 
 
@@ -267,7 +300,7 @@
             <input type="file" id="FileInput" size="50" onchange="loadJSON()">
         </div>
     </div>
-    <div id="imageLibrary" style="display:block;">
+    <div id="imageLibrary" style="display:none;">
         <img id="img-database" src="./images/database-icon.png">
         <img id="img-user" src="./images/user-icon.png">
     </div>
