@@ -276,10 +276,10 @@
       var dpr = window.devicePixelRatio || 1;
       var wNewSize = wCanvas.height;;
       if(wNewSize > wCanvas.width) wNewSize = wCanvas.width;
-      wNewSize *= dpr;
+      wNewSize /= dpr;
 
 
-      wCtx.scale(wNewSize/wCanvasWidth, wNewSize/wCanvasHeight);
+      wCtx.scale(wCanvasWidth/wNewSize, wCanvasHeight/wNewSize);
     }
 
     function init() {
