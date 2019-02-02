@@ -1,308 +1,347 @@
 <!DOCTYPE html>
 <html>
 <head>
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <meta name="apple-mobile-web-app-capable" content="yes" />
-    <title>Functional Map Generator</title>
-    <link rel="stylesheet" type="text/css" href="../../css/theme_01.css">
-    <script src="./databasemap.js" ></script>
-    <style>
-        #map-canvas-div
-        {
-            width: 100%;
-            height: 500px;
-            background-color: white;
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="apple-mobile-web-app-capable" content="yes" />
+  <title>Functional Map Generator</title>
+  <link rel="stylesheet" type="text/css" href="../../css/theme_01.css">
+  <script src="./databasemap.js"></script>
+  <style>
+    #map-canvas-div {
+      width: 100%;
+      height: 500px;
+      background-color: white;
+    }
+
+    #map-textarea {
+      width: calc(100% - 15px);
+      height: calc(100% - 50px);
+      overflow: scroll;
+      margin: auto;
+    }
+
+    #map-canvas {
+      width: 100%;
+      height: 100%;
+    }
+
+    .nav-option-display {
+      height: 400px;
+    }
+  </style>
+  <script type="text/javascript">
+    var wInitialFile = "./functionalmap.json"
+    var gFunctionalMapObject = new DatabaseMap("Database");
+
+    function download(filename, text) {
+      var element = document.createElement('a');
+      element.setAttribute('href', 'data:text/plain;charset=utf-8,' + encodeURIComponent(text));
+      element.setAttribute('download', filename);
+
+      element.style.display = 'none';
+      document.body.appendChild(element);
+
+      element.click();
+
+      document.body.removeChild(element);
+    }
+
+    function runObject() {
+      var wTextArea = document.getElementById("map-textarea");
+      if (null != wTextArea) {
+        var wObj = JSON.parse(wTextArea.value);
+        if (null != wObj) {
+          gFunctionalMapObject = wObj;
         }
+      }
+      loadObjToTextArea();
+    }
 
-        #map-textarea-div
-        {
-            width: 100%;
-        }
+    function saveObject() {
+      if (null != gFunctionalMapObject) {
+        download("FunctionalMap.json", JSON.stringify(gFunctionalMapObject, null, 2));
+      }
+      else {
+        alert("Functional Map Objet is null")
+      }
+    }
 
-        #map-textarea
-        {
-            width: calc(100% - 20px);
-            height: 300px;
-            overflow: scroll;
-        }
-    </style>
-    <script type="text/javascript">
-        var wInitialFile = "./functionalmap.json"
-        var gFunctionalMapObject = new DatabaseMap("Database");
+    function loadJSON() {
 
-        function download(filename, text) {
-            var element = document.createElement('a');
-            element.setAttribute('href', 'data:text/plain;charset=utf-8,' + encodeURIComponent(text));
-            element.setAttribute('download', filename);
+      if (!window.FileReader) return; // Browser is not compatible
 
-            element.style.display = 'none';
-            document.body.appendChild(element);
+      var wFile = document.getElementById("FileInput");
+      var txt = "";
+      if ('files' in wFile) {
+        if (wFile.files.length == 0) {
+          txt = "Select one or more files.";
+        } else {
 
-            element.click();
 
-            document.body.removeChild(element);
-        }
+          var reader = new FileReader();
 
-        function runObject() {
-            var wTextArea = document.getElementById("map-textarea");
-            if (null != wTextArea) {
-                var wObj = JSON.parse(wTextArea.value);
-                if (null != wObj) {
-                    gFunctionalMapObject = wObj;
-                }
+          reader.onload = function (evt) {
+            if (evt.target.readyState != 2) return;
+            if (evt.target.error) {
+              alert('Error while reading file');
+              return;
             }
+
+            var wObj = JSON.parse(evt.target.result);
+            if (null != wObj) {
+              gFunctionalMapObject = wObj;
+            }
+
             loadObjToTextArea();
+
+          };
+
+          reader.readAsText(wFile.files[0]);
         }
+      }
+      ;
+    }
 
-        function saveObject() {
-            if (null != gFunctionalMapObject) {
-                download("FunctionalMap.json", JSON.stringify(gFunctionalMapObject, null, 2));
-            }
-            else {
-                alert("Functional Map Objet is null")
-            }
-        }
+    function loadObjToTextArea() {
 
-        function loadJSON() {
+      var wTextArea = document.getElementById("map-textarea");
 
-            if (!window.FileReader) return; // Browser is not compatible
+      if (null != wTextArea) {
+        wTextArea.value = JSON.stringify(gFunctionalMapObject, null, 2);
+      }
+    }
 
-            var wFile = document.getElementById("FileInput");
-            var txt = "";
-            if ('files' in wFile) {
-                if (wFile.files.length == 0) {
-                    txt = "Select one or more files.";
-                } else {
+    function drawImageCenteredAt(iCtx, iImage, iCenterX, iCenterY, iWidth, iHeight) {
+
+      var wDBCornerX = iCenterX - iWidth / 2;
+      var wDBCornerY = iCenterY - iHeight / 2;
+
+      iCtx.drawImage(iImage, wDBCornerX, wDBCornerY, iWidth, iHeight);
+    }
+
+    function drawRectCenteredAt(iCtx, iCenterX, iCenterY, iWidth, iHeight) {
+
+      iCtx.fillRect(iCenterX - iWidth / 2, iCenterY - iHeight / 2, iWidth, iHeight);
+
+    }
+
+    function drawTextCenteredAt(iCtx, iCenterX, iCenterY, iText) {
+
+      iCtx.textAlign = "center";
+      iCtx.textBaseline = "middle";
+      iCtx.fillText(iText, iCenterX, iCenterY);
+
+    }
+
+    function drawLabelTextAt(iCtx, iCenterX, iCenterY, iText, iBackColor, iTextColor) {
+
+      iCtx.fillStyle = iBackColor;
+      drawRectCenteredAt(iCtx, iCenterX, iCenterY, iCtx.measureText(iText).width + 20, parseInt(iCtx.font) + 10);
+      iCtx.fillStyle = iTextColor;
+      drawTextCenteredAt(iCtx, iCenterX, iCenterY, iText);
+
+    }
+
+    function renderCanvas() {
+      var wIconSize = 75;
+      var wUserRadius = 200;
+
+      if (null == gFunctionalMapObject) {
+        return;
+      }
+
+      var wCanvas = document.getElementById("map-canvas");
+
+      if (null == wCanvas) {
+        return;
+      }
+
+      var wImage_db = document.getElementById("img-database");
+
+      if (null == wImage_db) {
+        return;
+      }
+
+      var wImage_user = document.getElementById("img-user");
+
+      if (null == wImage_user) {
+        return;
+      }
 
 
-                    var reader = new FileReader();
+      var wCtx = wCanvas.getContext("2d");
 
-                    reader.onload = function (evt) {
-                        if (evt.target.readyState != 2) return;
-                        if (evt.target.error) {
-                            alert('Error while reading file');
-                            return;
-                        }
+      if (null == wCtx) {
+        return;
+      }
 
-                        var wObj = JSON.parse(evt.target.result);
-                        if (null != wObj) {
-                            gFunctionalMapObject = wObj;
-                        }
+      var dpr = window.devicePixelRatio || 1;
+      var wCanvasHeight = wCanvas.height / dpr;
+      var wCanvasWidth = wCanvas.width / dpr;
 
-                        loadObjToTextArea();
+      var wCanvasCenterX = wCanvasWidth / 2;
+      var wCanvasCenterY = wCanvasHeight / 2;
 
-                    };
+      var wDatabaseName = Database_getDatabaseName(gFunctionalMapObject);
+      var wDatabaseSourceList = Database_getSourceList(gFunctionalMapObject);
+      var wDatabaseUserList = Database_getUserList(gFunctionalMapObject);
 
-                    reader.readAsText(wFile.files[0]);
-                }
-            }
-            ;
-        }
+      wCtx.clearRect(0, 0, wCanvasWidth, wCanvasHeight);
 
-        function loadObjToTextArea() {
+      wCtx.font = "10pt Arial";
 
-            var wTextArea = document.getElementById("map-textarea");
+      if (0 != wDatabaseSourceList.length) {
+        var wSubDBIconSize = wIconSize * 0.6;
+        var wIconBox = 2.0 * wSubDBIconSize;
+        var wCountPerLine = Math.floor(wCanvasWidth / (wIconBox));
 
-            if (null != wTextArea) {
-                wTextArea.value = JSON.stringify(gFunctionalMapObject, null, 2);
-            }
-        }
-
-        function drawImageCenteredAt(iCtx, iImage, iCenterX, iCenterY, iWidth, iHeight) {
-
-            var wDBCornerX = iCenterX - iWidth / 2;
-            var wDBCornerY = iCenterY - iHeight / 2;
-
-            iCtx.drawImage(iImage, wDBCornerX, wDBCornerY, iWidth, iHeight);
-        }
-
-        function drawRectCenteredAt(iCtx, iCenterX, iCenterY, iWidth, iHeight) {
-
-            iCtx.fillRect(iCenterX - iWidth / 2, iCenterY - iHeight / 2, iWidth, iHeight);
-
-        }
-
-        function drawTextCenteredAt(iCtx, iCenterX, iCenterY, iText) {
-
-            iCtx.textAlign = "center";
-            iCtx.textBaseline = "middle";
-            iCtx.fillText(iText, iCenterX, iCenterY);
-
+        if (wDatabaseSourceList.length < wCountPerLine) {
+          wCountPerLine = wDatabaseSourceList.length;
         }
         
-        function drawLabelTextAt(iCtx, iCenterX, iCenterY, iText, iBackColor, iTextColor) {
+        var wSpacing = wCanvasWidth /( wCountPerLine + 1);
 
-            iCtx.fillStyle = iBackColor;
-            drawRectCenteredAt(iCtx, iCenterX, iCenterY, iCtx.measureText(iText).width + 20, parseInt(iCtx.font) + 10);
-            iCtx.fillStyle = iTextColor;
-            drawTextCenteredAt(iCtx, iCenterX, iCenterY, iText);
+        for (var i = 0; i < wDatabaseSourceList.length; ++i) {
+          var wCenterX = (i % wCountPerLine + 1) * wSpacing;
+          var wCenterY = (Math.floor(i / wCountPerLine) + 0.5) * wIconBox;
+
+
+          drawImageCenteredAt(wCtx, wImage_db, wCenterX, wCenterY, wSubDBIconSize, wSubDBIconSize);
+          drawLabelTextAt(wCtx, wCenterX, wCenterY + wSubDBIconSize / 2 + parseInt(wCtx.font), wDatabaseSourceList[i], "white", "black");
 
         }
 
-        function renderCanvas() {
-            var wIconSize = 75;
-            var wUserRadius = 150;
+      }
 
-            if (null == gFunctionalMapObject) {
-                return;
-            }
+      if (0 != wDatabaseUserList.length) {
 
-            var wCanvas = document.getElementById("map-canvas");
+        var wUserIconAngle = ((2 / 4) * Math.PI + Math.PI) / wDatabaseUserList.length;
+        var wAngleOff = wUserIconAngle / 2 - (1 / 4) * Math.PI;
 
-            if (null == wCanvas) {
-                return;
-            }
-            
-            var wImage_db = document.getElementById("img-database");
+        for (var i = 0; i < wDatabaseUserList.length; ++i) {
+          var wAngle = wAngleOff + i * wUserIconAngle;
+          var wCenterX = Math.cos(wAngle) * wUserRadius + wCanvasCenterX;
+          var wCenterY = Math.sin(wAngle) * wUserRadius + wCanvasCenterY;
 
-            if (null == wImage_db) {
-                return;
-            }
-            
-            var wImage_user = document.getElementById("img-user");
+          drawImageCenteredAt(wCtx, wImage_user, wCenterX, wCenterY, wIconSize, wIconSize);
+          drawLabelTextAt(wCtx, wCenterX, wCenterY + wIconSize / 2 + parseInt(wCtx.font), wDatabaseUserList[i], "white", "black");
 
-            if (null == wImage_user) {
-                return;
-            }
-            
-
-            var wCtx = wCanvas.getContext("2d");
-
-            if (null == wCtx) {
-                return;
-            }
-
-            var wCanvasHeight = wCanvas.height;
-            var wCanvasWidth = wCanvas.width;
-
-            var wCanvasCenterX = wCanvasWidth / 2;
-            var wCanvasCenterY = wCanvasHeight / 2;
-
-            var wDatabaseName = Database_getDatabaseName(gFunctionalMapObject);
-            var wDatabaseSourceList = Database_getSourceList(gFunctionalMapObject);
-            var wDatabaseUserList = Database_getUserList(gFunctionalMapObject);
-
-            wCtx.clearRect(0, 0, wCanvasWidth, wCanvasHeight);
-
-            wCtx.font = "10pt Arial";
-
-            if (0 != wDatabaseSourceList.length) {
-                var wSubDBIconSize = wIconSize * 0.75;
-                var wBaseY = wSubDBIconSize;
-                for (var i = 0; i < wDatabaseSourceList.length; ++i) {
-                    var w = wAngleOff + i * wUserIconAngle;
-                    var wCenterX = wBaseY;
-                    var wCenterY = wBaseY + Math.floor(i/2) * (wBaseY + 30);
-
-                    if (1 == i % 2) {
-                        wCenterX = wCanvasWidth - wBaseY;
-                    }
-
-                    drawImageCenteredAt(wCtx, wImage_db, wCenterX, wCenterY, wSubDBIconSize, wSubDBIconSize);
-                    drawLabelTextAt(wCtx, wCenterX, wCenterY + wSubDBIconSize / 2 + parseInt(wCtx.font), wDatabaseSourceList[i], "white", "black");
-
-                }
-
-            }
-
-            if (0 != wDatabaseUserList.length) {
-
-                var wUserIconAngle = 2*Math.PI/wDatabaseUserList.length;
-                var wAngleOff = wUserIconAngle/2;
-
-                for (var i = 0; i < wDatabaseUserList.length; ++i) {
-                    var wAngle = wAngleOff + i* wUserIconAngle;
-                    var wCenterX = Math.cos(wAngle)*wUserRadius + wCanvasCenterX;
-                    var wCenterY = Math.sin(wAngle)*wUserRadius + wCanvasCenterY;
-
-                    drawImageCenteredAt(wCtx, wImage_user, wCenterX, wCenterY, wIconSize, wIconSize);
-                    drawLabelTextAt(wCtx, wCenterX, wCenterY + wIconSize / 2 + parseInt(wCtx.font), wDatabaseUserList[i], "white", "black");
-
-                }
-            
-            }
-
-            drawImageCenteredAt(wCtx, wImage_db, wCanvasCenterX, wCanvasCenterY, wIconSize, wIconSize);
-            drawLabelTextAt(wCtx, wCanvasCenterX, wCanvasCenterY + wIconSize / 2 + parseInt(wCtx.font), wDatabaseName, "white", "black");
         }
 
-        function init() {
-            resize();
-            Database_changeLabel(gFunctionalMapObject, "China-Mobile User Data");
+      }
 
-            Database_addSource(gFunctionalMapObject, "Call List");
-            Database_editSource(gFunctionalMapObject, "Call List", "Call Center");
-            Database_addSource(gFunctionalMapObject, "Call List");
-            Database_removeSource(gFunctionalMapObject, "Call List");
+      drawImageCenteredAt(wCtx, wImage_db, wCanvasCenterX, wCanvasCenterY, wIconSize, wIconSize);
+      drawLabelTextAt(wCtx, wCanvasCenterX, wCanvasCenterY + wIconSize / 2 + parseInt(wCtx.font), wDatabaseName, "white", "black");
+    }
 
-            Database_addUser(gFunctionalMapObject, "China-Mobile User Event Data");
-            Database_addUser(gFunctionalMapObject, "User01");
-            Database_editUserLabel(gFunctionalMapObject, "China-Mobile User Event Data", "User02");
-            Database_removeUser(gFunctionalMapObject, "User03");
-            Database_addUser(gFunctionalMapObject, "User03");
+    function init() {
+      resize();
+      Database_changeLabel(gFunctionalMapObject, "China-Mobile User Data");
 
-            Database_addUserAction(gFunctionalMapObject, "User01", "buy");
-            Database_addUserAction(gFunctionalMapObject, "User01", "sell");
-            Database_editUserAction(gFunctionalMapObject, "User01", "buy", "buy-All");
-            Database_removeUserAction(gFunctionalMapObject, "User01", "buy");
-            Database_addUserAction(gFunctionalMapObject, "User01", "buy-again");
- 
-            loadObjToTextArea();
+      Database_addSource(gFunctionalMapObject, "Phone Model Sales");
+      Database_addSource(gFunctionalMapObject, "Game Popularity");
+      Database_addSource(gFunctionalMapObject, "Game Popularity by Age");
 
-            setInterval( renderCanvas, 30);
-        }
+      Database_addUser(gFunctionalMapObject, "Game Developers");
+      Database_addUserAction(gFunctionalMapObject, "Game Developers", "Game Trends");
+
+      Database_addUser(gFunctionalMapObject, "Manufacturer");
+      Database_addUserAction(gFunctionalMapObject, "Phone Manufacturer", "Phone Use Case");
+      Database_addUserAction(gFunctionalMapObject, "Phone Manufacturer", "Find Model Popularity");
+      Database_addUserAction(gFunctionalMapObject, "Phone Manufacturer", "Locate Customer");
+
+      Database_addUser(gFunctionalMapObject, "Advertisers");
+      Database_addUserAction(gFunctionalMapObject, "Advertisers", "Ad Placement");
+      Database_addUserAction(gFunctionalMapObject, "Advertisers", "Measure Ad Effectiveness");
+
+      Database_addUser(gFunctionalMapObject, "Infastructucture");
+      Database_addUserAction(gFunctionalMapObject, "Infastructucture", "High Traffic area");
+
+      Database_addUser(gFunctionalMapObject, "Phone User");
+      Database_addUserAction(gFunctionalMapObject, "Phone User", "Get User Activity");
+      Database_addUserAction(gFunctionalMapObject, "Phone User", "Find User Activeity");
+
+      Database_addUser(gFunctionalMapObject, "Investigater");
+      Database_addUserAction(gFunctionalMapObject, "Investigater", "Track User Location");
+      Database_addUserAction(gFunctionalMapObject, "Investigater", "User APP usage");
+      Database_addUserAction(gFunctionalMapObject, "Investigater", "Find User pattern");
+
+      loadObjToTextArea();
+
+      setInterval(renderCanvas, 30);
+    }
 
 
-        function resize() {
-            var wCanvas = document.getElementById("map-canvas");
+    function resize() {
+      var wCanvas = document.getElementById("map-canvas");
 
-            if (null != wCanvas) {
-                wCanvas.height = wCanvas.parentElement.clientHeight - 2;
-                wCanvas.width = wCanvas.parentElement.clientWidth - 2;
-            }
-        }
+      if (null != wCanvas) {
 
-    </script>
+        var wSize = wCanvas.parentElement.clientHeight;
+        if (wSize > wCanvas.parentElement.clientWidth) wSize = wCanvas.parentElement.clientWidth;
+
+        wCanvas.height = wSize;
+        wCanvas.width = wSize;
+
+
+        var dpr = window.devicePixelRatio || 1;
+        var wRect = wCanvas.getBoundingClientRect();
+        wCanvas.height = wRect.height * dpr;
+        wCanvas.width = wRect.width * dpr
+        var wCtx = wCanvas.getContext('2d');
+        wCtx.scale(dpr, dpr);
+
+      }
+    }
+
+  </script>
 </head>
 <body onload="init()" onresize="resize()">
-    <div id="main-content-div">
-        <h1>Software Dev's Functional Map Generator</h1>
-        <div id="map-canvas-div">
-            <canvas id="map-canvas" style="border: 1px solid #999"></canvas>
-        </div>
-        <div class="navbar">
-            <div class="navbar-menu">
-                <label class="nav-option-tab option-01" for="nav-tab-01">Database</label>
-                <label class="nav-option-tab option-02" for="nav-tab-02">User</label>
-                <label class="nav-option-tab option-03" for="nav-tab-03">Action</label>
-            </div>
+  <div id="main-content-div">
+    <h1>Software Dev's Functional Map Generator</h1>
+    <div id="map-canvas-div">
+      <canvas id="map-canvas" style="border: 1px solid #999"></canvas>
+    </div>
+    <div class="navbar">
+      <div class="navbar-menu">
+        <label class="nav-option-tab option-01" for="nav-tab-01">Database</label>
+        <label class="nav-option-tab option-02" for="nav-tab-02">Source</label>
+        <label class="nav-option-tab option-03" for="nav-tab-03">User</label>
+        <label class="nav-option-tab option-04" for="nav-tab-04">Action</label>
+        <label class="nav-option-tab option-05" for="nav-tab-05">File</label>
+      </div>
 
-            <div class="nav-display">
-                <input class="nav-option-radio-bt" id="nav-tab-01" type="radio" name="navmenu" checked="checked">
-                <div class="nav-option-display option-01">
-                    Thiis some text for Rad 1
-                </div>
-                <input class="nav-option-radio-bt" id="nav-tab-02" type="radio" name="navmenu">
-                <div class="nav-option-display option-02">
-                    Thiis some text for Rad 2
-                </div>
-                <input class="nav-option-radio-bt" id="nav-tab-03" type="radio" name="navmenu">
-                <div class="nav-option-display option-03">
-                    Thiis some text for Rad 3
-                </div>
-            </div>
+      <div class="nav-display">
+        <input class="nav-option-radio-bt" id="nav-tab-01" type="radio" name="navmenu" checked="checked">
+        <div class="nav-option-display option-01">
+          <>
         </div>
-        <div id="map-textarea-div">
-            <textarea id="map-textarea"></textarea>
-            </br>
-      <input type="button" value="Run" onclick="runObject()" />
-            <input type="button" value="Save" onclick="saveObject()" />
-            <input type="file" id="FileInput" size="50" onchange="loadJSON()">
+        <input class="nav-option-radio-bt" id="nav-tab-02" type="radio" name="navmenu">
+        <div class="nav-option-display option-02">
+          Thiis some text for Rad 2
         </div>
+        <input class="nav-option-radio-bt" id="nav-tab-03" type="radio" name="navmenu">
+        <div class="nav-option-display option-03">
+          Thiis some text for Rad 3
+        </div>
+        <input class="nav-option-radio-bt" id="nav-tab-04" type="radio" name="navmenu">
+        <div class="nav-option-display option-04">
+          Thiis some text for Rad 3
+        </div>
+        <input class="nav-option-radio-bt" id="nav-tab-05" type="radio" name="navmenu">
+        <div class="nav-option-display option-05">
+          <textarea id="map-textarea"></textarea>
+          </br>
+          <input type="button" value="Run" onclick="runObject()" />
+          <input type="button" value="Save" onclick="saveObject()" />
+          <input type="file" id="FileInput" size="50" onchange="loadJSON()">
+        </div>
+      </div>
     </div>
-    <div id="imageLibrary" style="display:none;">
-        <img id="img-database" src="./images/database-icon.png">
-        <img id="img-user" src="./images/user-icon.png">
-    </div>
+  </div>
+  <div id="imageLibrary" style="display:none;">
+    <img id="img-database" src="./images/database-icon.png">
+    <img id="img-user" src="./images/user-icon.png">
+  </div>
 </body>
 </html>
