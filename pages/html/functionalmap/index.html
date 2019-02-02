@@ -198,21 +198,23 @@
 
       // Scale to screen
       var dpr = window.devicePixelRatio || 1;
-      var wNewSize = wCanvas.height;;
+      var wNewSize = wCanvas.height;
       if(wNewSize > wCanvas.width) wNewSize = wCanvas.width;
       wNewSize /= dpr;
       
       var wImageCenterX = wCanvas.width/2;
+      wImageCenterX /= dpr;
+      
       var wImageCenterY = wCanvas.height/2;
+      wImageCenterY /= dpr;
       
       wCtx.translate(wImageCenterX, wImageCenterY);
       
       var wImageScale = wNewSize/wCanvasWidth;
       wCtx.scale(wImageScale, wImageScale);
       
-      
       wCtx.fillStyle = "white";
-      wCtx.fillRect(0, 0, wCanvasWidth, wCanvasHeight);
+      wCtx.clearRect(0, 0, wCanvas.width, wCanvas.height);
 
       wCtx.font = wFont;
 
