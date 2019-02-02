@@ -287,8 +287,8 @@
       drawImageCenteredAt(wCtx, wImage_db, wCanvasCenterX, wCanvasCenterY, wIconSize, wIconSize);
       drawLabelTextAt(wCtx, wCanvasCenterX, wCanvasCenterY + wIconSize / 2 + parseInt(wCtx.font), wDatabaseName, wLabelColor, wTextColor);
     
-      wCtx.translate(-wImageCenterX, -wImageCenterY);
       wCtx.scale(1/wImageScale, 1/wImageScale);
+      wCtx.translate(-wImageCenterX, -wImageCenterY);
     }
 
     function init() {
