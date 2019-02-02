@@ -158,6 +158,13 @@
       var wLabelColor = "";
       var wTextColor = "black"
 
+      // Scale to screen
+      var dpr = window.devicePixelRatio || 1;
+      var wNewSize = wCanvas.height;;
+      if(wNewSize > wCanvas.width) wNewSize = wCanvas.width;
+      wNewSize /= dpr;
+      var wImageScale = wCanvasWidth/wNewSize;
+
       if (null == gFunctionalMapObject) {
         return;
       }
@@ -194,6 +201,7 @@
       var wDatabaseSourceList = Database_getSourceList(gFunctionalMapObject);
       var wDatabaseUserList = Database_getUserList(gFunctionalMapObject);
 
+      wCtx.scale(wImageScale, wImageScale);
       wCtx.clearRect(0, 0, wCanvasWidth, wCanvasHeight);
 
       wCtx.font = wFont;
@@ -272,14 +280,7 @@
       drawImageCenteredAt(wCtx, wImage_db, wCanvasCenterX, wCanvasCenterY, wIconSize, wIconSize);
       drawLabelTextAt(wCtx, wCanvasCenterX, wCanvasCenterY + wIconSize / 2 + parseInt(wCtx.font), wDatabaseName, wLabelColor, wTextColor);
     
-      // Scale to screen
-      var dpr = window.devicePixelRatio || 1;
-      var wNewSize = wCanvas.height;;
-      if(wNewSize > wCanvas.width) wNewSize = wCanvas.width;
-      wNewSize /= dpr;
-
-
-      //wCtx.scale(wCanvasWidth/wNewSize, wCanvasHeight/wNewSize);
+      wCtx.scale(1/wImageScale, 1/wImageScale);
     }
 
     function init() {
