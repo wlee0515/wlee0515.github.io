@@ -158,13 +158,6 @@
       var wLabelColor = "";
       var wTextColor = "black"
 
-      // Scale to screen
-      var dpr = window.devicePixelRatio || 1;
-      var wNewSize = wCanvas.height;;
-      if(wNewSize > wCanvas.width) wNewSize = wCanvas.width;
-      wNewSize /= dpr;
-      var wImageScale = wCanvasWidth/wNewSize;
-
       if (null == gFunctionalMapObject) {
         return;
       }
@@ -201,7 +194,14 @@
       var wDatabaseSourceList = Database_getSourceList(gFunctionalMapObject);
       var wDatabaseUserList = Database_getUserList(gFunctionalMapObject);
 
+      // Scale to screen
+      var dpr = window.devicePixelRatio || 1;
+      var wNewSize = wCanvas.height;;
+      if(wNewSize > wCanvas.width) wNewSize = wCanvas.width;
+      wNewSize /= dpr;
+      var wImageScale = wCanvasWidth/wNewSize;
       wCtx.scale(wImageScale, wImageScale);
+      
       wCtx.clearRect(0, 0, wCanvasWidth, wCanvasHeight);
 
       wCtx.font = wFont;
