@@ -157,7 +157,7 @@
       var wIconSize = 60;
       var wUserRadius = 250;
       var wFont = "9pt Arial";
-      var wLabelColor = "";
+      var wLabelColor = "white";
       var wTextColor = "black"
 
       if (null == gFunctionalMapObject) {
@@ -189,8 +189,8 @@
         return;
       }
       
-      var wCanvasCenterX = wCanvasWidth / 2;
-      var wCanvasCenterY = wCanvasHeight / 2 - wIconSize;
+      var wCanvasCenterX = 0;
+      var wCanvasCenterY = 0 - wIconSize;
 
       var wDatabaseName = Database_getDatabaseName(gFunctionalMapObject);
       var wDatabaseSourceList = Database_getSourceList(gFunctionalMapObject);
@@ -218,10 +218,10 @@
         }
         
         var wSpacing = wCanvasWidth /( wCountPerLine + 1);
-
+        
         for (var i = 0; i < wDatabaseSourceList.length; ++i) {
-          var wCenterX = (i % wCountPerLine + 1) * wSpacing;
-          var wCenterY = (Math.floor(i / wCountPerLine) + 0.5) * wIconBox;
+          var wCenterX = (i % wCountPerLine + 1) * wSpacing - wCanvasWidth;
+          var wCenterY = (Math.floor(i / wCountPerLine) + 0.5) * wIconBox - wCanvasHeight;
 
 
           drawImageCenteredAt(wCtx, wImage_db, wCenterX, wCenterY, wSubDBIconSize, wSubDBIconSize);
