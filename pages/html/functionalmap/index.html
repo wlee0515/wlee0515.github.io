@@ -199,7 +199,7 @@
       var wNewSize = wCanvas.height;;
       if(wNewSize > wCanvas.width) wNewSize = wCanvas.width;
       wNewSize /= dpr;
-      var wImageScale = wCanvasWidth/wNewSize;
+      var wImageScale = wNewSize/wCanvasWidth;
       wCtx.scale(wImageScale, wImageScale);
       
       wCtx.clearRect(0, 0, wCanvasWidth, wCanvasHeight);
