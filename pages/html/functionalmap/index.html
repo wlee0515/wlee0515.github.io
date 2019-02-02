@@ -201,8 +201,16 @@
       var wNewSize = wCanvas.height;;
       if(wNewSize > wCanvas.width) wNewSize = wCanvas.width;
       wNewSize /= dpr;
+      
+      var wImageCenterX = wCanvas.width/2;
+      var wImageCenterY = wCanvas.height/2;
+      
+      wCtx.translate(wImageCenterX, wImageCenterY);
+      
       var wImageScale = wNewSize/wCanvasWidth;
       wCtx.scale(wImageScale, wImageScale);
+      
+      
       wCtx.fillStyle = "white";
       wCtx.fillRect(0, 0, wCanvasWidth, wCanvasHeight);
 
@@ -236,7 +244,6 @@
         var wUserIconAngle = ((2 / 4) * Math.PI + Math.PI) / wDatabaseUserList.length;
         var wAngleOff = wUserIconAngle / 2 - (1 / 4) * Math.PI;
 
-        wCtx.translate(wCanvasCenterX, wCanvasCenterY)
         for (var i = 0; i < wDatabaseUserList.length; ++i) {
           var wAngle = wAngleOff + i * wUserIconAngle;
 
@@ -275,13 +282,12 @@
           drawLabelTextAt(wCtx, wCenterX, wCenterY + wIconSize / 2 + parseInt(wCtx.font), wDatabaseUserList[i], wLabelColor, wTextColor);
 
         }
-
-        wCtx.translate(-wCanvasCenterX, -wCanvasCenterY)
       }
 
       drawImageCenteredAt(wCtx, wImage_db, wCanvasCenterX, wCanvasCenterY, wIconSize, wIconSize);
       drawLabelTextAt(wCtx, wCanvasCenterX, wCanvasCenterY + wIconSize / 2 + parseInt(wCtx.font), wDatabaseName, wLabelColor, wTextColor);
     
+      wCtx.translate(-wImageCenterX, -wImageCenterY);
       wCtx.scale(1/wImageScale, 1/wImageScale);
     }
 
