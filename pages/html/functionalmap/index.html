@@ -203,7 +203,7 @@
       wNewSize /= dpr;
       var wImageScale = wNewSize/wCanvasWidth;
       wCtx.scale(wImageScale, wImageScale);
-      
+      wCtx.fillStyle = "white";
       wCtx.fillRect(0, 0, wCanvasWidth, wCanvasHeight);
 
       wCtx.font = wFont;
