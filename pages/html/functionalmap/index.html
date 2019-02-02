@@ -122,7 +122,9 @@
 
     function drawRectCenteredAt(iCtx, iCenterX, iCenterY, iWidth, iHeight) {
 
-      iCtx.fillRect(iCenterX - iWidth / 2, iCenterY - iHeight / 2, iWidth, iHeight);
+      iCtx.rect(iCenterX - iWidth / 2, iCenterY - iHeight / 2, iWidth, iHeight);
+      iCtx.fill();
+      iCtx.stroke();
 
     }
 
@@ -202,7 +204,7 @@
       var wImageScale = wNewSize/wCanvasWidth;
       wCtx.scale(wImageScale, wImageScale);
       
-      wCtx.clearRect(0, 0, wCanvasWidth, wCanvasHeight);
+      wCtx.fillRect(0, 0, wCanvasWidth, wCanvasHeight);
 
       wCtx.font = wFont;
 
