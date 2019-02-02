@@ -32,6 +32,7 @@
   <script type="text/javascript">
     var wInitialFile = "./functionalmap.json"
     var gFunctionalMapObject = new DatabaseMap("Database");
+    var gCanvasWidth = 800;
 
     function download(filename, text) {
       var element = document.createElement('a');
@@ -147,6 +148,10 @@
     }
 
     function renderCanvas() {
+      
+      var wCanvasHeight = gCanvasWidth;
+      var wCanvasWidth =  gCanvasWidth;
+
       var wIconSize = 60;
       var wUserRadius = 250;
       var wFont = "9pt Arial";
@@ -181,11 +186,7 @@
       if (null == wCtx) {
         return;
       }
-
-      var dpr = window.devicePixelRatio || 1;
-      var wCanvasHeight = wCanvas.height / dpr;
-      var wCanvasWidth = wCanvas.width / dpr;
-
+      
       var wCanvasCenterX = wCanvasWidth / 2;
       var wCanvasCenterY = wCanvasHeight / 2 - wIconSize;
 
@@ -270,6 +271,15 @@
 
       drawImageCenteredAt(wCtx, wImage_db, wCanvasCenterX, wCanvasCenterY, wIconSize, wIconSize);
       drawLabelTextAt(wCtx, wCanvasCenterX, wCanvasCenterY + wIconSize / 2 + parseInt(wCtx.font), wDatabaseName, wLabelColor, wTextColor);
+    
+      // Scale to screen
+      var dpr = window.devicePixelRatio || 1;
+      var wNewSize = wCanvas.height;;
+      if(wNewSize > wCanvas.width) wNewSize = wCanvas.width;
+      wNewSize /= dpr;
+
+
+      wCtx.scale(wNewCanvasWidth/wCanvasWidth, wNewCanvasHeight/wCanvasHeight);
     }
 
     function init() {
@@ -314,18 +324,7 @@
 
 
     function resize() {
-      var wCanvasDiv = document.getElementById("map-canvas-div");
       
-      if (null != wCanvasDiv) {
-
-        var wSize = wCanvasDiv.clientHeight;
-        if (wSize < wCanvasDiv.clientWidth) wSize = wCanvasDiv.clientWidth;
-
-        wCanvasDiv.height = wSize;
-        wCanvasDiv.width = wSize;
-
-      }
-
       var wCanvas = document.getElementById("map-canvas");
 
       if (null != wCanvas) {
