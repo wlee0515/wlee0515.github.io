@@ -16,7 +16,7 @@
 
     #map-textarea {
       width: calc(100% - 30px);
-      height: calc(100% - 50px);
+      height: 100px;
       overflow: scroll;
       margin: auto;
     }
@@ -66,7 +66,7 @@
     }
 
     .nav-option-display {
-      height: 20vh;
+      min-height: 10vh;
       width: 100%;
     }
 
@@ -392,42 +392,53 @@
     }
 
     function init() {
+
+      // Replace ./data.json with your JSON feed
+      fetch(wInitialFile).then(response => {
+        return response.json();
+      }).then(data => {
+
+        alert(data);
+
+      }).catch(err => {
+        Database_changeLabel(gFunctionalMapObject, "User APP Event");
+
+        Database_addSource(gFunctionalMapObject, "Phone Sales");
+        Database_addSource(gFunctionalMapObject, "Game Ranking");
+        Database_addSource(gFunctionalMapObject, "Population Age");
+        Database_addSource(gFunctionalMapObject, "Work Location");
+        Database_addSource(gFunctionalMapObject, "Home Address");
+
+        Database_addUser(gFunctionalMapObject, "Developers");
+        Database_addUserAction(gFunctionalMapObject, "Developers", "App Trends");
+        Database_addUserAction(gFunctionalMapObject, "Developers", "App Ranking");
+
+        Database_addUser(gFunctionalMapObject, "Manufacturer");
+        Database_addUserAction(gFunctionalMapObject, "Manufacturer", "Phone Sales");
+        Database_addUserAction(gFunctionalMapObject, "Manufacturer", "Product Targeting");
+        Database_addUserAction(gFunctionalMapObject, "Manufacturer", "Locate Customer");
+
+        Database_addUser(gFunctionalMapObject, "Advertisers");
+        Database_addUserAction(gFunctionalMapObject, "Advertisers", "Ad Placement");
+        Database_addUserAction(gFunctionalMapObject, "Advertisers", "Ad Effectiveness");
+
+        Database_addUser(gFunctionalMapObject, "Infrastructure");
+        Database_addUserAction(gFunctionalMapObject, "Infrastructure", "High Traffic area");
+
+        Database_addUser(gFunctionalMapObject, "Phone User");
+        Database_addUserAction(gFunctionalMapObject, "Phone User", "Get User Activity");
+        Database_addUserAction(gFunctionalMapObject, "Phone User", "Find User Activity");
+
+        Database_addUser(gFunctionalMapObject, "Investigator");
+        Database_addUserAction(gFunctionalMapObject, "Investigator", "Track User Location");
+        Database_addUserAction(gFunctionalMapObject, "Investigator", "User APP usage");
+        Database_addUserAction(gFunctionalMapObject, "Investigator", "Find User pattern");
+
+        loadObjToTextArea();
+      });
+
       resize();
-      Database_changeLabel(gFunctionalMapObject, "User APP Event");
-
-      Database_addSource(gFunctionalMapObject, "Phone Sales");
-      Database_addSource(gFunctionalMapObject, "Game Ranking");
-      Database_addSource(gFunctionalMapObject, "Population Age");
-      Database_addSource(gFunctionalMapObject, "Work Location");
-      Database_addSource(gFunctionalMapObject, "Home Address");
-
-      Database_addUser(gFunctionalMapObject, "Developers");
-      Database_addUserAction(gFunctionalMapObject, "Developers", "App Trends");
-      Database_addUserAction(gFunctionalMapObject, "Developers", "App Ranking");
-
-      Database_addUser(gFunctionalMapObject, "Manufacturer");
-      Database_addUserAction(gFunctionalMapObject, "Manufacturer", "Phone Sales");
-      Database_addUserAction(gFunctionalMapObject, "Manufacturer", "Product Targeting");
-      Database_addUserAction(gFunctionalMapObject, "Manufacturer", "Locate Customer");
-
-      Database_addUser(gFunctionalMapObject, "Advertisers");
-      Database_addUserAction(gFunctionalMapObject, "Advertisers", "Ad Placement");
-      Database_addUserAction(gFunctionalMapObject, "Advertisers", "Ad Effectiveness");
-
-      Database_addUser(gFunctionalMapObject, "Infastructucture");
-      Database_addUserAction(gFunctionalMapObject, "Infastructucture", "High Traffic area");
-
-      Database_addUser(gFunctionalMapObject, "Phone User");
-      Database_addUserAction(gFunctionalMapObject, "Phone User", "Get User Activity");
-      Database_addUserAction(gFunctionalMapObject, "Phone User", "Find User Activeity");
-
-      Database_addUser(gFunctionalMapObject, "Investigater");
-      Database_addUserAction(gFunctionalMapObject, "Investigater", "Track User Location");
-      Database_addUserAction(gFunctionalMapObject, "Investigater", "User APP usage");
-      Database_addUserAction(gFunctionalMapObject, "Investigater", "Find User pattern");
-
       loadObjToTextArea();
-
       renderCanvas();
     }
 
