@@ -44,7 +44,7 @@ function Database_getUserObj(iDatabase, iUserLabel){
         }
     }
     
-    alert("Database user <" + iUserLabel + "> already exist in database"); 
+    alert("Database user <" + iUserLabel + "> does not exist in database"); 
     return null;
 }
 
