@@ -398,7 +398,7 @@
         return response.json();
       }).then(data => {
 
-        alert(data);
+        gFunctionalMapObject = data;
 
       }).catch(err => {
         Database_changeLabel(gFunctionalMapObject, "User APP Event");
