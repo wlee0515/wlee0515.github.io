@@ -399,6 +399,7 @@
       }).then(data => {
 
         gFunctionalMapObject = data;
+        loadObjToTextArea();
 
       }).catch(err => {
         Database_changeLabel(gFunctionalMapObject, "User APP Event");
