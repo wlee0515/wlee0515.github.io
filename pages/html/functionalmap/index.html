@@ -8,13 +8,14 @@
   <script src="./databasemap.js"></script>
   <style>
     #map-canvas-div {
-      width: 100%;
-      height: 600px;
-      background-color: white;
+      width: 100vw;
+      height: calc(100vh - 40px);
+      max-height: 100%;
+      max-width: 100%;
     }
 
     #map-textarea {
-      width: calc(100% - 15px);
+      width: calc(100% - 30px);
       height: calc(100% - 50px);
       overflow: scroll;
       margin: auto;
@@ -23,10 +24,64 @@
     #map-canvas {
       width: 100%;
       height: 100%;
+      margin: auto;
+      background-color: white;
+    }
+
+    #heading-div {
+      position: fixed;
+      top: 0px;
+      padding: 5px;
+      width: calc(100% - 20px);
+      max-width: 800px;
+      margin: auto;
+      z-index:1;
+      background-color: inherit;
+    }
+
+    #heading-checkbox {
+      display:none;
+    }
+
+    #heading-toggle {
+      font-size: 12px;
+      color: blue;
+    }
+    
+    #heading-toggle:hover {
+      font-size: 12px;
+    }
+
+    #heading-checkbox:checked+h1{
+      font-size: 10px;
+    }
+
+    #app-div {
+      position: fixed;
+      bottom: 0px;
+      width: calc(100% - 20px);
+      max-width: 800px;
+      padding: 0px;
+      margin: auto;
     }
 
     .nav-option-display {
-      height: 400px;
+      height: 20vh;
+      width: 100%;
+    }
+
+    .navbar {
+      overflow-x: hidden;
+    }
+
+    .nav-option-tab {
+      height: 20px;
+      width: calc( 100% / 6 - 10px);
+      float: left;
+    }
+
+    .option-06 {
+      float: none;
     }
   </style>
   <script type="text/javascript">
@@ -124,7 +179,7 @@
 
       iCtx.fillRect(iCenterX - iWidth / 2, iCenterY - iHeight / 2, iWidth, iHeight);
       iCtx.strokeRect(iCenterX - iWidth / 2, iCenterY - iHeight / 2, iWidth, iHeight);
- 
+
     }
 
     function drawTextCenteredAt(iCtx, iCenterX, iCenterY, iText) {
@@ -137,11 +192,10 @@
 
     function drawLabelTextAt(iCtx, iCenterX, iCenterY, iText, iBackColor, iTextColor) {
 
-      if ("" != iBackColor)
-      {
+      if ("" != iBackColor) {
         iCtx.fillStyle = iBackColor;
         iCtx.strokeStyle = iTextColor;
-        drawRectCenteredAt(iCtx, iCenterX, iCenterY - 0.1*parseInt(iCtx.font), iCtx.measureText(iText).width + 10, parseInt(iCtx.font) + 5);
+        drawRectCenteredAt(iCtx, iCenterX, iCenterY - 0.1 * parseInt(iCtx.font), iCtx.measureText(iText).width + 10, parseInt(iCtx.font) + 5);
       }
 
       iCtx.fillStyle = iTextColor;
@@ -151,9 +205,9 @@
     }
 
     function renderCanvas() {
-      
+
       var wCanvasHeight = gCanvasWidth;
-      var wCanvasWidth =  gCanvasWidth;
+      var wCanvasWidth = gCanvasWidth;
 
       var wIconSize = 60;
       var wUserRadius = gCanvasWidth / 2 - 2.25 * wIconSize;
@@ -191,7 +245,7 @@
       if (null == wCtx) {
         return;
       }
-      
+
       var wCanvasCenterX = 0;
       var wCanvasCenterY = 0 - wCenterYOffset;
 
@@ -204,26 +258,26 @@
       // Scale to screen
       var dpr = window.devicePixelRatio || 1;
       var wNewSize = wCanvas.height;
-      if(wNewSize > wCanvas.width) wNewSize = wCanvas.width;
+      if (wNewSize > wCanvas.width) wNewSize = wCanvas.width;
       wNewSize /= dpr;
-      
-      var wImageCenterX = wCanvas.width/2;
+
+      var wImageCenterX = wCanvas.width / 2;
       wImageCenterX /= dpr;
-      
-      var wImageCenterY = wCanvas.height/2;
+
+      var wImageCenterY = wCanvas.height / 2;
       wImageCenterY /= dpr;
-      
+
       wCtx.translate(wImageCenterX, wImageCenterY);
-      
-      var wImageScale = wNewSize/wCanvasWidth;
+
+      var wImageScale = wNewSize / wCanvasWidth;
       wCtx.scale(wImageScale, wImageScale);
-      
+
       wCtx.font = wFont;
 
       if (0 != wDatabaseSourceList.length) {
         var wSubDBIconSize = wIconSize * 0.6;
         var wIconBox = 2.0 * wSubDBIconSize;
-        
+
         var wMaxTextSize = 0;
         for (var i = 0; i < wDatabaseSourceList.length; ++i) {
           var wMeasure = wCtx.measureText(wDatabaseSourceList[i]).width;
@@ -238,10 +292,10 @@
         if (wDatabaseSourceList.length < wCountPerLine) {
           wCountPerLine = wDatabaseSourceList.length;
         }
-        
+
         var wSpacing = wCanvasWidth / (wCountPerLine + 1);
         var wXOffset = wCanvasWidth / 2;
-        
+
         for (var i = 0; i < wDatabaseSourceList.length; ++i) {
           var wCenterX = (i % wCountPerLine + 1) * wSpacing - wXOffset;
           var wCenterY = -(Math.floor(i / wCountPerLine)) * wIconBox - wSourceYOffset;
@@ -272,18 +326,17 @@
 
           wCtx.translate(wCanvasCenterX, wCanvasCenterY);
           wCtx.rotate(wRotateAngle);
-          
+
           var wUserActionList = Database_getUserActionList(gFunctionalMapObject, wDatabaseUserList[i]);
 
-          if (0 != wUserActionList.length)
-          {
+          if (0 != wUserActionList.length) {
             var wSpacing = parseInt(wCtx.font) * 2.0;
             var wTotalHeight = wUserActionList.length * wSpacing;
             var wStart = -(wTotalHeight - wSpacing) / 2;
-            
+
             for (var j = 0; j < wUserActionList.length; ++j) {
               var wHeight = wStart + j * wSpacing;
-              
+
               wCtx.beginPath();
               wCtx.moveTo(0, 0);
               wCtx.quadraticCurveTo(0, wHeight, wRadius, wHeight);
@@ -306,7 +359,7 @@
           var wCenterY = Math.sin(wAngle) * wUserRadius + wCanvasCenterY;
 
           var wTextHeight = parseInt(wCtx.font);
-          
+
           wCtx.beginPath();
           wCtx.arc(wCenterX, wCenterY, wIconSize, 0, 2 * Math.PI);
           wCtx.closePath();
@@ -316,13 +369,13 @@
           wCtx.stroke();
 
           drawImageCenteredAt(wCtx, wImage_user, wCenterX, wCenterY - wTextHeight, wIconSize, wIconSize);
-          drawLabelTextAt(wCtx, wCenterX, wCenterY + wIconSize / 2 , wDatabaseUserList[i], wLabelColor, wTextColor);
+          drawLabelTextAt(wCtx, wCenterX, wCenterY + wIconSize / 2, wDatabaseUserList[i], wLabelColor, wTextColor);
 
         }
       }
 
       wCtx.beginPath();
-      wCtx.arc(wCanvasCenterX, wCanvasCenterY, 1.5*wIconSize, 0, 2 * Math.PI);
+      wCtx.arc(wCanvasCenterX, wCanvasCenterY, 1.5 * wIconSize, 0, 2 * Math.PI);
       wCtx.closePath();
       wCtx.fillStyle = wLabelColor;
       wCtx.strokeStyle = wTextColor;
@@ -330,10 +383,12 @@
       wCtx.stroke();
 
       drawImageCenteredAt(wCtx, wImage_db, wCanvasCenterX, wCanvasCenterY - parseInt(wCtx.font), wIconSize, wIconSize);
-      drawLabelTextAt(wCtx, wCanvasCenterX, wCanvasCenterY + wIconSize / 2 , wDatabaseName, wLabelColor, wTextColor);
-    
-      wCtx.scale(1/wImageScale, 1/wImageScale);
+      drawLabelTextAt(wCtx, wCanvasCenterX, wCanvasCenterY + wIconSize / 2, wDatabaseName, wLabelColor, wTextColor);
+
+      wCtx.scale(1 / wImageScale, 1 / wImageScale);
       wCtx.translate(-wImageCenterX, -wImageCenterY);
+
+      window.requestAnimationFrame(renderCanvas);
     }
 
     function init() {
@@ -373,12 +428,12 @@
 
       loadObjToTextArea();
 
-      setInterval(renderCanvas, 30);
+      renderCanvas();
     }
 
 
     function resize() {
-      
+
       var wCanvas = document.getElementById("map-canvas");
 
       if (null != wCanvas) {
@@ -397,43 +452,51 @@
 </head>
 <body onload="init()" onresize="resize()">
   <div id="main-content-div">
-    <h1>Software Dev's Functional Map Generator</h1>
-    <div id="map-canvas-div">
-      <canvas id="map-canvas" style="border: 1px solid #999"></canvas>
+    <div id="heading-div">
+      <input id="heading-checkbox" type="checkbox" name="navmenu">
+      <h1><label for="heading-checkbox">Software Dev's Functional Map Generator</h1>
+      <label id="heading-toggle" for="heading-checkbox">Toggle size</label>
     </div>
-    <div class="navbar">
-      <div class="navbar-menu">
-        <label class="nav-option-tab option-01" for="nav-tab-01">Database</label>
-        <label class="nav-option-tab option-02" for="nav-tab-02">Source</label>
-        <label class="nav-option-tab option-03" for="nav-tab-03">User</label>
-        <label class="nav-option-tab option-04" for="nav-tab-04">Action</label>
-        <label class="nav-option-tab option-05" for="nav-tab-05">File</label>
+    <div id="app-div">
+      <div id="map-canvas-div">
+        <canvas id="map-canvas"></canvas>
       </div>
+      <div class="navbar">
+        <div class="navbar-menu">
+          <label class="nav-option-tab option-01" for="nav-tab-01">Database</label>
+          <label class="nav-option-tab option-02" for="nav-tab-02">Source</label>
+          <label class="nav-option-tab option-03" for="nav-tab-03">User</label>
+          <label class="nav-option-tab option-04" for="nav-tab-04">Action</label>
+          <label class="nav-option-tab option-05" for="nav-tab-05">File</label>
+          <label class="nav-option-tab option-06" for="nav-tab-06">Hide</label>
+        </div>
 
-      <div class="nav-display">
-        <input class="nav-option-radio-bt" id="nav-tab-01" type="radio" name="navmenu" checked="checked">
-        <div class="nav-option-display option-01">
-          <>
-        </div>
-        <input class="nav-option-radio-bt" id="nav-tab-02" type="radio" name="navmenu">
-        <div class="nav-option-display option-02">
-          Thiis some text for Rad 2
-        </div>
-        <input class="nav-option-radio-bt" id="nav-tab-03" type="radio" name="navmenu">
-        <div class="nav-option-display option-03">
-          Thiis some text for Rad 3
-        </div>
-        <input class="nav-option-radio-bt" id="nav-tab-04" type="radio" name="navmenu">
-        <div class="nav-option-display option-04">
-          Thiis some text for Rad 3
-        </div>
-        <input class="nav-option-radio-bt" id="nav-tab-05" type="radio" name="navmenu">
-        <div class="nav-option-display option-05">
-          <textarea id="map-textarea"></textarea>
-          </br>
-          <input type="button" value="Run" onclick="runObject()" />
-          <input type="button" value="Save" onclick="saveObject()" />
-          <input type="file" id="FileInput" size="50" onchange="loadJSON()">
+        <div class="nav-display">
+          <input class="nav-option-radio-bt" id="nav-tab-01" type="radio" name="navmenu">
+          <div class="nav-option-display option-01">
+            <>
+          </div>
+          <input class="nav-option-radio-bt" id="nav-tab-02" type="radio" name="navmenu">
+          <div class="nav-option-display option-02">
+            Thiis some text for Rad 2
+          </div>
+          <input class="nav-option-radio-bt" id="nav-tab-03" type="radio" name="navmenu">
+          <div class="nav-option-display option-03">
+            Thiis some text for Rad 3
+          </div>
+          <input class="nav-option-radio-bt" id="nav-tab-04" type="radio" name="navmenu">
+          <div class="nav-option-display option-04">
+            Thiis some text for Rad 3
+          </div>
+          <input class="nav-option-radio-bt" id="nav-tab-05" type="radio" name="navmenu">
+          <div class="nav-option-display option-05">
+            <textarea id="map-textarea"></textarea>
+            </br>
+            <input type="button" value="Run" onclick="runObject()" />
+            <input type="button" value="Save" onclick="saveObject()" />
+            <input type="file" id="FileInput" size="50" onchange="loadJSON()">
+          </div>
+          <input class="nav-option-radio-bt" id="nav-tab-06" type="radio" name="navmenu">
         </div>
       </div>
     </div>
