@@ -11,6 +11,13 @@ function DatabaseMap (iDatabaseLabel) {
     this.users = [];
 }
 
+
+function Database_clearDatabase(iDatabase){
+    iDatabase.source = [];
+    iDatabase.users = [];
+}
+
+
 function Database_getDatabaseName(iDatabase){
     
     return iDatabase.label;
@@ -71,7 +78,7 @@ function Database_getUserCount(iDatabase){
     return iDatabase.users.length;
 }
 
-function Database_changeLabel(iDatabase, iNewLabel){
+function Database_editDatabaseName(iDatabase, iNewLabel){
     iDatabase.label = iNewLabel;
 }
 

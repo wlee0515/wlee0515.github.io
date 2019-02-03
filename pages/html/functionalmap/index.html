@@ -9,9 +9,16 @@
   <style>
     #map-canvas-div {
       width: 100vw;
-      height: calc(100vh - 40px);
+      height: calc( 100vh - 20px);
       max-height: 100%;
       max-width: 100%;
+    }
+    
+    #map-canvas {
+      width: 100%;
+      height: 100%;
+      margin: auto;
+      background-color: white;
     }
 
     #map-textarea {
@@ -21,20 +28,13 @@
       margin: auto;
     }
 
-    #map-canvas {
-      width: 100%;
-      height: 100%;
-      margin: auto;
-      background-color: white;
-    }
-
     #heading-div {
       position: fixed;
       top: 0px;
+      left:0px;
       padding: 0px;
-      width: calc(100% - 20px);
-      max-width: 800px;
-      margin: auto;
+      width: 100vw;
+      margin: 0px;
       z-index:1;
       background-color: inherit;
     }
@@ -44,14 +44,10 @@
     }
 
     #heading-toggle {
-      font-size: 12px;
+      font-size: 10px;
       color: blue;
     }
     
-    #heading-toggle:hover {
-      font-size: 12px;
-    }
-
     #heading-checkbox:checked+h1{
       font-size: 10px;
     }
@@ -59,10 +55,10 @@
     #app-div {
       position: fixed;
       bottom: 0px;
-      width: calc(100% - 20px);
-      max-width: 800px;
+      left:0px;
+      width: 100vw;
       padding: 0px;
-      margin: auto;
+      margin: 0px;
     }
 
     .nav-option-display {
@@ -82,6 +78,20 @@
 
     .option-06 {
       float: none;
+    }
+
+    .io-form-bt {
+      width : 200px;
+      height : 25px;
+    }
+    
+    .io-form-text {
+      width : 60%;
+      height : 25px;
+    }
+    .io-form-select{
+      width : 60%;
+      height : 25px;
     }
   </style>
   <script type="text/javascript">
@@ -110,7 +120,7 @@
           gFunctionalMapObject = wObj;
         }
       }
-      loadObjToTextArea();
+      updateIO();
     }
 
     function saveObject() {
@@ -148,7 +158,7 @@
               gFunctionalMapObject = wObj;
             }
 
-            loadObjToTextArea();
+            updateIO();
 
           };
 
@@ -158,14 +168,67 @@
       ;
     }
 
-    function loadObjToTextArea() {
+    function syncSelectOptionWithArray(iElementID, iStringArray){
+      
+      var wSelect = document.getElementById(iElementID);
+      if (null != wSelect){
+        if (0 != wSelect.options.length){
+          while (wSelect.options.length > iStringArray.length){
+            wSelect.remove(wSelect.options.length - 1);
+          }
+        }
+
+        while (wSelect.options.length < iStringArray.length){
+          var wOpt = document.createElement('option');
+          wOpt.value = iStringArray[wSelect.options.length];
+          wOpt.innerHTML = iStringArray[wSelect.options.length];
+          wSelect.appendChild(wOpt);
+        }
+
+        for(var i = 0; i < wSelect.options.length; ++i){
+          if (wSelect.options[i] != iStringArray[0]){
+            wSelect.options[i].value = iStringArray[i];
+            wSelect.options[i].innerHTML = iStringArray[i];
+          }
+        }
+      }
+    }
+
+    function updateIO() {
 
       var wTextArea = document.getElementById("map-textarea");
 
       if (null != wTextArea) {
         wTextArea.value = JSON.stringify(gFunctionalMapObject, null, 2);
       }
+
+      var wDBName = document.getElementById("io-dbname");
+
+      if (null != wDBName) {
+        wDBName.value = Database_getDatabaseName(gFunctionalMapObject);
+      }
+
+
+      var wDatabaseSourceList = Database_getSourceList(gFunctionalMapObject);
+      syncSelectOptionWithArray("io-selectsource",wDatabaseSourceList);
+
+      var wDatabaseUserList = Database_getUserList(gFunctionalMapObject);
+      syncSelectOptionWithArray("io-selectuser", wDatabaseUserList);
+      syncSelectOptionWithArray("io-action-selectuser", wDatabaseUserList);
+
+      updateactionselect();
+
     }
+
+    function updateactionselect() {
+      var wSelectedUser = document.getElementById("io-action-selectuser");
+      var wUserActionList = [];
+      if ("" != wSelectedUser.value) {
+        wUserActionList = Database_getUserActionList(gFunctionalMapObject, wSelectedUser.value);
+      }
+      syncSelectOptionWithArray("io-selectaction", wUserActionList);
+    }
+
 
     function drawImageCenteredAt(iCtx, iImage, iCenterX, iCenterY, iWidth, iHeight) {
 
@@ -400,7 +463,7 @@
         loadObjToTextArea();
 
       }).catch(err => {
-        Database_changeLabel(gFunctionalMapObject, "User APP Event Data");
+        Database_editDatabaseName(gFunctionalMapObject, "User APP Event Data");
 
         Database_addSource(gFunctionalMapObject, "Phone Sales");
         Database_addSource(gFunctionalMapObject, "Game Data");
@@ -435,15 +498,14 @@
         Database_addUserAction(gFunctionalMapObject, "Authority", "User Phone Activity");
         Database_addUserAction(gFunctionalMapObject, "Authority", "Spam Detection");
 
-        loadObjToTextArea();
+        updateIO();
       });
 
       resize();
-      loadObjToTextArea();
+      updateIO();
 
       setInterval(renderCanvas,200);
     }
-
 
     function resize() {
 
@@ -458,6 +520,106 @@
         var wCtx = wCanvas.getContext('2d');
         wCtx.scale(dpr, dpr);
 
+      }
+    }
+    
+    
+    function updateDatabaseName() {
+      var wName = document.getElementById("io-dbname");
+      if (null != wName) {
+        Database_editDatabaseName(gFunctionalMapObject, wName.value);
+        updateIO();
+      }
+    }
+    
+    function clearDatabase() {
+      Database_clearDatabase(gFunctionalMapObject);
+      updateIO();
+    }
+    
+    function addDatabaseSource() {
+      var wName = document.getElementById("io-addsource");
+      if (null != wName) {
+        Database_addSource(gFunctionalMapObject, wName.value);
+        updateIO();
+      }
+    }
+
+    function removeDatabaseSource() {
+      var wSourceSelect = document.getElementById("io-selectsource");
+      if (null != wSourceSelect) {
+        Database_removeSource(gFunctionalMapObject, wSourceSelect.value);
+        updateIO();
+      }
+    }
+
+    function editDatabaseSource() {
+      var wSourceSelect = document.getElementById("io-selectsource");
+      var wSourceEdit = document.getElementById("io-editsource");
+      if ((null != wSourceSelect) && (null != wSourceEdit)) {
+        Database_editSource(gFunctionalMapObject, wSourceSelect.value, wSourceEdit.value);
+        updateIO();
+      }
+    }
+    
+    function addDatabaseUser() {
+      var wName = document.getElementById("io-adduser");
+      if (null != wName) {
+        Database_addUser(gFunctionalMapObject, wName.value);
+        updateIO();
+      }
+    }
+    
+    function removeDatabaseUser() {
+      var wUserSelect = document.getElementById("io-selectuser");
+      if (null != wUserSelect) {
+        Database_removeUser(gFunctionalMapObject, wUserSelect.value);
+        updateIO();
+      }
+    }
+    
+    function editDatabaseUser() {
+      var wUserSelect = document.getElementById("io-selectuser");
+      var wUserEdit = document.getElementById("io-edituser");
+      if ((null != wUserSelect) && (null != wUserEdit)) {
+        Database_editUserLabel(gFunctionalMapObject, wUserSelect.value, wUserEdit.value);
+        updateIO();
+      }
+    }
+    
+    function addDatabaseAction() {
+      
+      var wSelectedUser = document.getElementById("io-action-selectuser");
+      if (null != wSelectedUser) {
+        var wName = document.getElementById("io-addaction");
+        if (null != wName) {
+          Database_addUserAction(gFunctionalMapObject, wSelectedUser.value, wName.value);
+          updateIO();
+        }
+      }
+    }
+    
+    function removeDatabaseAction() {
+      
+      var wSelectedUser = document.getElementById("io-action-selectuser");
+      if (null != wSelectedUser) {
+        var wActionSelect = document.getElementById("io-selectaction");
+        if (null != wActionSelect) {
+          Database_removeUserAction(gFunctionalMapObject, wSelectedUser.value, wActionSelect.value);
+          updateIO();
+        }
+      }
+    }
+    
+    function editDatabaseAction() {
+      var wSelectedUser = document.getElementById("io-action-selectuser");
+      if (null != wSelectedUser) {
+        var wActionSelect = document.getElementById("io-selectaction");
+        var wActionEdit = document.getElementById("io-editaction");
+        if ((null != wActionSelect) && (null != wActionEdit)) {
+          Database_editUserAction(gFunctionalMapObject,wSelectedUser.value, wActionSelect.value, wActionEdit.value);
+          updateIO();
+        }
       }
     }
 
@@ -477,9 +639,9 @@
       <div class="navbar">
         <div class="navbar-menu">
           <label class="nav-option-tab option-01" for="nav-tab-01">Database</label>
-          <label class="nav-option-tab option-02" for="nav-tab-02">Source</label>
-          <label class="nav-option-tab option-03" for="nav-tab-03">User</label>
-          <label class="nav-option-tab option-04" for="nav-tab-04">Action</label>
+          <label class="nav-option-tab option-02" for="nav-tab-02">Sources</label>
+          <label class="nav-option-tab option-03" for="nav-tab-03">Users</label>
+          <label class="nav-option-tab option-04" for="nav-tab-04">Actions</label>
           <label class="nav-option-tab option-05" for="nav-tab-05">File</label>
           <label class="nav-option-tab option-06" for="nav-tab-06">Hide</label>
         </div>
@@ -487,19 +649,58 @@
         <div class="nav-display">
           <input class="nav-option-radio-bt" id="nav-tab-01" type="radio" name="navmenu">
           <div class="nav-option-display option-01">
-            <>
+            <span>Change Database Name</span>
+            </br>
+            <input type="text" id="io-dbname" class="io-form-text"/>
+            <input type="button" class="io-form-bt" value="Change" onclick="updateDatabaseName()"/>
+            </br>
+            <input type="button" class="io-form-bt" value="Clear Database" onclick="clearDatabase()" />
           </div>
           <input class="nav-option-radio-bt" id="nav-tab-02" type="radio" name="navmenu">
           <div class="nav-option-display option-02">
-            Thiis some text for Rad 2
+            <span>Edit Database Sources</span>
+            </br>
+            <input type="text" id="io-addsource" class="io-form-text"/>
+            <input type="button" class="io-form-bt"value="Add" onclick="addDatabaseSource()" />
+            </br>
+            <select id="io-selectsource" class="io-form-select"></select>
+            <input type="button" class="io-form-bt"value="Remove" onclick="removeDatabaseSource()" />
+            </br>
+            <input type="text" id="io-editsource" class="io-form-text"/>
+            <input type="button" class="io-form-bt"value="Change" onclick="editDatabaseSource()" />
           </div>
           <input class="nav-option-radio-bt" id="nav-tab-03" type="radio" name="navmenu">
           <div class="nav-option-display option-03">
-            Thiis some text for Rad 3
+            <span>Edit Database Users</span>
+            </br>
+            <input type="text" id="io-adduser" class="io-form-text"/>
+            <input type="button" class="io-form-bt" value="Add" onclick="addDatabaseUser()" />
+            </br>
+            <select id="io-selectuser" class="io-form-select"></select>
+            <input type="button" class="io-form-bt" value="Remove" onclick="removeDatabaseUser()" />
+            </br>
+            <input type="text" id="io-edituser" class="io-form-text"/>
+            <input type="button" class="io-form-bt" value="Change" onclick="editDatabaseUser()" />
           </div>
           <input class="nav-option-radio-bt" id="nav-tab-04" type="radio" name="navmenu">
           <div class="nav-option-display option-04">
-            Thiis some text for Rad 3
+
+            <span>Edit Database User Actions</span> 
+            </br>
+            <select id="io-action-selectuser" class="io-form-select" onchange="updateactionselect()"></select>
+            </br>
+            <input type="text" id="io-addaction" class="io-form-text" />
+            <input type="button" class="io-form-bt" value="Add" onclick="addDatabaseAction()" />
+            </br>
+            <select id="io-selectaction" class="io-form-select"></select>
+            <input type="button" class="io-form-bt" value="Remove" onclick="removeDatabaseAction()" />
+            </br>
+            <input type="text" id="io-editaction" class="io-form-text" />
+            <input type="button" class="io-form-bt" value="Change" onclick="editDatabaseAction()" />
+            
+
+
+
           </div>
           <input class="nav-option-radio-bt" id="nav-tab-05" type="radio" name="navmenu">
           <div class="nav-option-display option-05">
