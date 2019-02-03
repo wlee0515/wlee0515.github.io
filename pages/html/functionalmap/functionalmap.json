@@ -1,24 +1,55 @@
 {
-  "Database": {
-    "label": "China-Mobile User Event Data",
-    "sources": [
-      "Cell Phone Provider"
-    ],
-    "users": [
-      {
-        "label": "Agent 1",
-        "actions": [
-          "Search for user",
-          "act2"
-        ]
-      },
-      {
-        "label": "Agent 2",
-        "actions": [
-          "act1",
-          "act2"
-        ]
-      }
-    ]
-  }
+  "label": "User APP Event",
+  "source": [
+    "Phone Sales",
+    "Game Ranking",
+    "Population Age",
+    "Work Location",
+    "Home Address"
+  ],
+  "users": [
+    {
+      "label": "Developers",
+      "actions": [
+        "App Trends",
+        "App Ranking"
+      ]
+    },
+    {
+      "label": "Manufacturer",
+      "actions": [
+        "Phone Sales",
+        "Product Targeting",
+        "Locate Customer"
+      ]
+    },
+    {
+      "label": "Advertisers",
+      "actions": [
+        "Ad Placement",
+        "Ad Effectiveness"
+      ]
+    },
+    {
+      "label": "Infrastructure",
+      "actions": [
+        "High Traffic area"
+      ]
+    },
+    {
+      "label": "Phone User",
+      "actions": [
+        "Get User Activity",
+        "Find User Activity"
+      ]
+    },
+    {
+      "label": "Investigator",
+      "actions": [
+        "Track User Location",
+        "User APP usage",
+        "Find User pattern"
+      ]
+    }
+  ]
 }
