@@ -387,8 +387,6 @@
 
       wCtx.scale(1 / wImageScale, 1 / wImageScale);
       wCtx.translate(-wImageCenterX, -wImageCenterY);
-
-      window.requestAnimationFrame(renderCanvas);
     }
 
     function init() {
@@ -440,7 +438,8 @@
 
       resize();
       loadObjToTextArea();
-      renderCanvas();
+
+      setInterval(renderCanvas,200);
     }
 
 
