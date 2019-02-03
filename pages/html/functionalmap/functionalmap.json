@@ -1,54 +1,56 @@
 {
-  "label": "User APP Event",
+  "label": "User APP Event Data",
   "source": [
     "Phone Sales",
-    "Game Ranking",
-    "Population Age",
-    "Work Location",
-    "Home Address"
+    "Game Data",
+    "Population Data",
+    "Location Date",
+    "Transit Data"
   ],
   "users": [
     {
       "label": "Developers",
       "actions": [
         "App Trends",
-        "App Ranking"
+        "App Usage",
+        "App Ideas"
       ]
     },
     {
       "label": "Manufacturer",
       "actions": [
         "Phone Sales",
-        "Product Targeting",
-        "Locate Customer"
+        "Phone Use condition",
+        "Customer Location",
+        "Customer Demographic"
       ]
     },
     {
       "label": "Advertisers",
       "actions": [
         "Ad Placement",
-        "Ad Effectiveness"
+        "Ad KPI"
       ]
     },
     {
       "label": "Infrastructure",
       "actions": [
-        "High Traffic area"
+        "Network Traffic",
+        "Transit Activity"
       ]
     },
     {
       "label": "Phone User",
       "actions": [
-        "Get User Activity",
-        "Find User Activity"
+        "Get User Activity"
       ]
     },
     {
-      "label": "Investigator",
+      "label": "Authority",
       "actions": [
-        "Track User Location",
-        "User APP usage",
-        "Find User pattern"
+        "User Location Data",
+        "User Phone Activity",
+        "Spam Detection"
       ]
     }
   ]
