@@ -5,6 +5,7 @@
   <meta name="apple-mobile-web-app-capable" content="yes" />
   <title>Functional Map Display</title>
   <link rel="stylesheet" type="text/css" href="../../css/theme_01.css">
+  <script src="../../javascript/utility.js"></script>
   <script src="./databasemap.js"></script>
   <style>
     #map-canvas-div {
@@ -32,10 +33,18 @@
   <script type="text/javascript">
     var wInitialFile = "./functionalmap.json"
     var gFunctionalMapObject = new DatabaseMap("Database");
+    var gSessionKey = "";
 
     function renderCanvas() {
 
-      Database_loadFromLocalStorage(gFunctionalMapObject, "FunctionalMap");
+      if ("" == gSessionKey) {
+        return;
+      }
+
+      if (false == Database_loadFromLocalStorage(gFunctionalMapObject, gSessionKey)) {
+        window.close();
+      }
+
       if (null == gFunctionalMapObject) {
         return;
       }
@@ -82,13 +91,15 @@
     }
 
     function init() {
+      alert("Functional Map Display uses HTML Web Storage to communicate and will not refresh when using Incognito or Private Mode");
 
       // Replace ./data.json with your JSON feed
       fetch(wInitialFile).then(response => {
         return response.json();
       }).then(data => {
 
-        gFunctionalMapObject = data;
+
+        Database_loadObjFromJSONObj(gFunctionalMapObject, data);
         loadObjToTextArea();
 
       }).catch(err => {
@@ -98,7 +109,15 @@
 
       resize();
 
-      setInterval(renderCanvas,200);
+      gSessionKey = getUrlParameter("key");
+
+      if ("" != gSessionKey) {
+        setInterval(renderCanvas, 200);
+      } else {
+        alert("Sorry you must have came to this page by mistake. We cannot find the associated \"Functional Map Generator\".\n You will be redirected to\"Functional Map Generator\".");
+        window.location = "./index.html";
+
+      }
     }
 
     function resize() {

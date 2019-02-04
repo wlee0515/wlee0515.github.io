@@ -13,6 +13,7 @@ function DatabaseMap (iDatabaseLabel) {
 
 
 function Database_clearDatabase(iDatabase){
+    iDatabase.label = "Database";
     iDatabase.source = [];
     iDatabase.users = [];
 }
@@ -267,6 +268,10 @@ function Database_loadObjFromJSONString(iDatabase, iJSONString) {
     }
 }
 
+function Database_cleanLocalStorage(iKey){
+    localStorage.removeItem(iKey);
+}
+
 function Database_saveToLocalStorage(iDatabase, iKey){
 
     localStorage.setItem(iKey, JSON.stringify(iDatabase));
@@ -274,7 +279,14 @@ function Database_saveToLocalStorage(iDatabase, iKey){
 
 function Database_loadFromLocalStorage(iDatabase, iKey){
 
-    Database_loadObjFromJSONString(iDatabase, localStorage.getItem(iKey));
+    var wMem = localStorage.getItem(iKey);
+    Database_clearDatabase(iDatabase);
+    if (null != wMem){
+        Database_loadObjFromJSONString(iDatabase, wMem);
+        return true;
+    }
+    return false;
+
 }
 
 function drawImageCenteredAt(iCtx, iImage, iCenterX, iCenterY, iWidth, iHeight) {
