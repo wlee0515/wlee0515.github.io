@@ -9,7 +9,7 @@
   <style>
     #map-canvas-div {
       width: 100vw;
-      height: calc( 100vh - 20px);
+      height: calc( 100vh - 45px);
       max-height: 100%;
       max-width: 100%;
     }
@@ -37,6 +37,7 @@
       margin: 0px;
       z-index:1;
       background-color: inherit;
+      min-height:25px;
     }
 
     #heading-checkbox {
@@ -48,7 +49,11 @@
       color: blue;
     }
     
-    #heading-checkbox:checked+h1{
+    #heading-title {
+      font-weight: bold;
+      font-size: 30px;
+    }
+    #heading-checkbox:checked+span{
       font-size: 10px;
     }
 
@@ -76,23 +81,10 @@
       float: left;
     }
 
-    .option-06 {
-      float: none;
+    input {
+      font-size:17px;
     }
 
-    .io-form-bt {
-      width : 200px;
-      height : 25px;
-    }
-    
-    .io-form-text {
-      width : 60%;
-      height : 25px;
-    }
-    .io-form-select{
-      width : 60%;
-      height : 25px;
-    }
   </style>
   <script type="text/javascript">
     var wInitialFile = "./functionalmap.json"
@@ -277,8 +269,8 @@
       var wFont = "10pt Arial";
       var wLabelColor = "white";
       var wTextColor = "black"
-      var wCenterYOffset = 0;
-      var wSourceYOffset = wUserRadius + wCenterYOffset - wIconSize;
+      var wCenterYOffset = - wIconSize;
+      var wSourceYOffset = wUserRadius - 1.5*wIconSize;
 
       if (null == gFunctionalMapObject) {
         return;
@@ -629,7 +621,7 @@
   <div id="main-content-div">
     <div id="heading-div">
       <input id="heading-checkbox" type="checkbox" name="navmenu">
-      <h1><label for="heading-checkbox">Software Dev's Functional Map Generator</h1>
+      <span id="heading-title"><label for="heading-checkbox">Software Dev's Functional Map Generator</label></span>
       <label id="heading-toggle" for="heading-checkbox">Toggle size</label>
     </div>
     <div id="app-div">
@@ -684,7 +676,6 @@
           </div>
           <input class="nav-option-radio-bt" id="nav-tab-04" type="radio" name="navmenu">
           <div class="nav-option-display option-04">
-
             <span>Edit Database User Actions</span> 
             </br>
             <select id="io-action-selectuser" class="io-form-select" onchange="updateactionselect()"></select>
@@ -697,10 +688,6 @@
             </br>
             <input type="text" id="io-editaction" class="io-form-text" />
             <input type="button" class="io-form-bt" value="Change" onclick="editDatabaseAction()" />
-            
-
-
-
           </div>
           <input class="nav-option-radio-bt" id="nav-tab-05" type="radio" name="navmenu">
           <div class="nav-option-display option-05">
