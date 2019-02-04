@@ -354,8 +354,8 @@ function Database_drawMap(iCtx, iDatabase, iDatabaseImg, iUserImg , iCanvasWidth
     var wFont = "10pt Arial";
     var wLabelColor = "white";
     var wTextColor = "black"
-    var wCenterYOffset = 0;
-    var wSourceYOffset = wUserRadius - wCenterYOffset;
+    var wCenterYOffset = wIconSize;
+    var wSourceYOffset = wUserRadius - wCenterYOffset - wIconSize;
 
     var wDatabaseName = Database_getDatabaseName(iDatabase);
     var wDatabaseSourceList = Database_getSourceList(iDatabase);
@@ -366,7 +366,7 @@ function Database_drawMap(iCtx, iDatabase, iDatabaseImg, iUserImg , iCanvasWidth
 
     if (0 != wDatabaseSourceList.length) {
         var wSubDBIconSize = wIconSize * 0.6;
-        var wIconBox = 2.0 * wSubDBIconSize;
+        var wSubIconBox = 2.0 * wSubDBIconSize;
 
         var wMaxTextSize = 0;
         for (var i = 0; i < wDatabaseSourceList.length; ++i) {
@@ -385,10 +385,12 @@ function Database_drawMap(iCtx, iDatabase, iDatabaseImg, iUserImg , iCanvasWidth
 
         var wSpacing = wRelativeWidth / (wCountPerLine + 1);
         var wXOffset = wRelativeWidth / 2;
+        var wLineCount =  Math.ceil(wDatabaseSourceList.length/wCountPerLine);
 
         for (var i = 0; i < wDatabaseSourceList.length; ++i) {
             var wCenterX = (i % wCountPerLine + 1) * wSpacing - wXOffset;
-            var wCenterY = (Math.floor(i / wCountPerLine)) * wIconBox - wSourceYOffset;
+            var wRow = Math.floor(i / wCountPerLine);
+            var wCenterY = (Math.floor(i / wCountPerLine)) * wSubIconBox - wSourceYOffset - wLineCount*wIconSize;
 
             drawImageCenteredAt(iCtx, iDatabaseImg, wCenterX, wCenterY, wSubDBIconSize, wSubDBIconSize);
             drawLabelTextAt(iCtx, wCenterX, wCenterY + wSubDBIconSize / 2 + wLabelHeight, wDatabaseSourceList[i], wLabelColor, wTextColor);
