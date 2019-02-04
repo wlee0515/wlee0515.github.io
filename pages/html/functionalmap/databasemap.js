@@ -430,9 +430,9 @@ function Database_drawMap(iCtx, iDatabase, iDatabaseImg, iUserImg , iCanvasWidth
 
                     iCtx.beginPath();
                     iCtx.moveTo(0, 0);
-                    iCtx.quadraticCurveTo(0, wHeight, wRadius, wHeight);
+                    iCtx.quadraticCurveTo(wRadius - wIconSize, wHeight, wRadius, wHeight);
                     iCtx.moveTo(wUserRadiusWithSign, 0);
-                    iCtx.quadraticCurveTo(wUserRadiusWithSign, wHeight, wRadius, wHeight);
+                    iCtx.quadraticCurveTo(wRadius + wIconSize, wHeight, wRadius, wHeight);
 
                     iCtx.strokeStyle = wTextColor;
                     iCtx.stroke();
