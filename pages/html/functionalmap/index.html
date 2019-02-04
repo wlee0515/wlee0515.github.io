@@ -89,6 +89,7 @@
   <script type="text/javascript">
     var wInitialFile = "./functionalmap.json"
     var gFunctionalMapObject = new DatabaseMap("Database");
+    var gSessionKey = "DB_"+Math.floor(Math.random*1000000);
 
     function download(filename, text) {
       var element = document.createElement('a');
@@ -150,7 +151,6 @@
           reader.readAsText(wFile.files[0]);
         }
       }
-      ;
     }
 
     function syncSelectOptionWithArray(iElementID, iStringArray){
@@ -203,6 +203,7 @@
 
       updateactionselect();
 
+      Database_saveToLocalStorage(gFunctionalMapObject, "FunctionalMap");
     }
 
     function updateactionselect() {
@@ -442,6 +443,9 @@
       <input id="heading-checkbox" type="checkbox" name="navmenu">
       <span id="heading-title"><label for="heading-checkbox">Software Dev's Functional Map Generator</label></span>
       <label id="heading-toggle" for="heading-checkbox">Toggle size</label>
+      <br/>
+      <a href="./functionalmapdisplay.html" target="_blank">Open Display</a>
+
     </div>
     <div id="app-div">
       <div id="map-canvas-div">
@@ -461,57 +465,57 @@
           <input class="nav-option-radio-bt" id="nav-tab-01" type="radio" name="navmenu">
           <div class="nav-option-display option-01">
             <span>Change Database Name</span>
-            </br>
+            <br/>
             <input type="text" id="io-dbname" class="io-form-text"/>
             <input type="button" class="io-form-bt" value="Change" onclick="updateDatabaseName()"/>
-            </br>
+            <br/>
             <input type="button" class="io-form-bt" value="Clear Database" onclick="clearDatabase()" />
           </div>
           <input class="nav-option-radio-bt" id="nav-tab-02" type="radio" name="navmenu">
           <div class="nav-option-display option-02">
             <span>Edit Database Sources</span>
-            </br>
+            <br/>
             <input type="text" id="io-addsource" class="io-form-text"/>
             <input type="button" class="io-form-bt"value="Add" onclick="addDatabaseSource()" />
-            </br>
+            <br/>
             <select id="io-selectsource" class="io-form-select"></select>
             <input type="button" class="io-form-bt"value="Remove" onclick="removeDatabaseSource()" />
-            </br>
+            <br/>
             <input type="text" id="io-editsource" class="io-form-text"/>
             <input type="button" class="io-form-bt"value="Change" onclick="editDatabaseSource()" />
           </div>
           <input class="nav-option-radio-bt" id="nav-tab-03" type="radio" name="navmenu">
           <div class="nav-option-display option-03">
             <span>Edit Database Users</span>
-            </br>
+            <br/>
             <input type="text" id="io-adduser" class="io-form-text"/>
             <input type="button" class="io-form-bt" value="Add" onclick="addDatabaseUser()" />
-            </br>
+            <br/>
             <select id="io-selectuser" class="io-form-select"></select>
             <input type="button" class="io-form-bt" value="Remove" onclick="removeDatabaseUser()" />
-            </br>
+            <br/>
             <input type="text" id="io-edituser" class="io-form-text"/>
             <input type="button" class="io-form-bt" value="Change" onclick="editDatabaseUser()" />
           </div>
           <input class="nav-option-radio-bt" id="nav-tab-04" type="radio" name="navmenu">
           <div class="nav-option-display option-04">
             <span>Edit Database User Actions</span> 
-            </br>
+            <br/>
             <select id="io-action-selectuser" class="io-form-select" onchange="updateactionselect()"></select>
-            </br>
+            <br/>
             <input type="text" id="io-addaction" class="io-form-text" />
             <input type="button" class="io-form-bt" value="Add" onclick="addDatabaseAction()" />
-            </br>
+            <br/>
             <select id="io-selectaction" class="io-form-select"></select>
             <input type="button" class="io-form-bt" value="Remove" onclick="removeDatabaseAction()" />
-            </br>
+            <br/>
             <input type="text" id="io-editaction" class="io-form-text" />
             <input type="button" class="io-form-bt" value="Change" onclick="editDatabaseAction()" />
           </div>
           <input class="nav-option-radio-bt" id="nav-tab-05" type="radio" name="navmenu">
           <div class="nav-option-display option-05">
             <textarea id="map-textarea"></textarea>
-            </br>
+            <br/>
             <input type="button" value="Run" onclick="runObject()" />
             <input type="button" value="Save" onclick="saveObject()" />
             <input type="file" id="FileInput" size="50" onchange="loadJSON()">

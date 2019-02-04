@@ -251,7 +251,7 @@ function Database_loadObjFromJSONObj(iDatabase, iJSONObj) {
             Database_addUser(iDatabase, wUserList[i]);
 
             var wActionList = Database_getUserActionList(iJSONObj,wUserList[i]);
-            for(var j = 0; j < wUserList.length; ++j){
+            for(var j = 0; j < wActionList.length; ++j){
                 Database_addUserAction(iDatabase,wUserList[i],wActionList[j]);
             }
         }
@@ -265,6 +265,16 @@ function Database_loadObjFromJSONString(iDatabase, iJSONString) {
 
         Database_loadObjFromJSONObj(iDatabase, wObj);
     }
+}
+
+function Database_saveToLocalStorage(iDatabase, iKey){
+
+    localStorage.setItem(iKey, JSON.stringify(iDatabase));
+}
+
+function Database_loadFromLocalStorage(iDatabase, iKey){
+
+    Database_loadObjFromJSONString(iDatabase, localStorage.getItem(iKey));
 }
 
 function drawImageCenteredAt(iCtx, iImage, iCenterX, iCenterY, iWidth, iHeight) {

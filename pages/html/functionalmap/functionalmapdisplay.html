@@ -1,0 +1,135 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="apple-mobile-web-app-capable" content="yes" />
+  <title>Functional Map Display</title>
+  <link rel="stylesheet" type="text/css" href="../../css/theme_01.css">
+  <script src="./databasemap.js"></script>
+  <style>
+    #map-canvas-div {
+      width: 100vw;
+      height: 100vh;
+    }
+    
+    #map-canvas {
+      width: 100%;
+      height: 100%;
+      margin: auto;
+      background-color: white;
+    }
+
+    #app-div {
+      position: fixed;
+      bottom: 0px;
+      left:0px;
+      width: 100vw;
+      padding: 0px;
+      margin: 0px;
+    }
+
+  </style>
+  <script type="text/javascript">
+    var wInitialFile = "./functionalmap.json"
+    var gFunctionalMapObject = new DatabaseMap("Database");
+
+    function renderCanvas() {
+
+      Database_loadFromLocalStorage(gFunctionalMapObject, "FunctionalMap");
+      if (null == gFunctionalMapObject) {
+        return;
+      }
+
+      var wCanvas = document.getElementById("map-canvas");
+
+      if (null == wCanvas) {
+        return;
+      }
+
+      var wImage_db = document.getElementById("img-database");
+
+      if (null == wImage_db) {
+        return;
+      }
+
+      var wImage_user = document.getElementById("img-user");
+
+      if (null == wImage_user) {
+        return;
+      }
+
+      var wCtx = wCanvas.getContext("2d");
+
+      if (null == wCtx) {
+        return;
+      }
+
+      wCtx.clearRect(0, 0, wCanvas.width, wCanvas.height);
+
+      // Scale to screen
+      var dpr = window.devicePixelRatio || 1;
+      var wCanvasHeight = wCanvas.height / dpr;
+      var wCanvasWidth = wCanvas.width / dpr;
+
+      var wImageCenterX = wCanvasWidth/2;
+      var wImageCenterY = wCanvasHeight/2;
+
+      wCtx.translate(wImageCenterX, wImageCenterY);
+
+      Database_drawMap(wCtx, gFunctionalMapObject, wImage_db, wImage_user, wCanvasWidth, wCanvasHeight);
+
+      wCtx.translate(-wImageCenterX, -wImageCenterY);
+    }
+
+    function init() {
+
+      // Replace ./data.json with your JSON feed
+      fetch(wInitialFile).then(response => {
+        return response.json();
+      }).then(data => {
+
+        gFunctionalMapObject = data;
+        loadObjToTextArea();
+
+      }).catch(err => {
+
+
+      });
+
+      resize();
+
+      setInterval(renderCanvas,200);
+    }
+
+    function resize() {
+
+      var wCanvas = document.getElementById("map-canvas");
+
+      if (null != wCanvas) {
+
+        var dpr = window.devicePixelRatio || 1;
+        var wRect = wCanvas.getBoundingClientRect();
+        wCanvas.height = wRect.height * dpr;
+        wCanvas.width = wRect.width * dpr
+        var wCtx = wCanvas.getContext('2d');
+        wCtx.scale(dpr, dpr);
+
+      }
+    }
+    
+  </script>
+</head>
+<body onload="init()" onresize="resize()">
+  <div id="main-content-div">
+    <div id="app-div">
+      <div id="map-canvas-div">
+        <canvas id="map-canvas"></canvas>
+      </div>
+    </div>
+  </div>
+  <div id="imageLibrary" style="display:none;">
+    <img id="img-database" src="./images/database-icon.png">
+    <img id="img-user" src="./images/user-icon.png">
+  </div>
+</body>
+</html>
