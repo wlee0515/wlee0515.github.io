@@ -451,6 +451,8 @@
         loadObjToTextArea();
 
       }).catch(err => {
+
+        gFunctionalMapObject = new DatabaseMap("Database");
         Database_editDatabaseName(gFunctionalMapObject, "User APP Event Data");
 
         Database_addSource(gFunctionalMapObject, "Phone Sales");
