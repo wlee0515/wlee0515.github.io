@@ -233,4 +233,226 @@ function Database_editUserAction(iDatabase, iUserLabel, iUserActionOriginal, iUs
     }
 }
 
+function Database_loadObjFromJSONObj(iDatabase, iJSONObj) {
+    if (null != iJSONObj){
+        
+        Database_clearDatabase(iDatabase);
+
+        var wName = Database_getDatabaseName(iJSONObj);
+        Database_editDatabaseName(iDatabase, wName);
+
+        var wSourceList = Database_getSourceList(iJSONObj);
+        for(var i = 0; i < wSourceList.length; ++i){
+            Database_addSource(iDatabase, wSourceList[i]);
+        }
+
+        var wUserList = Database_getUserList(iJSONObj);
+        for(var i = 0; i < wUserList.length; ++i){
+            Database_addUser(iDatabase, wUserList[i]);
+
+            var wActionList = Database_getUserActionList(iJSONObj,wUserList[i]);
+            for(var j = 0; j < wUserList.length; ++j){
+                Database_addUserAction(iDatabase,wUserList[i],wActionList[j]);
+            }
+        }
+    }
+}
+
+function Database_loadObjFromJSONString(iDatabase, iJSONString) {
+    
+    var wObj = JSON.parse(iJSONString);
+    if (null != wObj) {
+
+        Database_loadObjFromJSONObj(iDatabase, wObj);
+    }
+}
+
+function drawImageCenteredAt(iCtx, iImage, iCenterX, iCenterY, iWidth, iHeight) {
+
+    var wDBCornerX = iCenterX - iWidth / 2;
+    var wDBCornerY = iCenterY - iHeight / 2;
+
+    iCtx.drawImage(iImage, wDBCornerX, wDBCornerY, iWidth, iHeight);
+}
+
+function drawRectCenteredAt(iCtx, iCenterX, iCenterY, iWidth, iHeight) {
+
+    iCtx.fillRect(iCenterX - iWidth / 2, iCenterY - iHeight / 2, iWidth, iHeight);
+    iCtx.strokeRect(iCenterX - iWidth / 2, iCenterY - iHeight / 2, iWidth, iHeight);
+
+}
+
+function drawTextCenteredAt(iCtx, iCenterX, iCenterY, iText) {
+
+    iCtx.textAlign = "center";
+    iCtx.textBaseline = "middle";
+    iCtx.fillText(iText, iCenterX, iCenterY);
+
+}
+
+function drawLabelTextAt(iCtx, iCenterX, iCenterY, iText, iBackColor, iTextColor) {
+
+    if ("" != iBackColor) {
+        iCtx.fillStyle = iBackColor;
+        iCtx.strokeStyle = iTextColor;
+        drawRectCenteredAt(iCtx, iCenterX, iCenterY - 0.1 * parseInt(iCtx.font), iCtx.measureText(iText).width + 10, parseInt(iCtx.font) + 5);
+    }
+
+    iCtx.fillStyle = iTextColor;
+    iCtx.strokeStyle = iTextColor;
+    drawTextCenteredAt(iCtx, iCenterX, iCenterY, iText);
+
+}
+
+function Database_drawMap(iCtx, iDatabase, iDatabaseImg, iUserImg , iCanvasWidth, iCavasHeight) {
+
+    var wBaseLength = 1000;
+    if ((null == iCtx) || (null == iDatabase) || (null == iDatabaseImg) || (null == iUserImg)) {
+        return;
+    }
+     
+    var wCanvasWidth = iCanvasWidth;
+    var wCanvasHeight = iCavasHeight;
+
+    if (null == wCanvasWidth) wCanvasWidth = wBaseLength;
+    if (null == wCanvasHeight) wCanvasHeight = wCanvasWidth;
+
+    var wCanvasRefLength = wCanvasWidth;
+    if (wCanvasRefLength > wCanvasHeight) {
+        wCanvasRefLength = wCanvasHeight;
+    }
+    
+    var wImageScale = wCanvasRefLength / wBaseLength;
+    iCtx.scale(wImageScale, wImageScale);
+
+    var wRelativeWidth = wCanvasWidth/wImageScale;
+    
+    var wIconSize = 60;
+    var wUserRadius = wBaseLength / 2 - 2.25 * wIconSize;
+    var wFont = "10pt Arial";
+    var wLabelColor = "white";
+    var wTextColor = "black"
+    var wCenterYOffset = 0;
+    var wSourceYOffset = wUserRadius - wCenterYOffset;
+
+    var wDatabaseName = Database_getDatabaseName(iDatabase);
+    var wDatabaseSourceList = Database_getSourceList(iDatabase);
+    var wDatabaseUserList = Database_getUserList(iDatabase);
+
+    iCtx.font = wFont;
+    var wLabelHeight = parseInt(iCtx.font);
+
+    if (0 != wDatabaseSourceList.length) {
+        var wSubDBIconSize = wIconSize * 0.6;
+        var wIconBox = 2.0 * wSubDBIconSize;
+
+        var wMaxTextSize = 0;
+        for (var i = 0; i < wDatabaseSourceList.length; ++i) {
+            var wMeasure = iCtx.measureText(wDatabaseSourceList[i]).width;
+            if (wMaxTextSize < wMeasure) {
+                wMaxTextSize = wMeasure;
+            }
+        }
+        wMaxTextSize += wSubDBIconSize;
+
+        var wCountPerLine = Math.floor(wRelativeWidth / (wMaxTextSize));
+
+        if (wDatabaseSourceList.length < wCountPerLine) {
+            wCountPerLine = wDatabaseSourceList.length;
+        }
+
+        var wSpacing = wRelativeWidth / (wCountPerLine + 1);
+        var wXOffset = wRelativeWidth / 2;
+
+        for (var i = 0; i < wDatabaseSourceList.length; ++i) {
+            var wCenterX = (i % wCountPerLine + 1) * wSpacing - wXOffset;
+            var wCenterY = (Math.floor(i / wCountPerLine)) * wIconBox - wSourceYOffset;
+
+            drawImageCenteredAt(iCtx, iDatabaseImg, wCenterX, wCenterY, wSubDBIconSize, wSubDBIconSize);
+            drawLabelTextAt(iCtx, wCenterX, wCenterY + wSubDBIconSize / 2 + wLabelHeight, wDatabaseSourceList[i], wLabelColor, wTextColor);
+
+        }
+
+    }
+
+    iCtx.translate(0, wCenterYOffset);
+
+    if (0 != wDatabaseUserList.length) {
+
+        var wUserIconAngle = ((2 / 4) * Math.PI + Math.PI) / wDatabaseUserList.length;
+        var wAngleOff = wUserIconAngle / 2 - (1 / 4) * Math.PI;
+
+        for (var i = 0; i < wDatabaseUserList.length; ++i) {
+            var wAngle = wAngleOff + i * wUserIconAngle;
+
+            var wUserRadiusWithSign = wUserRadius;
+            var wRotateAngle = wAngle;
+            var wRadius = 0.5 * (wUserRadius - wIconSize / 2) + wIconSize / 2;
+            if (Math.PI / 2 < Math.abs(wRotateAngle)) {
+                wRotateAngle += Math.PI;
+                wRadius *= -1;
+                wUserRadiusWithSign *= -1;
+            }
+
+            iCtx.rotate(wRotateAngle);
+
+            var wUserActionList = Database_getUserActionList(gFunctionalMapObject, wDatabaseUserList[i]);
+
+            if (0 != wUserActionList.length) {
+                var wSpacing = parseInt(iCtx.font) * 2.0;
+                var wTotalHeight = wUserActionList.length * wSpacing;
+                var wStart = -(wTotalHeight - wSpacing) / 2;
+
+                for (var j = 0; j < wUserActionList.length; ++j) {
+                    var wHeight = wStart + j * wSpacing;
+
+                    iCtx.beginPath();
+                    iCtx.moveTo(0, 0);
+                    iCtx.quadraticCurveTo(0, wHeight, wRadius, wHeight);
+                    iCtx.moveTo(wUserRadiusWithSign, 0);
+                    iCtx.quadraticCurveTo(wUserRadiusWithSign, wHeight, wRadius, wHeight);
+
+                    iCtx.strokeStyle = wTextColor;
+                    iCtx.stroke();
+
+                    drawLabelTextAt(iCtx, wRadius, wHeight, wUserActionList[j], wLabelColor, wTextColor);
+                }
+
+            }
+
+            iCtx.rotate(-wRotateAngle);
+
+
+            var wCenterX = Math.cos(wAngle) * wUserRadius;
+            var wCenterY = Math.sin(wAngle) * wUserRadius;
+
+            iCtx.beginPath();
+            iCtx.arc(wCenterX, wCenterY, wIconSize, 0, 2 * Math.PI);
+            iCtx.closePath();
+            iCtx.fillStyle = wLabelColor;
+            iCtx.strokeStyle = wTextColor;
+            iCtx.fill();
+            iCtx.stroke();
+
+            drawImageCenteredAt(iCtx, iUserImg, wCenterX, wCenterY - wLabelHeight, wIconSize, wIconSize);
+            drawLabelTextAt(iCtx, wCenterX, wCenterY + wIconSize / 2, wDatabaseUserList[i], wLabelColor, wTextColor);
+            
+        }
+    }
+
+    iCtx.beginPath();
+    iCtx.arc(0, 0, 1.5 * wIconSize, 0, 2 * Math.PI);
+    iCtx.closePath();
+    iCtx.fillStyle = wLabelColor;
+    iCtx.strokeStyle = wTextColor;
+    iCtx.fill();
+    iCtx.stroke();
+
+    drawImageCenteredAt(iCtx, iDatabaseImg, 0,-wLabelHeight, wIconSize, wIconSize);
+    drawLabelTextAt(iCtx, 0,wIconSize / 2, wDatabaseName, wLabelColor, wTextColor);
+    
+    iCtx.translate(0, -wCenterYOffset);
+
+    iCtx.scale(1 / wImageScale, 1 / wImageScale);
+}
 -->

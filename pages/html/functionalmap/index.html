@@ -81,11 +81,14 @@
       float: left;
     }
 
+    .io-form-text{
+      width: 200px;
+    }
+
   </style>
   <script type="text/javascript">
     var wInitialFile = "./functionalmap.json"
     var gFunctionalMapObject = new DatabaseMap("Database");
-    var gCanvasWidth = 1000;
 
     function download(filename, text) {
       var element = document.createElement('a');
@@ -103,10 +106,7 @@
     function runObject() {
       var wTextArea = document.getElementById("map-textarea");
       if (null != wTextArea) {
-        var wObj = JSON.parse(wTextArea.value);
-        if (null != wObj) {
-          gFunctionalMapObject = wObj;
-        }
+        Database_loadObjFromJSONString(gFunctionalMapObject, wTextArea.value);
       }
       updateIO();
     }
@@ -141,10 +141,7 @@
               return;
             }
 
-            var wObj = JSON.parse(evt.target.result);
-            if (null != wObj) {
-              gFunctionalMapObject = wObj;
-            }
+            Database_loadObjFromJSONString(gFunctionalMapObject, evt.target.result);
 
             updateIO();
 
@@ -217,56 +214,7 @@
       syncSelectOptionWithArray("io-selectaction", wUserActionList);
     }
 
-
-    function drawImageCenteredAt(iCtx, iImage, iCenterX, iCenterY, iWidth, iHeight) {
-
-      var wDBCornerX = iCenterX - iWidth / 2;
-      var wDBCornerY = iCenterY - iHeight / 2;
-
-      iCtx.drawImage(iImage, wDBCornerX, wDBCornerY, iWidth, iHeight);
-    }
-
-    function drawRectCenteredAt(iCtx, iCenterX, iCenterY, iWidth, iHeight) {
-
-      iCtx.fillRect(iCenterX - iWidth / 2, iCenterY - iHeight / 2, iWidth, iHeight);
-      iCtx.strokeRect(iCenterX - iWidth / 2, iCenterY - iHeight / 2, iWidth, iHeight);
-
-    }
-
-    function drawTextCenteredAt(iCtx, iCenterX, iCenterY, iText) {
-
-      iCtx.textAlign = "center";
-      iCtx.textBaseline = "middle";
-      iCtx.fillText(iText, iCenterX, iCenterY);
-
-    }
-
-    function drawLabelTextAt(iCtx, iCenterX, iCenterY, iText, iBackColor, iTextColor) {
-
-      if ("" != iBackColor) {
-        iCtx.fillStyle = iBackColor;
-        iCtx.strokeStyle = iTextColor;
-        drawRectCenteredAt(iCtx, iCenterX, iCenterY - 0.1 * parseInt(iCtx.font), iCtx.measureText(iText).width + 10, parseInt(iCtx.font) + 5);
-      }
-
-      iCtx.fillStyle = iTextColor;
-      iCtx.strokeStyle = iTextColor;
-      drawTextCenteredAt(iCtx, iCenterX, iCenterY, iText);
-
-    }
-
     function renderCanvas() {
-
-      var wCanvasHeight = gCanvasWidth;
-      var wCanvasWidth = gCanvasWidth;
-
-      var wIconSize = 60;
-      var wUserRadius = gCanvasWidth / 2 - 2.25 * wIconSize;
-      var wFont = "10pt Arial";
-      var wLabelColor = "white";
-      var wTextColor = "black"
-      var wCenterYOffset = - wIconSize;
-      var wSourceYOffset = wUserRadius - 1.5*wIconSize;
 
       if (null == gFunctionalMapObject) {
         return;
@@ -290,153 +238,26 @@
         return;
       }
 
-
       var wCtx = wCanvas.getContext("2d");
 
       if (null == wCtx) {
         return;
       }
 
-      var wCanvasCenterX = 0;
-      var wCanvasCenterY = 0 - wCenterYOffset;
-
-      var wDatabaseName = Database_getDatabaseName(gFunctionalMapObject);
-      var wDatabaseSourceList = Database_getSourceList(gFunctionalMapObject);
-      var wDatabaseUserList = Database_getUserList(gFunctionalMapObject);
-
       wCtx.clearRect(0, 0, wCanvas.width, wCanvas.height);
 
       // Scale to screen
       var dpr = window.devicePixelRatio || 1;
-      var wNewSize = wCanvas.height;
-      if (wNewSize > wCanvas.width) wNewSize = wCanvas.width;
-      wNewSize /= dpr;
+      var wCanvasHeight = wCanvas.height / dpr;
+      var wCanvasWidth = wCanvas.width / dpr;
 
-      var wImageCenterX = wCanvas.width / 2;
-      wImageCenterX /= dpr;
-
-      var wImageCenterY = wCanvas.height / 2;
-      wImageCenterY /= dpr;
+      var wImageCenterX = wCanvasWidth / 2;
+      var wImageCenterY = wCanvasHeight / 2;
 
       wCtx.translate(wImageCenterX, wImageCenterY);
 
-      var wImageScale = wNewSize / wCanvasWidth;
-      wCtx.scale(wImageScale, wImageScale);
+      Database_drawMap(wCtx, gFunctionalMapObject, wImage_db, wImage_user, wCanvasWidth, wCanvasHeight);
 
-      wCtx.font = wFont;
-
-      if (0 != wDatabaseSourceList.length) {
-        var wSubDBIconSize = wIconSize * 0.6;
-        var wIconBox = 2.0 * wSubDBIconSize;
-
-        var wMaxTextSize = 0;
-        for (var i = 0; i < wDatabaseSourceList.length; ++i) {
-          var wMeasure = wCtx.measureText(wDatabaseSourceList[i]).width;
-          if (wMaxTextSize < wMeasure) {
-            wMaxTextSize = wMeasure;
-          }
-        }
-        wMaxTextSize += wSubDBIconSize;
-
-        var wCountPerLine = Math.floor(wCanvasWidth / (wMaxTextSize));
-
-        if (wDatabaseSourceList.length < wCountPerLine) {
-          wCountPerLine = wDatabaseSourceList.length;
-        }
-
-        var wSpacing = wCanvasWidth / (wCountPerLine + 1);
-        var wXOffset = wCanvasWidth / 2;
-
-        for (var i = 0; i < wDatabaseSourceList.length; ++i) {
-          var wCenterX = (i % wCountPerLine + 1) * wSpacing - wXOffset;
-          var wCenterY = -(Math.floor(i / wCountPerLine)) * wIconBox - wSourceYOffset;
-
-          drawImageCenteredAt(wCtx, wImage_db, wCenterX, wCenterY, wSubDBIconSize, wSubDBIconSize);
-          drawLabelTextAt(wCtx, wCenterX, wCenterY + wSubDBIconSize / 2 + parseInt(wCtx.font), wDatabaseSourceList[i], wLabelColor, wTextColor);
-
-        }
-
-      }
-
-      if (0 != wDatabaseUserList.length) {
-
-        var wUserIconAngle = ((2 / 4) * Math.PI + Math.PI) / wDatabaseUserList.length;
-        var wAngleOff = wUserIconAngle / 2 - (1 / 4) * Math.PI;
-
-        for (var i = 0; i < wDatabaseUserList.length; ++i) {
-          var wAngle = wAngleOff + i * wUserIconAngle;
-
-          var wUserRadiusWithSign = wUserRadius;
-          var wRotateAngle = wAngle;
-          var wRadius = 0.5 * (wUserRadius - wIconSize / 2) + wIconSize / 2;
-          if (Math.PI / 2 < Math.abs(wRotateAngle)) {
-            wRotateAngle += Math.PI;
-            wRadius *= -1;
-            wUserRadiusWithSign *= -1;
-          }
-
-          wCtx.translate(wCanvasCenterX, wCanvasCenterY);
-          wCtx.rotate(wRotateAngle);
-
-          var wUserActionList = Database_getUserActionList(gFunctionalMapObject, wDatabaseUserList[i]);
-
-          if (0 != wUserActionList.length) {
-            var wSpacing = parseInt(wCtx.font) * 2.0;
-            var wTotalHeight = wUserActionList.length * wSpacing;
-            var wStart = -(wTotalHeight - wSpacing) / 2;
-
-            for (var j = 0; j < wUserActionList.length; ++j) {
-              var wHeight = wStart + j * wSpacing;
-
-              wCtx.beginPath();
-              wCtx.moveTo(0, 0);
-              wCtx.quadraticCurveTo(0, wHeight, wRadius, wHeight);
-              wCtx.moveTo(wUserRadiusWithSign, 0);
-              wCtx.quadraticCurveTo(wUserRadiusWithSign, wHeight, wRadius, wHeight);
-
-              wCtx.strokeStyle = wTextColor;
-              wCtx.stroke();
-
-              drawLabelTextAt(wCtx, wRadius, wHeight, wUserActionList[j], wLabelColor, wTextColor);
-            }
-
-          }
-
-          wCtx.rotate(-wRotateAngle);
-
-          wCtx.translate(-wCanvasCenterX, -wCanvasCenterY);
-
-          var wCenterX = Math.cos(wAngle) * wUserRadius + wCanvasCenterX;
-          var wCenterY = Math.sin(wAngle) * wUserRadius + wCanvasCenterY;
-
-          var wTextHeight = parseInt(wCtx.font);
-
-          wCtx.beginPath();
-          wCtx.arc(wCenterX, wCenterY, wIconSize, 0, 2 * Math.PI);
-          wCtx.closePath();
-          wCtx.fillStyle = wLabelColor;
-          wCtx.strokeStyle = wTextColor;
-          wCtx.fill();
-          wCtx.stroke();
-
-          drawImageCenteredAt(wCtx, wImage_user, wCenterX, wCenterY - wTextHeight, wIconSize, wIconSize);
-          drawLabelTextAt(wCtx, wCenterX, wCenterY + wIconSize / 2, wDatabaseUserList[i], wLabelColor, wTextColor);
-
-        }
-      }
-
-      wCtx.beginPath();
-      wCtx.arc(wCanvasCenterX, wCanvasCenterY, 1.5 * wIconSize, 0, 2 * Math.PI);
-      wCtx.closePath();
-      wCtx.fillStyle = wLabelColor;
-      wCtx.strokeStyle = wTextColor;
-      wCtx.fill();
-      wCtx.stroke();
-
-      drawImageCenteredAt(wCtx, wImage_db, wCanvasCenterX, wCanvasCenterY - parseInt(wCtx.font), wIconSize, wIconSize);
-      drawLabelTextAt(wCtx, wCanvasCenterX, wCanvasCenterY + wIconSize / 2, wDatabaseName, wLabelColor, wTextColor);
-
-      wCtx.scale(1 / wImageScale, 1 / wImageScale);
       wCtx.translate(-wImageCenterX, -wImageCenterY);
     }
 
