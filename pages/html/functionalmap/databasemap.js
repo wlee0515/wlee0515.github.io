@@ -349,9 +349,9 @@ function Database_drawMap(iCtx, iDatabase, iDatabaseImg, iUserImg , iCanvasWidth
 
     var wRelativeWidth = wCanvasWidth/wImageScale;
     
-    var wIconSize = 60;
+    var wIconSize = 50;
     var wUserRadius = wBaseLength / 2 - 2.25 * wIconSize;
-    var wFont = "10pt Arial";
+    var wFont = "12pt Arial";
     var wLabelColor = "white";
     var wTextColor = "black"
     var wCenterYOffset = wIconSize;
@@ -412,10 +412,15 @@ function Database_drawMap(iCtx, iDatabase, iDatabaseImg, iUserImg , iCanvasWidth
             var wUserRadiusWithSign = wUserRadius;
             var wRotateAngle = wAngle;
             var wRadius = 0.5 * (wUserRadius - wIconSize / 2) + wIconSize / 2;
+            var wInflectRad_1 = wRadius - wRadius/2;
+            var wInflectRad_2 = wRadius + wRadius/2;
+
             if (Math.PI / 2 < Math.abs(wRotateAngle)) {
                 wRotateAngle += Math.PI;
                 wRadius *= -1;
                 wUserRadiusWithSign *= -1;
+                wInflectRad_1 *= -1;
+                wInflectRad_2 *= -1;
             }
 
             iCtx.rotate(wRotateAngle);
@@ -432,9 +437,9 @@ function Database_drawMap(iCtx, iDatabase, iDatabaseImg, iUserImg , iCanvasWidth
 
                     iCtx.beginPath();
                     iCtx.moveTo(0, 0);
-                    iCtx.quadraticCurveTo(wRadius - wIconSize, wHeight, wRadius, wHeight);
+                    iCtx.quadraticCurveTo(wInflectRad_1, wHeight, wRadius, wHeight);
                     iCtx.moveTo(wUserRadiusWithSign, 0);
-                    iCtx.quadraticCurveTo(wRadius + wIconSize, wHeight, wRadius, wHeight);
+                    iCtx.quadraticCurveTo(wInflectRad_2, wHeight, wRadius, wHeight);
 
                     iCtx.strokeStyle = wTextColor;
                     iCtx.stroke();
