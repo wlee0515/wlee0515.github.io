@@ -5,6 +5,24 @@
   <meta name="apple-mobile-web-app-capable" content="yes" />
   <title>WLee0515's Github Page</title>
   <link rel="stylesheet" type="text/css" href="pages/css/theme_01.css">
+  <style>
+      
+    .nav-option-display {
+      min-height: 75vh;
+      width: 100%;
+      padding-top: 40px;
+    }
+
+    .navbar {
+      overflow-x: hidden;
+    }
+
+    .nav-option-tab {
+      height: 20px;
+      width: calc( 100% / 3 - 10px);
+      float: left;
+    }
+  </style>
   <script type="text/javascript">
   
   </script>
@@ -14,10 +32,42 @@
   <div id="main-content-div">
   <h1>Welcome World</h1>
     <div>
-      <h2>Tool List</h2>
-      <ul>
-        <li><a href="pages/html/functionalmap/index.html">Software Development's Functional Map Generator</a></li>
-      </ul>
+      <div id="app-div">
+        <div class="navbar">
+          <div class="navbar-menu">
+            <label class="nav-option-tab option-01" for="nav-tab-01">Intoduction</label>
+            <label class="nav-option-tab option-02" for="nav-tab-02">Home Made Tools</label>
+            <label class="nav-option-tab option-03" for="nav-tab-03">Projects</label>
+          </div>
+        
+          <div class="nav-display">
+            <input class="nav-option-radio-bt" id="nav-tab-01" type="radio" name="navmenu" checked="checked">
+            <div class="nav-option-display option-01">
+        
+        
+       
+            </div>
+            <input class="nav-option-radio-bt" id="nav-tab-02" type="radio" name="navmenu">
+            <div class="nav-option-display option-02">
+                
+              <ul>
+                <li><a href="pages/html/functionalmap/index.html">Software Development's Functional Map Generator</a></li>
+              </ul>
+        
+            </div>
+            <input class="nav-option-radio-bt" id="nav-tab-03" type="radio" name="navmenu">
+            <div class="nav-option-display option-03">
+        
+              <ul>
+                <li><a href="https://wlee0515.github.io/US_Baby_Names/">US Baby Name Count from 1910 to 2017</a></li>
+              </ul>
+        
+        
+        
+            </div>
+          </div>
+        </div>
+      </div>
     </div>
   </div>
 </body>
