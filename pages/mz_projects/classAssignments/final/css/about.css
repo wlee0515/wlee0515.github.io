@@ -1,0 +1,154 @@
+/**** SERVICE CSS ****/
+@import url('https://fonts.googleapis.com/css?family=Bungee|Raleway');
+
+/* destktop size */
+#s1{
+	position: relative;
+	height: 100%;
+	background: url(../images/capture.jpg) fixed center center;
+	background-size: cover;
+}
+
+#s1 div {
+	position: absolute;
+	top: 15%;
+	left: 10%;
+	background: #fff;
+	padding: 20px;
+	width: 45%;
+	max-height: 100%;
+
+}
+
+
+#s1 div h1{
+	font-size: 45px;
+	color: #000;
+	font-family: 'Bungee', cursive;
+}
+
+#s1 div p{
+	font-size: 18px;
+	color: #888;
+	font-family: 'Raleway', sans-serif;
+	text-align: justify;
+	overflow: hidden;
+
+}
+
+#wrapper div{
+	width: 100%;
+	overflow: hidden;
+}
+
+#wrapper article{
+	width: 60%;
+	margin: 2%;
+	background: #eee;
+	float: left;
+	padding: 1.5%;
+	text-align: justify;
+}
+
+#wrapper aside{
+	width: 30%;
+	margin: 1.5%;
+	background: #eee;
+	float: left;
+	padding: 1.5%;
+	text-align: justify;
+}
+
+footer {
+	clear: both;
+}
+
+div h2{
+	font-family: 'Bungee', cursive;
+	font-size: 32px;
+	/*padding-bottom: 10px;*/
+	color: #000;
+	text-transform: capitalize;
+}
+
+div p{
+	color: #333;
+	font-size: 20px;
+	font-family: 'Raleway', sans-serif;
+	text-align: justify;
+}
+
+/*** TABLET SIZE ***/ 
+@media only screen and (max-width: 768px){
+	#s1 div {
+		width: 80%;
+		height: auto;
+		left: 10%;
+	}
+
+	#s1 div h1 {
+		font-size: 45px;
+	}
+
+	#s1 div p{
+		font-size: 18px;
+	}
+
+	#wrapper article {
+		width: 85%;
+		margin: auto 7.5%;
+	}
+
+	#wrapper aside {
+		width: 85%;
+		margin: auto 7.5%;
+	}
+
+	#wrapper h2{
+		font-size: 40px;
+	}
+
+	#wrapper p{
+		font-size: 18px;
+	}
+
+	footer {
+		font-size: 15px;
+	padding: 12px 0px;
+
+	}
+}
+
+/*** MOBOLE SIZE ***/
+@media only screen and (max-width: 480px){
+	#s1 div {
+		width: 90%;
+		left: 5%;
+	}
+
+	#s1 div h1 {
+		font-size: 25px;
+	}
+
+	#s1 div p{
+		font-size: 16px;
+	}
+
+	#wrapper article {
+		width: 95%;
+		margin: auto 2.5%;
+	}
+
+	#wrapper aside {
+		width: 95%;
+		margin: auto 2.5%;
+	} 
+
+	#wrapper h2{
+		font-size: 25px;
+	}
+
+	#wrapper p{
+		font-size: 16px;
+	}
+}

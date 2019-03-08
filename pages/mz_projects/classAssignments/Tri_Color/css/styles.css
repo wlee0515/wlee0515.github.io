@@ -1,0 +1,54 @@
+@charset "utf-8";
+
+/*CSS document*/
+
+body{
+	margin: 0;
+	padding: 0;
+	background-color: aqua;
+}
+
+body .container{
+	background-color: yellow;
+	padding: 20px;
+	overflow: auto;
+
+}
+
+body .container .outerborder{
+	position: relative;
+	float: left;
+	width: 30px;
+	height: 300px;
+	border: 1px solid black;
+	margin: 5px;
+
+}
+
+body .container .col{
+	width: 30px;
+	height: 150px;
+	border: 1px solid black;
+	position: absolute;
+	bottom: 0;
+	transition: 1s;
+}
+
+body .container .col1{
+	background-color: red;
+}
+
+body .container .col2{
+	background-color: green;
+}
+
+body .container .col3{
+	background-color: blue;
+}
+
+body .container .fields{
+	background-color: lightcoral;
+	margin-left: 150px;
+	
+}
+

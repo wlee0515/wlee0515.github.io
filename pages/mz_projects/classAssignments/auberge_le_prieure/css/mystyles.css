@@ -1,0 +1,161 @@
+
+body {
+	margin: 0;
+	padding: 0;
+	box-sizing: border-box;
+	position: relative;
+}
+
+h {
+	padding: 10px;
+	font-size: 25px;
+	color: teal;
+	font-weight: bolder;
+}
+
+header{
+	text-align: center;
+}
+
+.class_resume {
+	width: 25%;
+	position: fixed;
+	left: 20px;
+	top: 250px;
+	border-radius: 10px;
+	background-color: #d38787;
+}
+
+.class_ForChosenItems {
+	border: 2px solid white;
+	margin: 15px;
+	padding: 15px;
+	box-sizing: border-box;
+	height: 200px;
+	border-radius: 10px;
+	overflow: auto;
+}
+
+.class_ForChosenItems::-webkit-scrollbar-track {
+	box-shadow: inset 0 0 6px rgba(0,0,0,0.3); 
+    border-radius: 10px;
+}
+
+.class_ForChosenItems::-webkit-scrollbar-thumb {
+    border-radius: 10px;
+	box-shadow: inset 0 0 6px rgba(0,0,0,0.5);
+}
+
+.class_ForCalculation {
+	border: 2px solid white;
+	margin: 15px;
+	padding: 15px;
+	height: 200px;
+	border-radius: 10px;
+}
+
+#id_menu {
+	width: 60%;
+	position: absolute;
+	top:250px;
+	right: 80px;	
+	order: 2px solid rgba(12,59,141,0.20);
+	border-radius: 5px;
+	background-color: rgba(255,199,0, 0.10);
+	box-shadow: 5px 5px 10px;
+}
+
+.class_ForItems {
+	background-color: #efdad2;
+	width: 98%;
+	height: 300px;
+	border: 4px solid #f29c80;
+	border-radius: 20px;
+	margin: 20px 10px;
+}
+
+.class_ForImages{
+	float: left;
+	width: 200px;
+	height: 200px;
+	margin: 50px 20px;
+	border-radius: 5px;
+}
+
+.class_ForItemNames{
+	float: left;
+	width: 400px;
+	height: 250px;
+	background-color: #cce8b7;
+	margin: 25px;
+	border-radius: 15px;
+	text-align: center;
+	line-height: 50px;
+}
+
+.class_ForPricesAndCheckbox  {
+	float: left;
+	width: 150px;
+	height: 80px;
+	background-color: rgba(255,199,0, 0.10);
+	border-radius: 15px;
+	font-size: 20px;
+	text-align: center;
+	border: solid 1px white;
+	margin: 110px;
+	
+}
+
+
+@media only screen and (max-width: 768px){
+	.class_ForItems {
+		width: 95%;
+		height: 600px;
+	}
+
+	.class_ForImages{
+		position: absolute;
+		margin: 5px 25%;
+	}
+	.class_ForItemNames
+	{
+		position: absolute;
+		margin: 225px 5% 5px 5%;
+	}
+	.class_ForPricesAndCheckbox {
+		position: absolute;
+		margin: 500px 30% 5px 30%;
+	}
+}
+
+@media only screen and (max-width: 480px){
+	img,header{
+		max-width: 375px;
+	}
+	
+.class_resume{
+	width: 100%;
+	height: 250px;
+	bottom: 0px;
+	left: 0px;
+	top: auto;
+}
+.class_ForChosenItems{
+	height: 80px;
+}
+.class_ForCalculation{
+	height: 40px;
+}
+
+#id_menu{
+	width: 100%;
+	margin: 0;
+	top: 120px;
+	right: 0;
+	margin-bottom: 300px;
+}
+.class_ForItemNames
+	{
+		width: 85%;
+	}
+}

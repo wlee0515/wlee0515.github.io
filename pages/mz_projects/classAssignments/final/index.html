@@ -1,0 +1,48 @@
+<!-- MAIN PAYGE --> 
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+	<title>Exploring the World</title>
+	<link rel="stylesheet" type="text/css" href="css/style.css">
+</head>
+<body>
+	<!--The Background-->
+	<video autoplay loop poster="images/main.jpg" id="bgvid">
+		<source src="videos/cold.mp4" type="video/mp4">
+		Your browser does not suport the video tag.
+	</video>
+
+	<!--logo-->
+	<header>
+		<h1>Exploring the World</h1>
+	</header>
+	<!-- The overlay -->
+	<div id="myNav" class="overlay">
+	<a href="javascript:void(0)" class="closebtn" onclick="closeNav()">&times;</a>
+
+   	<div class="overlay-content">
+    	<a href="index.html">Home</a>
+    	<a href="web/service.html">Services</a>
+    	<a href="web/about.html">About</a>
+    	<a href="web/contact.html">Contact</a>
+  	</div>
+
+
+	</div>
+
+	<span onclick="openNav()">&#9776;</span>
+
+	<script>
+	function openNav() {
+    document.getElementById("myNav").style.width = "100%";
+}
+
+	function closeNav() {
+    document.getElementById("myNav").style.width = "0%";
+}
+</script>
+
+</body>
+</html>

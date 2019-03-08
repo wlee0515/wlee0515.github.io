@@ -1,0 +1,86 @@
+{
+	"ENTRÉES": 
+			[
+				{ 	
+					"PICTURE" 		: "images/e1.jpg", 
+					"NAME" 			: "TERRINE DE FOIE GRAS", 
+					"PRICE" 		: 19.00,
+					"DESCRIPTIONS" 	: "gel à la pêche, carvi, pleurotes érigés, biscuit au maïs, pistaches"
+				},
+				{ 	
+					"PICTURE" 		: "images/e2.jpg", 
+					"NAME" 			: "ASPERGES VERTES", 
+					"PRICE" 		: 11.00,
+					"DESCRIPTIONS" 	: "pain frit, radis, orpin, mayonnaise au safran"
+				},
+				{ 	
+					"PICTURE" 		: "images/e3.jpg", 
+					"NAME" 			: "COUTEAUX DE MER", 
+					"PRICE" 		: 10.00,
+					"DESCRIPTIONS" 	: "persil de mer, soya, shiso, concombre, nori, jus de gingembre"
+				},
+				{ 	
+					"PICTURE" 		: "images/e4.jpg", 
+					"NAME" 			: "CREVETTES NORDIQUES", 
+					"PRICE" 		: 16.00,
+					"DESCRIPTIONS" 	: "pain à l’huile, amandes fraîches, tomate, fleurs de zucchini, mayonnaise au piment habanero"
+				}
+			],
+	"PLATS PRINCIPAUX": 
+			[
+				{ 	
+					"PICTURE" 		: "images/p1.jpg", 
+					"NAME" 			: "MAGRET DE CANARD", 
+					"PRICE" 		: 25.00,
+					"DESCRIPTIONS" 	: "bette à carde, pleurotes, fraises, purée d'ail noir, têtes de violon, pommes de terre, marguerite, sauce au vermouth"
+				},
+
+				{ 	
+					"PICTURE" 		: "images/p2.jpg", 
+					"NAME" 			: "FILET DE BOEUF ET HOMARD", 
+					"PRICE" 		: 26.00,
+					"DESCRIPTIONS" 	: "asperges vertes, morilles, sauce au cassissier"
+				},
+
+				{ 	
+					"PICTURE" 		: "images/p3.jpg", 
+					"NAME" 			: "CAILLE", 
+					"PRICE" 		: 27.00,
+					"DESCRIPTIONS" 	: "purée de betteraves et yogourt, riz sauvage, pleurotes, amandes fraiches, ail, poudre d’olive, sauce à l’origan"
+				},
+
+				{ 	
+					"PICTURE" 		: "images/p4.jpg", 
+					"NAME" 			: "CAVATELLI AU HOMARD", 
+					"PRICE" 		: 28.00,
+					"DESCRIPTIONS" 	: "asperges vertes, estragon, Parmigiano Reggiano"
+				}
+			],
+	"DESSERTS": 
+			[
+				{ 	
+					"PICTURE" 		: "images/d1.jpg", 
+					"NAME" 			: "POUDDING AU MÉLILOT ET CHOCOLAT BLANC", 
+					"PRICE" 		: 13.99,
+					"DESCRIPTIONS" 	: "croustade au sarrasin, tire-éponge et gastrique au miel, noix de pin givrées, sorbet à la camomille"
+				},
+				{ 	
+					"PICTURE" 		: "images/d2.jpg", 
+					"NAME" 			: "PANNA COTTA AU CHOCOLAT DULCEY", 
+					"PRICE" 		: 14.50,
+					"DESCRIPTIONS" 	: "purée de chicoutai, meringue et crème au thym, crème glacée à l’érable"
+				},
+				{ 	
+					"PICTURE" 		: "images/d3.jpg", 
+					"NAME" 			: "MERINGUE AU GINGEMBRE", 
+					"PRICE" 		: 14.00,
+					"DESCRIPTIONS" 	: "poudre d’arachides caramélisées, crème anglaise à la mélasse, granité à la framboise, ganache et gâteau au chocolat au lait Tanariva"
+				},
+				{ 	
+					"PICTURE" 		: "images/d4.jpg", 
+					"NAME" 			: "BAVAROIS AU YOGOURT ET GENIÈVRE", 
+					"PRICE" 		: 16.00,
+					"DESCRIPTIONS" 	: "mousse et gel aux bleuets, meringue au poivre rose, yogourt glacé aux bleuets"
+				}
+			]
+}

@@ -1,0 +1,217 @@
+@charset "UTF-8";
+
+body {
+	margin: 0;
+	padding: 0;
+	width: 100%;
+}
+
+#logo {
+	text-align: center;
+}
+
+header{
+	text-align: center;
+}
+
+h {
+	font-size: 25px;
+	color: white;
+	font-weight: bolder;
+}
+
+.class_container {
+	background-color: #d38787;
+	width: 60%;
+	margin: 20px auto;
+	padding: 10px;
+}
+
+.class_ForItems {
+	background-color: #efdad2;
+	width: 98%;
+	height: 300px;
+	border: 4px solid #f29c80;
+	border-radius: 20px;
+	margin: 20px 10px;
+}
+
+.class_ForImages{
+	float: left;
+	width: 200px;
+	height: 200px;
+	margin: 50px 20px;
+	border-radius: 5px;
+}
+
+.class_ForPrices  {
+	background-color: #d38787;
+	width: 150px;
+	height: 150px;
+	border-radius: 100px;
+	text-align: center;
+	line-height: 150px;
+	color: white;
+	box-sizing: border-box;
+	border: 2px solid white;
+	float: left;
+	margin: 75px 20px;
+}
+.class_ForItemNames{
+	float: left;
+	width: 400px;
+	height: 250px;
+	background-color: #cce8b7;
+	margin: 25px;
+	border-radius: 15px;
+	text-align: center;
+	line-height: 50px;
+}
+
+.class_ForCheckboxe {
+	width: 100px;
+	height: 100px;
+	float: left;
+	margin-top: 150px;
+	margin-left: 100px;
+	
+}
+
+.class_box {
+	margin-left: -5px;
+}
+
+.class_resume {
+	width: 300px;
+	height: 400px;
+	border-radius: 20px;
+	background-color: #d38787;
+	position: fixed;
+	left: 20px;
+	top: 20px;
+}
+
+.class_ForChosenItems {
+	border: 2px solid white;
+	margin: 15px;
+	padding: 15px;
+	box-sizing: border-box;
+	height: 100px;
+	border-radius: 10px;
+	overflow: auto;
+}
+
+@media screen and (max-width: 1386px) {
+
+
+    .class_container {
+		margin-left: 340px;
+	}
+
+
+.class_ForChosenItems::-webkit-scrollbar {
+    width: 12px;
+}
+
+.class_ForChosenItems::-webkit-scrollbar-track {
+	box-shadow: inset 0 0 6px rgba(0,0,0,0.3); 
+    border-radius: 10px;
+}
+
+.class_ForChosenItems::-webkit-scrollbar-thumb {
+    border-radius: 10px;
+	box-shadow: inset 0 0 6px rgba(0,0,0,0.5);
+}
+
+.class_ForCalculation {
+	border: 2px solid white;
+	margin: 15px;
+	padding: 15px;
+	height: 200px;
+	border-radius: 10px;
+}
+
+}
+
+@media only screen and (max-width: 768px) {
+
+	.class_container {
+		width: 60%;
+		margin: 30px 20px 20px 230px;
+	}
+
+	.class_resume {
+	width: 30%;
+	height: 400px;
+	position: fixed;
+	left: 20px;
+	top: 180px;
+}
+
+
+.class_ForItems {
+	width: auto;
+	height: 300px;
+	margin: 10px 5px;
+}
+
+.class_ForImages{
+	width: 150px;
+	height: 150px;
+	margin: auto;
+}
+
+.class_ForItemNames{
+	width: 100px;
+	height: 150px;
+	padding-top: 20px;
+	margin: auto;
+	line-height: 20px;
+}
+
+.class_ForPrices  {
+	width: 50px;
+	height: 50px;
+	margin: 50px 10px;
+	line-height: 150px;
+}
+
+
+.class_ForCheckboxe {
+	width:50px;
+	height: 50px;
+	float: left;
+	margin-top: 100px;
+	margin-left: 50px;
+	
+}
+
+}
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+

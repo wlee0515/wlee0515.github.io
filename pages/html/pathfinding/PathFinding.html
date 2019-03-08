@@ -1,0 +1,696 @@
+﻿<html>
+<head>
+    <script src="Maze.js"></script> 
+    <meta name="viewport" content="width=400" />
+    <title>Path Fnding</title>
+    <style>
+
+        #Method_Selection
+        {
+    text-decoration: none;
+    font-size: 20px;
+    font-family: 'Josefin Slab', serif;
+    color: darkgray;
+    padding-left: 20;
+    padding-right: 20;
+        }
+
+        #CanvasContainer
+        {
+            height : 100%;
+            width : 100%;
+            margin-top: 30px;
+            margin-bottom: 30px;
+            padding-left: 20;
+        }
+
+        canvas
+        {
+            border: 1px solid blue;
+        }
+
+    </style>
+
+
+    <script src="../../javascript/default_nav.js"></script>
+    <script src="../../javascript/PageGenerationScript.js"></script>
+    <link rel="stylesheet" href="../../css/PageGenerationDesign.css">
+    <link rel="stylesheet" href="../../css/default.css" >
+
+    <script type="text/javascript">
+
+
+        var cAStar = 1;
+        var cFlood = 2;
+        var cDijkstra = 3;
+
+        var gMethodChoice = cFlood;
+
+        var gMazeHeight = 30;
+        var gMazeWidth = 30;
+        var gMaze;
+
+        var gMazeCellScore;
+ 
+        var gScoreMax = 0;
+        var gSolutionFound = false;
+        var gSolutionScore = 100;
+        var gSolutionStack = [];
+
+
+        var gFirstPass = true;
+
+        function init() {
+
+            generateNavBar();
+
+            gMaze = new Maze(gMazeWidth, gMazeHeight);
+            gMaze.cellDrawFunction = drawMazeCell;
+            gMaze.generateRandomMaze();
+
+            var wCanvas = document.getElementById("OuputCanvas");
+            wCanvas.addEventListener("mousedown", MazeClick, false);
+
+            resize();
+
+            resetCellScore()
+
+            setInterval(processTick, 50);
+        }
+
+        function resetCellScore() {
+
+            gMazeCellScore = [];
+            for (var i = 0; i < gMaze.mMazeArray.length ; ++i) {
+
+                gMazeCellScore.push(0);
+            }
+
+        }
+
+        function resize() {
+            var wCanvas = document.getElementById("OuputCanvas");
+            var wSize = wCanvas.parentElement.clientHeight;
+            if (wSize > wCanvas.parentElement.clientWidth) wSize = wCanvas.parentElement.clientWidth;
+
+            wCanvas.height = wSize - 2;
+            wCanvas.width = wSize - 2;
+        }
+
+        function resetSolution(){
+
+                gFirstPass = true;
+                gScoreMax = 0;
+                gSolutionFound = false;
+                gSolutionScore = 100;
+                gSolutionStack = [];
+                resetCellScore();
+        }
+
+        function methodChange() {
+
+                var wAstarDOM = document.getElementById("method_astar");
+
+                if(null != wAstarDOM) {
+                    if(true == wAstarDOM.checked){
+                        gMethodChoice = cAStar;
+                    }
+                }
+
+                var wFloodDOM = document.getElementById("method_flood");
+
+                if(null != wFloodDOM) {
+                    if(true == wFloodDOM.checked){
+                        gMethodChoice = cFlood;
+                    }
+                }
+
+
+                var wDijkstraDOM = document.getElementById("method_dijkstra");
+
+                if(null != wDijkstraDOM) {
+                    if(true == wDijkstraDOM.checked){
+                        gMethodChoice = cDijkstra;
+                    }
+                }
+
+                resetSolution();
+        }
+
+        function MazeClick(iEvent) {
+
+            if (null != iEvent) {
+
+                var wCanvas = document.getElementById("OuputCanvas");
+
+                var wSize = wCanvas.parentElement.clientHeight;
+                if (wSize > wCanvas.parentElement.clientWidth) wSize = wCanvas.parentElement.clientWidth;
+
+                var wCellSizeX = wSize / gMazeWidth;
+                var wCellSizeY = wSize / gMazeHeight;
+
+                x = Math.floor((iEvent.clientX + document.body.scrollLeft - wCanvas.offsetLeft) / wCellSizeX);
+                y = Math.floor((iEvent.clientY + document.body.scrollTop - wCanvas.offsetTop) / wCellSizeY);
+
+                gMaze.toggleMazeCoordinate(x, y);
+
+                resetSolution();
+            }
+        }
+        
+        function processTick() {
+
+            var wCanvas = document.getElementById("OuputCanvas");
+
+            if (cFlood == gMethodChoice) {
+                calculateFloodSearch();
+            }
+            else if (cAStar == gMethodChoice) {
+                calculateAStarSearch(1.0);
+            }
+            else if (cDijkstra == gMethodChoice) {
+                calculateAStarSearch(0.0);
+            }
+
+            gMaze.draw(wCanvas);
+        }
+
+
+        var wOpenNodes;
+        var wCloseNodes;
+        var gHScore;
+        var gFScore;
+
+        function calculateAStarSearch( iHeuristicMultiplyer) {
+
+            if(true == gFirstPass) {
+                gFirstPass = false;
+
+                wOpenNodes = new Array();
+                wCloseNodes = new Array();
+
+                wOpenNodes.push(gMaze.mMazeEndIndex);
+                gMazeCellScore[wOpenNodes[0]] = 1;
+
+                gScoreMax = 1;
+
+
+                gHScore = [];
+                gFScore = [];
+                for (var i = 0; i < gMaze.mMazeArray.length ; ++i) {
+
+                    gHScore.push(0);
+                    gFScore.push(0);
+                }
+
+            }
+
+            if ( (false == gSolutionFound) && ( 0 < wOpenNodes.length )) {
+                
+                var wSmallestIndex = 0;
+                var wSmallestScore =  gFScore[wOpenNodes[0]];
+
+                for (var i = 0; i < wOpenNodes.length; ++i) {
+                    if ( wSmallestScore  > gFScore[wOpenNodes[i]]) {
+
+                        wSmallestIndex = i;
+                        wSmallestScore =  gFScore[wOpenNodes[i]];
+                    }
+
+
+                    if ( gScoreMax  < gMazeCellScore[wOpenNodes[i]]) {
+
+                        gScoreMax =  gMazeCellScore[wOpenNodes[i]];
+                    }
+                }
+
+
+                var wMazeIndex = wOpenNodes[wSmallestIndex];
+
+                if ( 1 == wOpenNodes.length) {
+                    wOpenNodes.pop();
+                }
+                else {
+                    for (var i = wSmallestIndex; i < wOpenNodes.length - 1; ++i) {
+                        wOpenNodes[i] = wOpenNodes[ i+1 ];
+                    }
+
+                    wOpenNodes.pop();
+                }
+
+
+                        var wCoordinate = gMaze.getMazeCoordinate(wMazeIndex);
+                        for (var j = 0; j < 4 ; ++j) {
+
+                            var wX = wCoordinate.x + 1;
+                            var wY = wCoordinate.y;
+
+
+                            if( 0 == j) {
+
+                              wX = wCoordinate.x + 1;
+                              wY = wCoordinate.y;
+
+                            }
+
+                            else if( 1 == j) {
+
+                              wX = wCoordinate.x - 1;
+                              wY = wCoordinate.y;
+
+                            }
+
+                            else if( 2 == j) {
+
+                              wX = wCoordinate.x;
+                              wY = wCoordinate.y + 1;
+
+                            }
+                            else if( 3 == j) {
+
+                              wX = wCoordinate.x;
+                              wY = wCoordinate.y - 1;
+
+                            }
+
+                            if ((wX >= 0) && (wX < gMazeWidth)) {
+                                if ((wY >= 0) && (wY < gMazeHeight)) {
+                                    var k = gMaze.getMazeIndex(wX, wY);
+
+                                    var wTileType = gMaze.mMazeArray[k];
+
+
+                                    if (gMaze.HOLE != wTileType) {
+
+                                        var wIsClosedNode = false;
+
+                                        for(var p = 0; p < wCloseNodes.length ; ++p){
+                                            if(k == wCloseNodes[p]){
+                                                wIsClosedNode = true;
+                                                break;
+                                            }
+                                        }
+
+                                        if (false ==  wIsClosedNode) {
+
+                                            var wWScore = gMazeCellScore[wMazeIndex] + 1;
+                                            var wHScore = wX + wY; // ( wX*wX)  + (wY*wY);
+                                            var wFScore = wWScore + iHeuristicMultiplyer*wHScore;
+
+                                            var wIsOpenNode = false;
+
+
+                                            for(var p = 0; p < wOpenNodes.length ; ++p){
+                                                if(k == wOpenNodes[p]){
+                                                    wIsOpenNode = true;
+                                                    break;
+                                                }
+                                            }
+
+                                            if (false == wIsOpenNode)
+                                            {
+                                                wOpenNodes.push(k);
+                                                        gMazeCellScore[k] = wWScore;
+                                                        gHScore[k] = wHScore;
+                                                        gFScore[k] = wFScore;
+                                            }
+                                            else 
+                                            {
+                                                if ( 0 != gMazeCellScore[k])
+                                                {
+                                                    if ( gMazeCellScore[k] > wWScore) {
+                                                        gMazeCellScore[k] = wWScore;
+                                                        gHScore[k] = wHScore;
+                                                        gFScore[k] = wFScore;
+
+                                                    }
+                                                }
+                                                else {
+                                                        gMazeCellScore[k] = wWScore;
+                                                        gHScore[k] = wHScore;
+                                                        gFScore[k] = wFScore;
+                                                }
+
+                                            }
+
+
+                                            if ( gMaze.START == wTileType) {
+
+                                                gSolutionFound = true;
+                                                gSolutionScore = gMazeCellScore[k];
+                                            }
+
+                                        }
+
+                                    }
+                                    
+                                }
+                            }
+
+                        }
+
+
+                wCloseNodes.push(wMazeIndex);
+
+            }
+
+            if ((true == gSolutionFound) && (0 == gSolutionStack.length)) {
+
+                backTrackSolution();
+            }
+
+
+        }
+
+        function calculateFloodSearch() {
+
+            if(true == gFirstPass) {
+                gFirstPass = false;
+            }
+            
+            if (false == gSolutionFound) {
+
+                var wPastArray = gMazeCellScore;
+                resetCellScore();
+
+                for (var i = 0; i < gMazeCellScore.length ; ++i) {
+
+                    if (gMaze.END == gMaze.mMazeArray[i]) {
+
+                        gMazeCellScore[i] = 1;
+                        continue;
+                    }
+                    else if (gMaze.HOLE == gMaze.mMazeArray[i]) {
+                        gMazeCellScore[i] = 0;
+                        continue;
+                    }
+                    else if (0 != wPastArray[i]) {
+                        gMazeCellScore[i] = wPastArray[i];
+                    }
+                    else if (0 == wPastArray[i]) {
+
+                        var wMinScore = gMazeCellScore.length;
+                        var wHasNewValue = false;
+                        var wCoordinate = gMaze.getMazeCoordinate(i);
+                        for (var j = 0; j < 4 ; ++j) {
+
+                            var wX = wCoordinate.x + 1;
+                            var wY = wCoordinate.y;
+
+
+                            if( 0 == j) {
+
+                              wX = wCoordinate.x + 1;
+                              wY = wCoordinate.y;
+
+                            }
+
+                            else if( 1 == j) {
+
+                              wX = wCoordinate.x - 1;
+                              wY = wCoordinate.y;
+
+                            }
+
+                            else if( 2 == j) {
+
+                              wX = wCoordinate.x;
+                              wY = wCoordinate.y + 1;
+
+                            }
+                            else if( 3 == j) {
+
+                              wX = wCoordinate.x;
+                              wY = wCoordinate.y - 1;
+
+                            }
+
+                            if ((wX >= 0) && (wX < gMazeWidth)) {
+                                if ((wY >= 0) && (wY < gMazeHeight)) {
+                                    var k = gMaze.getMazeIndex(wX, wY);
+
+                                    if (0 != wPastArray[k]) {
+
+                                        if (wMinScore > wPastArray[k]) {
+                                            wMinScore = wPastArray[k];
+
+                                            wHasNewValue = true;
+                                        }
+                                    }
+                                }
+                            }
+
+                        }
+
+
+
+                        if (true == wHasNewValue) {
+                            gMazeCellScore[i] = wMinScore + 1;
+
+                            if(gScoreMax < gMazeCellScore[i])
+                            {
+                                gScoreMax = gMazeCellScore[i];
+                            }
+                        }
+                    }
+
+
+                    if (gMaze.START == gMaze.mMazeArray[i]) {
+
+                        if (0 != gMazeCellScore[i]) {
+                            gSolutionFound = true;
+                            gSolutionScore = gMazeCellScore[i];
+                        }
+                    }
+                }
+            }
+
+            if ((true == gSolutionFound) && (0 == gSolutionStack.length)) {
+
+                backTrackSolution();
+            }
+        }
+
+        function backTrackSolution (){
+                gSolutionStack = [];
+                gSolutionStack.push(gMaze.mMazeStartIndex)
+
+                for (var i = gSolutionScore; i > 1 ; --i) {
+
+                    var wCoordinate = gMaze.getMazeCoordinate(gSolutionStack[gSolutionStack.length - 1]);
+
+                        var wMinScore = gMazeCellScore.length;
+                        var wMinScoreIndex = 0;
+                        var wHasNewValue = false;
+                    for (var j = 0; j < 4 ; ++j) {
+
+                            var wX = wCoordinate.x + 1;
+                            var wY = wCoordinate.y;
+
+
+                            if( 0 == j) {
+
+                              wX = wCoordinate.x + 1;
+                              wY = wCoordinate.y;
+
+                            }
+
+                            else if( 1 == j) {
+
+                              wX = wCoordinate.x - 1;
+                              wY = wCoordinate.y;
+
+                            }
+
+                            else if( 2 == j) {
+
+                              wX = wCoordinate.x;
+                              wY = wCoordinate.y + 1;
+
+                            }
+                            else if( 3 == j) {
+
+                              wX = wCoordinate.x;
+                              wY = wCoordinate.y - 1;
+
+                            }
+
+                            if ((wX >= 0) && (wX < gMazeWidth)) {
+                                if ((wY >= 0) && (wY < gMazeHeight)) {
+                                    var k = gMaze.getMazeIndex(wX, wY);
+
+                                    if (0 != gMazeCellScore[k]) {
+
+                                        if (wMinScore > gMazeCellScore[k]) {
+                                            wMinScore = gMazeCellScore[k];
+                                            wMinScoreIndex = k;
+
+                                            wHasNewValue = true;
+                                        }
+                                    }
+                                }
+                            }
+
+                        }
+
+
+                        if (true == wHasNewValue) {
+
+                            gSolutionStack.push(wMinScoreIndex);
+                        }
+
+                }
+        }
+
+
+
+        function drawMazeCell(iCtx, iCellIndex, iCellWidth, iCellHeight) {
+
+            iCtx.strokeStyle = "purple";
+            var wScale = 0.45 * iCellHeight;
+
+            if (0 != gMazeCellScore[iCellIndex]) {
+
+
+                var wCellOffset = iCellWidth*0.2;
+                var wCellReduce = iCellWidth*0.4;
+
+                iCtx.beginPath();
+
+                iCtx.fillStyle = "blue";
+                iCtx.globalAlpha = 0.6*gMazeCellScore[iCellIndex] / gScoreMax;
+
+                iCtx.rect(-0.5 * iCellWidth + wCellOffset, -0.5 * iCellHeight + wCellOffset, iCellWidth - wCellReduce,  iCellHeight - wCellReduce);
+                iCtx.fill();
+            
+                iCtx.globalAlpha = 1.0;
+
+                iCtx.beginPath();
+
+                iCtx.fillStyle = "lime";
+                iCtx.globalAlpha = 0.6*(1 - gMazeCellScore[iCellIndex] / gScoreMax);
+
+
+                iCtx.rect(-0.5 * iCellWidth + wCellOffset, -0.5 * iCellHeight + wCellOffset, iCellWidth - wCellReduce, iCellHeight - wCellReduce);
+                iCtx.fill();
+                iCtx.globalAlpha = 1.0;
+
+
+                if( true == gSolutionFound ) {
+
+                    var wIsSolution = false;
+
+                    for (var i = 0; i < gSolutionStack.length ; ++i) {
+
+                        if(parseInt(iCellIndex) == parseInt(gSolutionStack[i])) {
+                            wIsSolution = true;
+                            break;
+                        }
+                    }
+
+                    if ( true == wIsSolution ){
+
+                        iCtx.fillStyle = "magenta";
+                        iCtx.strokeStyle = "magenta";
+
+                        iCtx.beginPath();
+                        iCtx.arc(0,0,iCellWidth*0.2,0,2*Math.PI);
+                        iCtx.fill();
+                        iCtx.stroke();
+                    }
+                }
+
+                if( 30 < iCellHeight)
+                {
+
+                    iCtx.fillStyle = "white";
+                    iCtx.strokeStyle = "white";
+
+                    var wTextMargin = 0.15 * iCellHeight;
+                    iCtx.textAlign = "center";
+                    iCtx.textBaseline = "middle";
+                    iCtx.fillText(gMazeCellScore[iCellIndex], 0, 0);
+
+                }
+
+            }
+        }
+
+
+    </script>
+
+  <script async src="//pagead2.googlesyndication.com/pagead/js/adsbygoogle.js"></script>
+  <script>
+    (adsbygoogle = window.adsbygoogle || []).push({
+      google_ad_client: "ca-pub-8218122073733389",
+      enable_page_level_ads: true
+    });
+  </script>
+
+
+</head>
+<body onload="init()" onresize ="resize()">
+
+    <div id="Title">Path Finding</div>
+    <div id="Content">
+        <p>This is a path finding algorithm demonstration. The maze is randomly generated. The algorithm will search the maze to find the shortest path from the top left corner to the bottom right corner.</p>
+        <p>You could manually alter the tiles by simply clicking on the maze.</p>
+        <p>Enjoy!</p>
+    </div>
+    </br>
+
+    <div id="Method_Selection">
+        <h1>Path Finding Algorithm Selection</h1>
+        </br>
+        <input type="radio" id="method_flood" name="methodSelection" onchange = "methodChange()" checked="true"><span>Flood</span>
+        </br>
+        <input type="radio" id="method_astar" name="methodSelection" onchange = "methodChange()"><span>A* Algorithm</span>
+        </br>
+        <input type="radio" id="method_dijkstra" name="methodSelection" onchange = "methodChange()"><span>Dijkstra's Algorithm</span>
+    </div>
+
+    <div id="CanvasContainer">
+        <canvas id="OuputCanvas" onclick="MazeClick()"></canvas>
+    </div>
+    </br>
+
+  <div class="AdsenseAd">
+    <script async src="//pagead2.googlesyndication.com/pagead/js/adsbygoogle.js"></script>
+    <ins class="adsbygoogle"
+         style="display:block"
+         data-ad-client="ca-pub-8218122073733389"
+         data-ad-slot="1437418951"
+         data-ad-format="auto"></ins>
+    <script>
+      (adsbygoogle = window.adsbygoogle || []).push({});
+    </script>
+  </div>
+  </br>
+  
+  <div class="AdsenseAd">
+    <script async src="//pagead2.googlesyndication.com/pagead/js/adsbygoogle.js"></script>
+    <ins class="adsbygoogle"
+         style="display:block"
+         data-ad-client="ca-pub-8218122073733389"
+         data-ad-slot="1437418951"
+         data-ad-format="auto"></ins>
+    <script>
+      (adsbygoogle = window.adsbygoogle || []).push({});
+    </script>
+  </div>
+  </br>
+
+  <div class="AdsenseAd">
+    <script async src="//pagead2.googlesyndication.com/pagead/js/adsbygoogle.js"></script>
+    <ins class="adsbygoogle"
+         style="display:block"
+         data-ad-client="ca-pub-8218122073733389"
+         data-ad-slot="1437418951"
+         data-ad-format="auto"></ins>
+    <script>
+      (adsbygoogle = window.adsbygoogle || []).push({});
+    </script>
+  </div>
+
+</body>
+</html>

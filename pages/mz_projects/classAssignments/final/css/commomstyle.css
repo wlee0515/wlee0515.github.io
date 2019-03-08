@@ -1,0 +1,58 @@
+/*** COMMON STYLE  ***/
+
+*{
+	margin: 0;
+	padding: 0;
+	box-sizing:border-box;
+}
+
+html, body{
+	height: 100%;
+}
+
+nav{
+	position: fixed;
+	top: 0;
+	width: 100%;
+	z-index: 99;
+	text-align: right;
+	background-color: #7E8AA2;
+	padding: 0.8%;
+	text-transform: uppercase;
+}
+
+nav a:link{
+	display: inline-block;
+	margin-right: 15px;
+	text-decoration: none;
+	color: #eee;
+}
+
+nav a:visited{
+	color: #eee;
+}
+
+nav a:hover {
+	color: #5CCFD3;
+	font-style: italic;
+}
+
+footer{
+	background:  #7E8AA2;
+	bottom-margin:0;
+	height: 30px;
+	padding: 1.2%;
+	width: 100%;
+	text-align: center;
+	color: #eee;
+	font-size: 20px;
+	font-family: verdana, sans-serif;
+	font-style: italic;
+	text-transform: capitalize;	
+	vertical-align:middle;
+}
+footer p{ 
+	line-height:0px; 
+}
+
+
