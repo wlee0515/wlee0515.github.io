@@ -8,8 +8,7 @@
 
         #CanvasContainer
         {
-            height : 100%;
-            width : 100%;
+            width : 90%;
             margin-top: 30px;
             margin-bottom: 30px;
             padding-left: 20;
@@ -23,7 +22,8 @@
     </style>
 
 
-    <link rel="stylesheet" href="../../css/theme_01.css" >
+    <link rel="stylesheet" href="../../css/theme_01.css" />
+    <script src="../../javascript/utility.js"></script>
 
     <script type="text/javascript">
 
@@ -76,8 +76,7 @@
 
         function resize() {
             var wCanvas = document.getElementById("OuputCanvas");
-            var wSize = wCanvas.parentElement.clientHeight;
-            if (wSize > wCanvas.parentElement.clientWidth) wSize = wCanvas.parentElement.clientWidth;
+            var wSize = wCanvas.parentElement.clientWidth;
 
             wCanvas.height = wSize - 2;
             wCanvas.width = wSize - 2;
@@ -123,30 +122,7 @@
                 resetSolution();
         }
 
-        function getAllScroll(iDOM){
-            var wScrollX = iDOM.scrollLeft;
-            var wScrollY = iDOM.scrollTop;
-            
-            var wCurrentDOM = iDOM;
-            
-            while(wCurrentDOM != document.body){
-            
-               wScrollX += wCurrentDOM.scrollLeft;
-               wScrollY += wCurrentDOM.scrollTop;
-              
-               wCurrentDOM = wCurrentDOM.parentNode;
-            }
-            
-            
-               wScrollX += wCurrentDOM.scrollLeft;
-               wScrollY += wCurrentDOM.scrollTop;
-           
-            return {
-            x: wScrollX,
-            y: wScrollY,
-            };
-          
-        }
+
         function MazeClick(iEvent) {
 
             if (null != iEvent) {
