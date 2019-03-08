@@ -5,15 +5,6 @@
     <title>Path Fnding</title>
     <style>
 
-        #Method_Selection
-        {
-    text-decoration: none;
-    font-size: 20px;
-    font-family: 'Josefin Slab', serif;
-    color: darkgray;
-    padding-left: 20;
-    padding-right: 20;
-        }
 
         #CanvasContainer
         {
@@ -32,10 +23,7 @@
     </style>
 
 
-    <script src="../../javascript/default_nav.js"></script>
-    <script src="../../javascript/PageGenerationScript.js"></script>
-    <link rel="stylesheet" href="../../css/PageGenerationDesign.css">
-    <link rel="stylesheet" href="../../css/default.css" >
+    <link rel="stylesheet" href="../../css/theme_01.css" >
 
     <script type="text/javascript">
 
@@ -61,8 +49,6 @@
         var gFirstPass = true;
 
         function init() {
-
-            generateNavBar();
 
             gMaze = new Maze(gMazeWidth, gMazeHeight);
             gMaze.cellDrawFunction = drawMazeCell;
@@ -137,6 +123,30 @@
                 resetSolution();
         }
 
+        function getAllScroll(iDOM){
+            var wScrollX = iDOM.scrollLeft;
+            var wScrollY = iDOM.scrollTop;
+            
+            var wCurrentDOM = iDOM;
+            
+            while(wCurrentDOM != document.body){
+            
+               wScrollX += wCurrentDOM.scrollLeft;
+               wScrollY += wCurrentDOM.scrollTop;
+              
+               wCurrentDOM = wCurrentDOM.parentNode;
+            }
+            
+            
+               wScrollX += wCurrentDOM.scrollLeft;
+               wScrollY += wCurrentDOM.scrollTop;
+           
+            return {
+            x: wScrollX,
+            y: wScrollY,
+            };
+          
+        }
         function MazeClick(iEvent) {
 
             if (null != iEvent) {
@@ -149,8 +159,9 @@
                 var wCellSizeX = wSize / gMazeWidth;
                 var wCellSizeY = wSize / gMazeHeight;
 
-                x = Math.floor((iEvent.clientX + document.body.scrollLeft - wCanvas.offsetLeft) / wCellSizeX);
-                y = Math.floor((iEvent.clientY + document.body.scrollTop - wCanvas.offsetTop) / wCellSizeY);
+                var wScroll = getAllScroll(wCanvas)
+                x = Math.floor((iEvent.clientX + wScroll.x - wCanvas.offsetLeft) / wCellSizeX);
+                y = Math.floor((iEvent.clientY + wScroll.y - wCanvas.offsetTop) / wCellSizeY);
 
                 gMaze.toggleMazeCoordinate(x, y);
 
@@ -618,20 +629,12 @@
 
 
     </script>
-
-  <script async src="//pagead2.googlesyndication.com/pagead/js/adsbygoogle.js"></script>
-  <script>
-    (adsbygoogle = window.adsbygoogle || []).push({
-      google_ad_client: "ca-pub-8218122073733389",
-      enable_page_level_ads: true
-    });
-  </script>
-
-
+    
 </head>
 <body onload="init()" onresize ="resize()">
 
-    <div id="Title">Path Finding</div>
+  <div id="main-content-div">
+    <h1>Path Finding</h1>
     <div id="Content">
         <p>This is a path finding algorithm demonstration. The maze is randomly generated. The algorithm will search the maze to find the shortest path from the top left corner to the bottom right corner.</p>
         <p>You could manually alter the tiles by simply clicking on the maze.</p>
@@ -654,43 +657,6 @@
     </div>
     </br>
 
-  <div class="AdsenseAd">
-    <script async src="//pagead2.googlesyndication.com/pagead/js/adsbygoogle.js"></script>
-    <ins class="adsbygoogle"
-         style="display:block"
-         data-ad-client="ca-pub-8218122073733389"
-         data-ad-slot="1437418951"
-         data-ad-format="auto"></ins>
-    <script>
-      (adsbygoogle = window.adsbygoogle || []).push({});
-    </script>
   </div>
-  </br>
-  
-  <div class="AdsenseAd">
-    <script async src="//pagead2.googlesyndication.com/pagead/js/adsbygoogle.js"></script>
-    <ins class="adsbygoogle"
-         style="display:block"
-         data-ad-client="ca-pub-8218122073733389"
-         data-ad-slot="1437418951"
-         data-ad-format="auto"></ins>
-    <script>
-      (adsbygoogle = window.adsbygoogle || []).push({});
-    </script>
-  </div>
-  </br>
-
-  <div class="AdsenseAd">
-    <script async src="//pagead2.googlesyndication.com/pagead/js/adsbygoogle.js"></script>
-    <ins class="adsbygoogle"
-         style="display:block"
-         data-ad-client="ca-pub-8218122073733389"
-         data-ad-slot="1437418951"
-         data-ad-format="auto"></ins>
-    <script>
-      (adsbygoogle = window.adsbygoogle || []).push({});
-    </script>
-  </div>
-
 </body>
 </html>
