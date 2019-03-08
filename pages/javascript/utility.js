@@ -16,5 +16,29 @@ function getUrlParameter(iParameter)
     return "";
 }
 
+function getAllScroll(iDOM){
+    var wScrollX = iDOM.scrollLeft;
+    var wScrollY = iDOM.scrollTop;
+    
+    var wCurrentDOM = iDOM;
+    
+    while(wCurrentDOM != document.body){
+    
+       wScrollX += wCurrentDOM.scrollLeft;
+       wScrollY += wCurrentDOM.scrollTop;
+      
+       wCurrentDOM = wCurrentDOM.parentNode;
+    }
+    
+    
+       wScrollX += wCurrentDOM.scrollLeft;
+       wScrollY += wCurrentDOM.scrollTop;
+   
+    return {
+    x: wScrollX,
+    y: wScrollY,
+    };
+  
+}
 
 -->
