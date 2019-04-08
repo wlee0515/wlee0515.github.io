@@ -167,7 +167,7 @@
       // calculateAgentState(iDTime, gAgentContactManager);
       // calculateAgentDecision(gAgentContactManager);
 
-      calculateTactics(iDTime, gEntityPositionManager);
+      calculateTactics(iDTime, gTacticalNavigationServer, gEntityPositionManager);
       calculateEntityLocation(iDTime, gEntityPositionManager);
 
       if (null != gCanvasDOM) {
@@ -184,7 +184,9 @@
       }
     }
 
-    function calculateTactics(iDTime, iEntityManager) {
+    function calculateTactics(iDTime, iTacticsServer, iEntityManager) {
+      iTacticsServer.processTime(iDTime);
+    
       var wEntityList = iEntityManager.getEntityList();
       for (var i = 0; i < wEntityList.length; ++i) {
         var wEntityRef = wEntityList[i];
