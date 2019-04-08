@@ -4,6 +4,7 @@
   <script src="..\..\javascript\commonMath.js"></script>
   <script src="..\..\javascript\matrix.js"></script>
   <script src="javascript\entity.js"></script>
+  <script src="javascript\tactic.js"></script>
   <!-- fill iPhone screen with canvas -->
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Battlefield Simulation</title>
@@ -54,9 +55,8 @@
     var gControlPointScale = 1.0;
     var gControlPointScaleInitialDist = -1;
 
-    var gAgentContactManager
     var gEntityPositionManager = new EntityPositionManager();
-
+    var gTacticalNavigationServer = new TacticalNavigationServer();
 
     var gActionList = Array("fwd", "left", "right", "ahoot", "jab");
     var gActionCost = Array( 1.0 ,   1.5 ,    1.5 ,    3.0 ,  2.0 );
@@ -67,6 +67,7 @@
         this.mIsDead = false;
         this.mIsHit = false;
         this.mContacts = [];
+        this.TacticalUnit = gTacticalNavigationServer.addTacticalUnit();
     }
     
     function CreateNewEntity(iEntityManager,iX, iY, iZ) {
@@ -76,143 +77,15 @@
         return wEntity;
     }
     
-    function Agent()
-    {
-      this.reset = function () {
-        this.mX = 0.0;
-        this.mY = 0.0;
-        this.mAngle = 0.0;
-
-        this.mSpeed = 0.0;
-        this.mTurnRate = 0.0;
-
-        this.mHealth = 0.0;
-        this.mRemainingTime = 0.0;
-        this.mIsDead = false;
-        this.mIsHit = false;
-
-        this.mInputVector = [];
-//        this.mAgentBrain = new RecursiveNeuralNet(gAgentFOVIntervals, 2 * gAgentFOVIntervals, 3);
-      }
-
-      this.reset();
-    }
-    
-    function BearingAndRange(iBearing, iRange)
-    {
-      this.mBearing = iBearing;
-      this.mRange = iRange;
-    }
-
-    function AgentManager(iAgentCount)
-    {
-      this.mAgentList = null;
-      this.mLiveAgentList = null;
-
-      this.resetAgent = function(iAgent)
-      {
-        iAgent.mX = Math.random() * 2 * gOuterWallRadius - gOuterWallRadius; //Math.floor(i / 10) * 100;
-        iAgent.mY = Math.random() * 2 * gOuterWallRadius - gOuterWallRadius; //  (i % 10) * 100;
-        iAgent.mAngle = Math.random() * 2 * Math.PI;
-        iAgent.mRemainingTime = gAgentInitTime;
-        iAgent.mHealth = gAgentInitHealth;
-        iAgent.mIsDead = false;
-        iAgent.mIsHit = false;
-      }
-
-      this.reset = function () {
-        this.mAgentList = [];
-        this.mLiveAgentList = [];
-
-        for (var i = 0; i < iAgentCount; ++i) {
-          var wNewAgent = new Agent();
-          this.resetAgent(wNewAgent);
-          wNewAgent.mRemainingTime = Math.random() * gAgentInitTime;
-
-
-          this.mAgentList.push(wNewAgent);
-          this.mLiveAgentList.push(i);
-        }
-
-        this.updateAgentContact();
-      }
-
-      this.updateAgentContact = function () {
-        this.mAgentContactList = [];
-        for (var i = 0; i < this.mAgentList.length; ++i) {
-
-          var wNewRow = [];
-
-          for (var j = 0; j < i; ++j) {
-            var wDeltaX = this.mAgentList[j].mX - this.mAgentList[i].mX;
-            var wDeltaY = this.mAgentList[j].mY - this.mAgentList[i].mY;
-
-            var iBearing = Math.atan2(wDeltaY,wDeltaX);
-            var iRange = Math.sqrt(wDeltaX*wDeltaX + wDeltaY*wDeltaY);
-            
-            wNewRow.push(new BearingAndRange(iBearing, iRange));
-          }
-          this.mAgentContactList.push(wNewRow);
-        }
-      }
-
-      this.getContact = function (iFrom, iTo)
-      {
-        if(iFrom == iTo) {
-          return new BearingAndRange(0, 0);
-        }
-        else if (iFrom > iTo) {
-
-          var wContact = this.mAgentContactList[iFrom][iTo];
-
-          if (null == wContact) {
-            var wHi = 0;
-            wHi += 2;
-            wHi += 2;
-
-          }
-
-          return wContact;
-        }
-
-        var wInvContact = this.mAgentContactList[iTo][iFrom];
-
-        if (null == wInvContact)
-        {
-          var wHi = 0;
-          wHi += 2;
-          wHi += 2;
-
-        }
-        var wNewBearing = normalizeAngle( wInvContact.mBearing + Math.PI);
-        return new BearingAndRange(wNewBearing, wInvContact.mRange);
-      }
-
-      this.reset();
-
-      this.getRandomLiveAgent = function()
-      {
-        if (0.05*gAgentCount >= this.mLiveAgentList.length)
-        {
-          return null;
-        }
-
-        var wIndex = Math.floor(Math.random() * this.mLiveAgentList.length).toFixed();
-        return this.mAgentList[this.mLiveAgentList[wIndex]];
-      }
-    }
-
 
     function init()
     {
-      gEntity = CreateNewEntity(gEntityPositionManager,10,10,0);      
-      gEntity = CreateNewEntity(gEntityPositionManager,-20,20,0);      
-      gEntity = CreateNewEntity(gEntityPositionManager,30,-30,0);      
-      gEntity = CreateNewEntity(gEntityPositionManager,-40,-40,0);      
-      gEntity.InputEntityAcceleration = [1,0,0];
+      for(var i = 0; i < gAgentCount; ++i) {
+        var x = (2*Math.random() -1)*gOuterWallRadius;
+        var y = (2*Math.random() -1)*gOuterWallRadius;
+        CreateNewEntity(gEntityPositionManager,x,y,0);      
+      }
       
-      gAgentContactManager = new AgentManager(gAgentCount);
-
       var wDOM = document.getElementById("Arena");
       if (null != wDOM)
       {
@@ -289,11 +162,12 @@
 
     function processTick(iDTime)
     {
-      gAgentContactManager.updateAgentContact();
+      //gAgentContactManager.updateAgentContact();
 
-      calculateAgentState(iDTime, gAgentContactManager);
-      calculateAgentDecision(gAgentContactManager);
+      // calculateAgentState(iDTime, gAgentContactManager);
+      // calculateAgentDecision(gAgentContactManager);
 
+      calculateTactics(iDTime, gEntityPositionManager);
       calculateEntityLocation(iDTime, gEntityPositionManager);
 
       if (null != gCanvasDOM) {
@@ -310,6 +184,28 @@
       }
     }
 
+    function calculateTactics(iDTime, iEntityManager) {
+      var wEntityList = iEntityManager.getEntityList();
+      for (var i = 0; i < wEntityList.length; ++i) {
+        var wEntityRef = wEntityList[i];
+        var wTacticRef = wEntityRef.metadata.TacticalUnit;
+        
+        var wCurrentPosition = wEntityRef.EntityPosition.getColumn(0);
+        
+        var wTgtMat = new matrix(3,1);
+        wTgtMat.setColumn(0,wTacticRef.TacticalUnitTgtPosition);
+        
+        var wDeltaPosition = wTgtMat.getSubtraction(wEntityRef.EntityPosition);
+        wDeltaPosition.scale(0.001);
+        
+//        var wTagetPosition = wTacticRef.TacticalUnitTgtPosition;
+//        var wTagetAngularPosition = wTacticRef.TacticalUnitTgtPosition;
+        
+        
+        wEntityRef.InputEntityAcceleration = wDeltaPosition.getColumn(0);
+      }
+    }
+    
     function calculateEntityLocation(iDTime, iEntityManager) {
 
       iEntityManager.integrate(iDTime);
