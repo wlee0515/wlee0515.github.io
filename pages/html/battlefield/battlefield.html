@@ -1,0 +1,637 @@
+<html>
+<head>
+  <script src="..\..\javascript\ControlDOM.js"></script>
+  <script src="..\..\javascript\commonMath.js"></script>
+  <script src="..\..\javascript\matrix.js"></script>
+  <script src="javascript\entity.js"></script>
+  <!-- fill iPhone screen with canvas -->
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Battlefield Simulation</title>
+  <style>
+    body {
+      margin: 0;
+      padding: 0;
+      background-color : black;
+    }
+
+    div {
+      width: 100%;
+      height: 100%;
+    }
+
+  </style>
+  <script type="text/javascript">
+
+    var gCanvasDOM = null;
+    var gOuterWallRadius = 1000;
+    var gInnerWallRadius = 100;
+    var gWallMargin = 25;
+    var gAgentRadius = 10;
+    var gAgentFOV = Math.PI;
+    var gAgentFOVRange = 250.0;
+    var gAgentFOVIntervals = 15;
+    var gAgentInitTime = 10000.0;
+    var gAgentInitHealth = 100.0;
+    var gAgentHealthDecay = 1.0;
+    var gAgentHitFOV = Math.PI/16;
+    var gAgentHitRangeMax = 2.0 * gAgentRadius;
+    var gAgentHitRangeMin = gAgentRadius;
+    var gAgentHitDamage = 15.0;
+    var gAgentHitRecover = 0.75 * gAgentHitDamage;
+    var gAgentReviveTime = 10.0;
+    var gAgentMaxSpeed = 100.0;
+    var gAgentMaxAcceleration = 100.0;
+    var gAgentMaxTurnRate = 10*Math.PI;
+
+    var gAgentCount = 100;
+
+    var gTranslateX = 0;
+    var gTranslateY = 0;
+    var gScale = 1.0;
+
+    var gControlPointTranslateX = 0;
+    var gControlPointTranslateY = 0;
+    var gControlPointScale = 1.0;
+    var gControlPointScaleInitialDist = -1;
+
+    var gAgentContactManager
+    var gEntityPositionManager = new EntityPositionManager();
+
+
+    var gActionList = Array("fwd", "left", "right", "ahoot", "jab");
+    var gActionCost = Array( 1.0 ,   1.5 ,    1.5 ,    3.0 ,  2.0 );
+
+
+    function EntityMetaData() {
+        this.mHealth = gAgentInitHealth;
+        this.mIsDead = false;
+        this.mIsHit = false;
+        this.mContacts = [];
+    }
+    
+    function CreateNewEntity(iEntityManager,iX, iY, iZ) {
+        var wEntity = new Entity(gAgentMaxSpeed, gAgentMaxAcceleration);
+        wEntity.metadata  = new EntityMetaData();
+        iEntityManager.addEntity(wEntity, iX, iY, iZ);
+        return wEntity;
+    }
+    
+    function Agent()
+    {
+      this.reset = function () {
+        this.mX = 0.0;
+        this.mY = 0.0;
+        this.mAngle = 0.0;
+
+        this.mSpeed = 0.0;
+        this.mTurnRate = 0.0;
+
+        this.mHealth = 0.0;
+        this.mRemainingTime = 0.0;
+        this.mIsDead = false;
+        this.mIsHit = false;
+
+        this.mInputVector = [];
+//        this.mAgentBrain = new RecursiveNeuralNet(gAgentFOVIntervals, 2 * gAgentFOVIntervals, 3);
+      }
+
+      this.reset();
+    }
+    
+    function BearingAndRange(iBearing, iRange)
+    {
+      this.mBearing = iBearing;
+      this.mRange = iRange;
+    }
+
+    function AgentManager(iAgentCount)
+    {
+      this.mAgentList = null;
+      this.mLiveAgentList = null;
+
+      this.resetAgent = function(iAgent)
+      {
+        iAgent.mX = Math.random() * 2 * gOuterWallRadius - gOuterWallRadius; //Math.floor(i / 10) * 100;
+        iAgent.mY = Math.random() * 2 * gOuterWallRadius - gOuterWallRadius; //  (i % 10) * 100;
+        iAgent.mAngle = Math.random() * 2 * Math.PI;
+        iAgent.mRemainingTime = gAgentInitTime;
+        iAgent.mHealth = gAgentInitHealth;
+        iAgent.mIsDead = false;
+        iAgent.mIsHit = false;
+      }
+
+      this.reset = function () {
+        this.mAgentList = [];
+        this.mLiveAgentList = [];
+
+        for (var i = 0; i < iAgentCount; ++i) {
+          var wNewAgent = new Agent();
+          this.resetAgent(wNewAgent);
+          wNewAgent.mRemainingTime = Math.random() * gAgentInitTime;
+
+
+          this.mAgentList.push(wNewAgent);
+          this.mLiveAgentList.push(i);
+        }
+
+        this.updateAgentContact();
+      }
+
+      this.updateAgentContact = function () {
+        this.mAgentContactList = [];
+        for (var i = 0; i < this.mAgentList.length; ++i) {
+
+          var wNewRow = [];
+
+          for (var j = 0; j < i; ++j) {
+            var wDeltaX = this.mAgentList[j].mX - this.mAgentList[i].mX;
+            var wDeltaY = this.mAgentList[j].mY - this.mAgentList[i].mY;
+
+            var iBearing = Math.atan2(wDeltaY,wDeltaX);
+            var iRange = Math.sqrt(wDeltaX*wDeltaX + wDeltaY*wDeltaY);
+            
+            wNewRow.push(new BearingAndRange(iBearing, iRange));
+          }
+          this.mAgentContactList.push(wNewRow);
+        }
+      }
+
+      this.getContact = function (iFrom, iTo)
+      {
+        if(iFrom == iTo) {
+          return new BearingAndRange(0, 0);
+        }
+        else if (iFrom > iTo) {
+
+          var wContact = this.mAgentContactList[iFrom][iTo];
+
+          if (null == wContact) {
+            var wHi = 0;
+            wHi += 2;
+            wHi += 2;
+
+          }
+
+          return wContact;
+        }
+
+        var wInvContact = this.mAgentContactList[iTo][iFrom];
+
+        if (null == wInvContact)
+        {
+          var wHi = 0;
+          wHi += 2;
+          wHi += 2;
+
+        }
+        var wNewBearing = normalizeAngle( wInvContact.mBearing + Math.PI);
+        return new BearingAndRange(wNewBearing, wInvContact.mRange);
+      }
+
+      this.reset();
+
+      this.getRandomLiveAgent = function()
+      {
+        if (0.05*gAgentCount >= this.mLiveAgentList.length)
+        {
+          return null;
+        }
+
+        var wIndex = Math.floor(Math.random() * this.mLiveAgentList.length).toFixed();
+        return this.mAgentList[this.mLiveAgentList[wIndex]];
+      }
+    }
+
+
+    function init()
+    {
+      gEntity = CreateNewEntity(gEntityPositionManager,10,10,0);      
+      gEntity = CreateNewEntity(gEntityPositionManager,-20,20,0);      
+      gEntity = CreateNewEntity(gEntityPositionManager,30,-30,0);      
+      gEntity = CreateNewEntity(gEntityPositionManager,-40,-40,0);      
+      gEntity.InputEntityAcceleration = [1,0,0];
+      
+      gAgentContactManager = new AgentManager(gAgentCount);
+
+      var wDOM = document.getElementById("Arena");
+      if (null != wDOM)
+      {
+        gCanvasDOM = new ControlDOM(wDOM, 20);
+
+        gCanvasDOM.run = processTick;
+        gCanvasDOM.onControlPointUpdate = processControlPoints;
+
+        gCanvasDOM.init();
+      }
+    }
+    
+    function processControlPoints(iControlPoints)
+    {
+      var wActiveIndex1 = -2
+      var wActiveIndex2 = -2
+      for(var i = 0; i < iControlPoints.length; ++i )
+      {
+        if(true == iControlPoints[i].mActive)
+        {
+          if (-2 == wActiveIndex1)
+          {
+            wActiveIndex1 = i;
+          }
+          else if (-2 == wActiveIndex2)
+          {
+            wActiveIndex2 = i;
+          }
+        }
+      }
+
+      if ((-2 != wActiveIndex1) && (-2 == wActiveIndex2) && (0.0 > gControlPointScaleInitialDist))
+      {
+        gControlPointTranslateX = iControlPoints[wActiveIndex1].mMovementX;
+        gControlPointTranslateY = iControlPoints[wActiveIndex1].mMovementY;
+      }
+      else if ((-2 != wActiveIndex1) && (-2 != wActiveIndex2))
+      {
+        if (0.0 > gControlPointScaleInitialDist)
+        {
+          var wX = iControlPoints[wActiveIndex1].mX - iControlPoints[wActiveIndex2].mX;
+          var wY = iControlPoints[wActiveIndex1].mY - iControlPoints[wActiveIndex2].mY;
+          gControlPointScaleInitialDist = Math.sqrt(wX * wX + wY * wY);
+        }
+
+        var wX = iControlPoints[wActiveIndex1].mX - iControlPoints[wActiveIndex2].mX;
+        var wY = iControlPoints[wActiveIndex1].mY - iControlPoints[wActiveIndex2].mY;
+        gControlPointScale = Math.sqrt(wX * wX + wY * wY);
+        gControlPointScale /= gControlPointScaleInitialDist;
+
+        gControlPointTranslateX = iControlPoints[wActiveIndex1].mMovementX;
+        gControlPointTranslateY = iControlPoints[wActiveIndex1].mMovementY;
+
+        gControlPointTranslateX += - gTranslateX * ( (1 - gControlPointScale) / gScale );
+        gControlPointTranslateY += -gTranslateY * ((1 - gControlPointScale) / gScale);
+      }
+      else
+      {
+        gTranslateX += gControlPointTranslateX;
+        gTranslateY += gControlPointTranslateY;
+        gControlPointTranslateX = 0;
+        gControlPointTranslateY = 0;
+        gScale *= gControlPointScale;
+        gControlPointScale = 1.0;
+        gControlPointScaleInitialDist = -1.0;
+
+        if (-2 != wActiveIndex1)
+        {
+          iControlPoints[wActiveIndex1].mMovementX = 0;
+          iControlPoints[wActiveIndex1].mMovementY = 0;
+        }
+      }
+    }
+
+    function processTick(iDTime)
+    {
+      gAgentContactManager.updateAgentContact();
+
+      calculateAgentState(iDTime, gAgentContactManager);
+      calculateAgentDecision(gAgentContactManager);
+
+      calculateEntityLocation(iDTime, gEntityPositionManager);
+
+      if (null != gCanvasDOM) {
+
+        var wDOM = gCanvasDOM.getControlDOM();
+        var wCtx = wDOM.getContext("2d");
+        wCtx.clearRect(0, 0, wDOM.width, wDOM.height);
+
+        resizeCanvasDOM(wDOM);
+        transformCanvas(wCtx, wDOM);
+        drawArenaWall(wCtx);
+        
+        drawArenaEntities(wCtx, gEntityPositionManager);
+      }
+    }
+
+    function calculateEntityLocation(iDTime, iEntityManager) {
+
+      iEntityManager.integrate(iDTime);
+      var wEntityList = iEntityManager.getEntityList();
+      for (var i = 0; i < wEntityList.length; ++i) {
+        var wEntityRef = wEntityList[i];
+        wEntityRef.metadata.mContacts = iEntityManager.calculateEntityRangeAndBearing(wEntityRef.EntityPosition.getColumn(0));
+      }
+    }
+    
+    function drawArenaEntities(iCtx, iEntityManager) {
+    
+        var wEntityList = iEntityManager.getEntityList();
+
+        for (var i = 0; i < wEntityList.length; ++i) {
+          drawArenaEntityContacts(iCtx, wEntityList[i]);
+        }
+        
+        for (var i = 0; i < wEntityList.length; ++i) {
+          drawArenaEntity(iCtx, wEntityList[i]);
+        }
+    }
+    
+    function drawArenaEntityContacts(iCtx, iEntity) {
+    
+      iCtx.lineWidth = 1;
+      
+      if (true == iEntity.metadata.mIsDead) {
+        return;
+      }
+
+      var wCenterX = iEntity.EntityPosition.get(0,0);
+      var wCenterY = iEntity.EntityPosition.get(1,0);
+      var wCenterZ = iEntity.EntityPosition.get(2,0);
+
+      for (var i = 0; i < iEntity.metadata.mContacts.length; ++i) {
+        var wContact = iEntity.metadata.mContacts[i];
+        if (iEntity.EntityID == wContact.EntityID) {
+          continue;
+        }
+        
+        if (wContact.Range < gAgentFOVRange)
+        {
+           var wAngle = Math.abs(normalizeAngle(wContact.Bearing - iEntity.EntityAngularPosition.get(2,0)));
+           if (wAngle < gAgentFOV)
+           {
+              iCtx.strokeStyle = "yellow";
+
+              if ((wContact.Range <= gAgentHitRangeMax) && (wContact.Range >= gAgentHitRangeMin))
+              {
+
+                if(wAngle < gAgentHitFOV)
+                {
+                  iCtx.strokeStyle = "red";
+                }
+              }
+
+              var wEndX = wCenterX + wContact.Dx;
+              var wEndY = wCenterY + wContact.Dy;
+              iCtx.beginPath();
+              iCtx.moveTo(wCenterX,wCenterY);
+              iCtx.lineTo(wEndX, wEndY);
+              iCtx.stroke();
+            }
+          }
+        }
+      
+    }
+    
+    function drawArenaEntity(iCtx, iEntity) {
+      var wX = iEntity.EntityPosition.get(0,0);
+      var wY = iEntity.EntityPosition.get(1,0);
+      var wAngle = iEntity.EntityAngularPosition.get(2,0);
+      
+      iCtx.translate(wX,wY);
+      iCtx.rotate(wAngle);
+
+      iCtx.lineWidth = 2;
+
+      if (true == iEntity.metadata.mIsDead) {
+        iCtx.strokeStyle = "grey";
+      }
+      else
+      {
+        var wAgentFOVResolution = 2 * gAgentFOV / gAgentFOVIntervals;
+
+        iCtx.strokeStyle = "red";
+
+        for (var i = 0; i < gAgentFOVIntervals; ++i)
+        {
+          iCtx.globalAlpha = 1.0;
+          iCtx.beginPath();
+          iCtx.arc(0, 0, gAgentRadius * 2.0 + 5, - gAgentFOV + i * wAgentFOVResolution, - gAgentFOV + (i+1) * wAgentFOVResolution, false);
+          iCtx.stroke();
+        }
+
+        iCtx.globalAlpha = 1.0;
+      
+        iCtx.strokeStyle = "lime";
+        iCtx.beginPath();
+        iCtx.arc(0, 0, gAgentRadius * 2.0, 0, (iEntity.metadata.mHealth/gAgentInitHealth) * 2 * Math.PI, false);
+        iCtx.stroke();
+
+        iCtx.strokeStyle = "magenta";
+        iCtx.beginPath();
+        iCtx.arc(0, 0, gAgentHitRangeMax, -gAgentHitFOV, gAgentHitFOV, false);
+        iCtx.arc(0, 0, gAgentHitRangeMin, gAgentHitFOV, -gAgentHitFOV, true);
+        iCtx.closePath();
+        iCtx.stroke();
+
+        if (true == iEntity.metadata.mIsHit) {
+          iCtx.strokeStyle = "red";
+        }
+        else {
+          iCtx.strokeStyle = "white";
+        }
+      }
+
+      iCtx.beginPath();
+      iCtx.arc(0, 0, gAgentRadius, 0, 2 * Math.PI, false);
+      iCtx.stroke();
+
+      iCtx.beginPath();
+      iCtx.moveTo(0, gAgentRadius);
+      iCtx.lineTo(gAgentRadius * 2, 0);
+      iCtx.lineTo(0, -gAgentRadius);
+      iCtx.stroke();
+
+      iCtx.rotate(-wAngle);
+      iCtx.translate(-wX,-wY);
+    }
+    
+
+    function calculateAgentState(iDTime, iAgentManager) {
+
+      var wLiveAgentList = [];
+      var wHitRadius = gAgentHitRangeMax + gAgentRadius;
+      for (var i = 0; i < iAgentManager.mAgentList.length; ++i) {
+
+        if (false == iAgentManager.mAgentList[i].mIsDead) {
+
+          iAgentManager.mAgentList[i].mIsHit = false;
+
+          for (var j = 0; j < iAgentManager.mAgentList.length; ++j) {
+
+            if (i == j) {
+              continue;
+            }
+
+            if (true == iAgentManager.mAgentList[j].mIsDead) {
+              continue;
+            }
+
+            var wContact = iAgentManager.getContact(j, i);
+            if ((wContact.mRange <= wHitRadius) && (wContact.mRange >= gAgentHitRangeMin)) {
+              if (Math.abs(normalizeAngle(wContact.mBearing - iAgentManager.mAgentList[j].mAngle)) < gAgentHitFOV) {
+                iAgentManager.mAgentList[i].mHealth -= gAgentHitDamage;
+                iAgentManager.mAgentList[j].mHealth += gAgentHitRecover;
+                iAgentManager.mAgentList[i].mIsHit = true;
+              }
+            }
+          }
+        }
+
+        iAgentManager.mAgentList[i].mRemainingTime -= iDTime;
+        iAgentManager.mAgentList[i].mHealth -= iDTime*gAgentHealthDecay;
+
+        if (0.05 > (Math.abs(iAgentManager.mAgentList[i].mSpeed) - gAgentMaxSpeed) / gAgentMaxSpeed)
+        {
+          iAgentManager.mAgentList[i].mHealth -= iDTime*gAgentHealthDecay;
+        }
+
+        if (0.05 > (Math.abs(iAgentManager.mAgentList[i].mTurnRate) - gAgentMaxTurnRate) / gAgentMaxTurnRate) {
+          iAgentManager.mAgentList[i].mHealth -= iDTime*gAgentHealthDecay;
+        }
+
+        if (0 >= iAgentManager.mAgentList[i].mRemainingTime)
+        {
+          iAgentManager.mAgentList[i].mIsDead = true;
+        }
+
+        if (gAgentInitHealth <= iAgentManager.mAgentList[i].mHealth)
+        {
+          iAgentManager.mAgentList[i].mHealth = gAgentInitHealth;
+        }
+        else if (0 >= iAgentManager.mAgentList[i].mHealth)
+        {
+          iAgentManager.mAgentList[i].mIsDead = true;
+        }
+
+        if (true == iAgentManager.mAgentList[i].mIsDead)
+        {
+          iAgentManager.mAgentList[i].mHealth = 0.0;
+
+          if (0 <= iAgentManager.mAgentList[i].mRemainingTime)
+          {
+            iAgentManager.mAgentList[i].mRemainingTime = -gAgentReviveTime/100;
+          }
+
+        }
+        else
+        {
+          wLiveAgentList.push(i);
+        }
+        /*
+        if (-gAgentReviveTime >= iAgentManager.mAgentList[i].mRemainingTime)
+        {
+          iAgentManager.resetAgent(iAgentManager.mAgentList[i]);
+          var wAgent1 = iAgentManager.getRandomLiveAgent();
+          var wAgent2 = iAgentManager.getRandomLiveAgent();
+
+          if ((null == wAgent1) || (null == wAgent2))
+          {
+            iAgentManager.mAgentList[i].mAgentBrain.generateRandomWeights();
+          }
+          else
+          {
+            var wNewWeights = breedSpecimen(wAgent1.mAgentBrain.getWeightsVector(), wAgent2.mAgentBrain.getWeightsVector());
+            iAgentManager.mAgentList[i].mAgentBrain.setWeightsVector(wNewWeights);
+          }
+        }
+        */
+      }
+
+      iAgentManager.mLiveAgentList = wLiveAgentList;
+    }
+
+    function calculateAgentDecision(iAgentManager) {
+
+      var wAgentFOVResolution = 2*gAgentFOV/ gAgentFOVIntervals;
+
+      for (var i = 0; i < iAgentManager.mAgentList.length; ++i) {
+
+        if (true == iAgentManager.mAgentList[i].mIsDead) {
+          continue;
+        }
+
+        var wInputVector = [];
+        for(var k = 0; k < gAgentFOVIntervals; ++k)
+        {
+          wInputVector.push(0.0);
+        }
+        
+        for (var j = 0; j < iAgentManager.mAgentList.length; ++j) {
+
+          if (i == j) {
+            continue;
+          }
+
+          if (true == iAgentManager.mAgentList[j].mIsDead) {
+            continue;
+          }
+
+          var wContact = iAgentManager.getContact(i, j);
+          if (wContact.mRange <= gAgentFOVRange) {
+            var wAngle = normalizeAngle(wContact.mBearing - iAgentManager.mAgentList[i].mAngle);
+            if (Math.abs(wAngle) < gAgentFOV) {
+              var wIndex = Math.floor((wAngle + gAgentFOV) / wAgentFOVResolution).toFixed();
+              var wValue = 1.0 - wContact.mRange / gAgentFOVRange;
+
+              if (wValue > wInputVector[wIndex])
+              {
+                wInputVector[wIndex] = wValue;
+              }
+            }
+          }
+        }
+        iAgentManager.mAgentList[i].mInputVector = wInputVector;
+//        var wOuputVector = iAgentManager.mAgentList[i].mAgentBrain.processInput(wInputVector);
+
+//        iAgentManager.mAgentList[i].mSpeed += 0.9*( wOuputVector[0] * gAgentMaxSpeed - iAgentManager.mAgentList[i].mSpeed);
+ //       iAgentManager.mAgentList[i].mTurnRate = 0.9*((wOuputVector[1] - wOuputVector[2]) * gAgentMaxTurnRate - iAgentManager.mAgentList[i].mTurnRate);
+
+        //iAgentManager.mAgentList[i].mSpeed += wOuputVector[0] * gAgentMaxSpeed;
+        //iAgentManager.mAgentList[i].mTurnRate = (wOuputVector[1] - wOuputVector[2]) * gAgentMaxTurnRate;
+
+      }
+    }
+    
+    function resizeCanvasDOM(iDOM)
+    {
+      if (null != iDOM)
+      {
+        iDOM.width = iDOM.parentNode.clientWidth - 2;
+        iDOM.height = iDOM.parentNode.clientHeight - 2;
+      }
+    }
+
+    function transformCanvas(iCtx, iDOM) {
+      if ((null != iCtx) && (null != iDOM)) {
+        iCtx.translate(iDOM.width / 2 + gTranslateX + gControlPointTranslateX, iDOM.height / 2 + gTranslateY + gControlPointTranslateY);
+        iCtx.scale(gScale * gControlPointScale, gScale * gControlPointScale);
+      }
+    }
+
+    function drawArenaWall(iCtx)
+    {
+      if (null != iCtx)
+      {
+        iCtx.lineWidth = 30;
+        iCtx.strokeStyle = "green";
+        iCtx.beginPath();
+        iCtx.arc(0, 0, gOuterWallRadius, 0, 2 * Math.PI, false);
+        iCtx.stroke();
+
+        iCtx.strokeStyle = "red";
+        iCtx.beginPath();
+        iCtx.arc(0, 0, gInnerWallRadius, 0, 2 * Math.PI, false);
+        iCtx.stroke();
+        iCtx.lineWidth = 2;
+      }
+    }
+
+
+  </script>
+</head>
+<body onload="init()">
+  <div>
+    <canvas id="Arena" style="border:1px solid #999"></canvas>
+  </div>
+  <!--
+  <div id="TextArea"></div>
+  -->
+</body>
+</html>
