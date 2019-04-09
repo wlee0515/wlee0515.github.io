@@ -28,7 +28,7 @@
     var gInnerWallRadius = 100;
     var gWallMargin = 25;
     var gAgentRadius = 10;
-    var gAgentFOV = Math.PI;
+    var gAgentFOV = Math.PI/3;
     var gAgentFOVRange = 250.0;
     var gAgentFOVIntervals = 15;
     var gAgentInitTime = 10000.0;
@@ -70,20 +70,26 @@
         this.TacticalUnit = gTacticalNavigationServer.addTacticalUnit();
     }
     
-    function CreateNewEntity(iEntityManager,iX, iY, iZ) {
+    function CreateNewEntity(iEntityManager,iX, iY, iPsi) {
         var wEntity = new Entity(gAgentMaxSpeed, gAgentMaxAcceleration);
         wEntity.metadata  = new EntityMetaData();
-        iEntityManager.addEntity(wEntity, iX, iY, iZ);
+        iEntityManager.addEntity(wEntity, iX, iY, 0,0,0,iPsi);
         return wEntity;
     }
     
+    
+    function RemoveEntity(iEntityManager,iEntity) {
+        gTacticalNavigationServer.removeTacticalUnit(wEntity.metadata.TacticalUnit.TacticalUnitID);
+        iEntityManager.removeEntity(wEntity);
+    }
 
     function init()
     {
       for(var i = 0; i < gAgentCount; ++i) {
         var x = (2*Math.random() -1)*gOuterWallRadius;
         var y = (2*Math.random() -1)*gOuterWallRadius;
-        CreateNewEntity(gEntityPositionManager,x,y,0);      
+        var psi = (2*Math.random() -1)*Math.PI;
+        CreateNewEntity(gEntityPositionManager,x,y,psi);      
       }
       
       var wDOM = document.getElementById("Arena");
@@ -214,7 +220,30 @@
       var wEntityList = iEntityManager.getEntityList();
       for (var i = 0; i < wEntityList.length; ++i) {
         var wEntityRef = wEntityList[i];
-        wEntityRef.metadata.mContacts = iEntityManager.calculateEntityRangeAndBearing(wEntityRef.EntityPosition.getColumn(0));
+        
+        var wContactList = iEntityManager.calculateEntityRangeAndBearing(wEntityRef.EntityPosition.getColumn(0));
+        wEntityRef.metadata.mContacts = [] ;
+        
+        
+        for (var j = 0; j < wContactList.length; ++j) {
+          var wContact = wContactList[j];
+          if (null != wContact) {
+            if (wEntityRef.EntityID == wContact.EntityID) {
+              continue;
+            }
+          
+            if (wContact.Range > gAgentFOVRange) {
+              continue;
+            }
+            
+            var wFOVAngle = Math.abs(normalizeAngle(wContact.Bearing - wEntityRef.EntityAngularPosition.get(2,0)));
+            if (wFOVAngle > gAgentFOV) {
+              continue;
+            }
+            
+            wEntityRef.metadata.mContacts .push(wContact);
+          }
+        }
       }
     }
     
@@ -238,43 +267,41 @@
       if (true == iEntity.metadata.mIsDead) {
         return;
       }
-
-      var wCenterX = iEntity.EntityPosition.get(0,0);
-      var wCenterY = iEntity.EntityPosition.get(1,0);
-      var wCenterZ = iEntity.EntityPosition.get(2,0);
-
+      
+      var wX = iEntity.EntityPosition.get(0,0);
+      var wY = iEntity.EntityPosition.get(1,0);
+      var wAngle = iEntity.EntityAngularPosition.get(2,0);
+      iCtx.translate(wX,wY);
+//      iCtx.rotate(wAngle);
+      
       for (var i = 0; i < iEntity.metadata.mContacts.length; ++i) {
         var wContact = iEntity.metadata.mContacts[i];
-        if (iEntity.EntityID == wContact.EntityID) {
+        
+        if (null == wContact) {
           continue;
         }
         
-        if (wContact.Range < gAgentFOVRange)
+        iCtx.strokeStyle = "yellow";
+        
+        var wFOVAngle = Math.abs(normalizeAngle(wContact.Bearing - iEntity.EntityAngularPosition.get(2,0)));
+        if ((wContact.Range <= gAgentHitRangeMax) && (wContact.Range >= gAgentHitRangeMin))
         {
-           var wAngle = Math.abs(normalizeAngle(wContact.Bearing - iEntity.EntityAngularPosition.get(2,0)));
-           if (wAngle < gAgentFOV)
-           {
-              iCtx.strokeStyle = "yellow";
-
-              if ((wContact.Range <= gAgentHitRangeMax) && (wContact.Range >= gAgentHitRangeMin))
-              {
-
-                if(wAngle < gAgentHitFOV)
-                {
-                  iCtx.strokeStyle = "red";
-                }
-              }
-
-              var wEndX = wCenterX + wContact.Dx;
-              var wEndY = wCenterY + wContact.Dy;
-              iCtx.beginPath();
-              iCtx.moveTo(wCenterX,wCenterY);
-              iCtx.lineTo(wEndX, wEndY);
-              iCtx.stroke();
-            }
+        
+          if(wFOVAngle < gAgentHitFOV)
+          {
+            iCtx.strokeStyle = "red";
           }
         }
-      
+        
+        
+        iCtx.beginPath();
+        iCtx.moveTo(0,0);
+        iCtx.lineTo(wContact.Dx, wContact.Dy);
+        iCtx.stroke();
+      }
+
+//      iCtx.rotate(-wAngle);
+      iCtx.translate(-wX,-wY);      
     }
     
     function drawArenaEntity(iCtx, iEntity) {
