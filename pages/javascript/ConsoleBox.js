@@ -1,161 +1,134 @@
 <!--
 
-function ConsoleBox()
-{
-    this.mLogEnable = false;
-    this.mLogFile = "";
-    this.mLatestLogs = "";
-    
-    this.mCmdCallbackList = [];
+  function ConsoleBox(iInitX = 0, iInitY = 0, iIsAvailable = true) {
 
-    this.getLogEnableFlag =  function () {
-        return this.mLogEnable;
-    }
-    
-    this.setLogEnableFlag =  function (iFlag) {
-        this.mLogEnable = iFlag;
-    }
+    if (true == iIsAvailable) {
+      this.mMoveMode = false;
+      this.mBodyTop = iInitY;
+      this.mBodyLeft = iInitX;
+      this.mMouseMoveDeltaTop = 0;
+      this.mMouseMoveDeltaLeft = 0;
+      this.mCmdCallbackList = [];
 
-    this.getLog =  function () {
-        return this.mLogFile;
-    }
-    
-    this.getLatestLog = function () {
-        var wlog = this.mLatestLogs;
-        this.mLatestLogs = "";
-        return wlog;
-    }
+      this.mSection = document.createElement('div');
+      this.mSection.style.position = "fixed";
+      this.mSection.style.top = this.mBodyTop;
+      this.mSection.style.left = this.mBodyLeft;
 
-    this.clearLog = function () {
-        this.mLogFile = "";
-        this.mLatestLogs = "";
-    }
+      this.mMoveButton = document.createElement('input');
+      this.mMoveButton.type = "button";
+      this.mMoveButton.value = "Move";
+      this.mMoveButton.style.width = "60px";
 
-    this.log = function(iLogEntry){
-        //if(true == this.mLogEnable)
-        {
-            this.mLogFile += iLogEntry + "\n";
-            this.mLatestLogs += iLogEntry + "\n";
+      this.mMinimizeButton = document.createElement('input');
+      this.mMinimizeButton.type = "button";
+      this.mMinimizeButton.value = "_";
+
+      this.mBreak1 = document.createElement('br');
+
+      this.mTextArea = document.createElement('textarea');
+      this.mTextArea.style.width = "360px";
+      this.mTextArea.style.resize = "both";
+      this.mTextArea.style.overflow = "auto";
+
+      this.mBreak2 = document.createElement('br');
+
+      this.mCmdLine = document.createElement('input');
+      this.mCmdLine.style.width = "300px";
+
+      this.mSendButton = document.createElement('input');
+      this.mSendButton.type = "button";
+      this.mSendButton.value = "Send";
+      this.mSendButton.style.width = "60px";
+
+      this.mSection.appendChild(this.mMoveButton);
+      this.mSection.appendChild(this.mMinimizeButton);
+      this.mSection.appendChild(this.mBreak1);
+      this.mSection.appendChild(this.mTextArea);
+      this.mSection.appendChild(this.mBreak2);
+      this.mSection.appendChild(this.mCmdLine);
+      this.mSection.appendChild(this.mSendButton);
+      document.body.appendChild(this.mSection);
+
+      this.MoveButtonDown = function (evt) {
+        this.mMoveMode = true;
+        this.mMouseMoveDeltaTop = evt.pageY - this.mBodyTop;
+        this.mMouseMoveDeltaLeft = evt.pageX - this.mBodyLeft;
+      }
+
+      this.MoveButtonUp = function (evt) {
+        this.mMoveMode = false;
+        this.mBodyTop = evt.pageY - this.mMouseMoveDeltaTop;
+        this.mBodyLeft = evt.pageX - this.mMouseMoveDeltaLeft;
+        this.mSection.style.top = this.mBodyTop;
+        this.mSection.style.left = this.mBodyLeft;
+      }
+
+      this.BodyMouseMove = function (evt) {
+        if (true == this.mMoveMode) {
+          this.mBodyTop = evt.pageY - this.mMouseMoveDeltaTop;
+          this.mBodyLeft = evt.pageX - this.mMouseMoveDeltaLeft;
+          this.mSection.style.top = this.mBodyTop;
+          this.mSection.style.left = this.mBodyLeft;
         }
-    };
+      }
 
-    
-    this.addToCmdLineCallBack = function(iFunction){
+      this.MinimizeButtonOnclick = function () {
+        if (this.mTextArea.style.display != "none") {
+          this.mBreak1.style.display = "none";
+          this.mTextArea.style.display = "none";
+          this.mBreak2.style.display = "none";
+          this.mCmdLine.style.display = "none";
+          this.mSendButton.style.display = "none";
+        }
+        else {
+          this.mBreak1.style.display = "inline";
+          this.mTextArea.style.display = "inline";
+          this.mBreak2.style.display = "inline";
+          this.mCmdLine.style.display = "inline";
+          this.mSendButton.style.display = "inline";
+        }
+      }
+      
+      this.SendButtonOnclick = function () {
+        if ("" != this.mCmdLine.value) {
+          var wInput = this.mCmdLine.value;
+          this.addTextToConsole("cmd>" + wInput + "\n");
+          for (var i = 0; i < this.mCmdCallbackList.length; ++i) {
+            if (null != this.mCmdCallbackList[i]) this.mCmdCallbackList[i](wInput);
+          }
+
+          this.mCmdLine.value = "";
+        }
+      }
+
+      this.mMoveButton.addEventListener("mousedown", this.MoveButtonDown.bind(this), false);
+      this.mMoveButton.addEventListener("mouseup", this.MoveButtonUp.bind(this), false);
+      this.mMinimizeButton.addEventListener("mousedown", this.MinimizeButtonOnclick.bind(this), false);
+      this.mSendButton.addEventListener("mousedown", this.SendButtonOnclick.bind(this), false);
+
+      document.body.addEventListener("mousemove", this.BodyMouseMove.bind(this), false);
+
+
+      this.addTextToConsole = function (iText) {
+        if (null != this.mTextArea) {
+          this.mTextArea.value += iText;
+          this.mTextArea.scrollTop = this.mTextArea.scrollHeight;
+        }
+      }
+      
+    }
+
+    this.log = function (ilog) {
+      this.addTextToConsole("log>" + ilog + "\n");
+    }
+
+    this.addToCmdLineCallBack = function (iFunction) {
+      if (null != this.mCmdCallbackList) {
         this.mCmdCallbackList.push(iFunction);
+      }
     };
-
-    var wSection = document.createElement('div');
-    //wSection.style.position = "fixed";
-    wSection.style.top = "100";
-    wSection.style.left = "100";
-    wSection.style.position = "fixed";
-
-    var wMoveButton = document.createElement('input');
-    wMoveButton.type ="button";
-    wMoveButton.value = "Move";
-    wMoveButton.style.width = "60px";
-
-    var wMinimizeButton = document.createElement('input');
-    wMinimizeButton.type ="button";
-    wMinimizeButton.value = "_";
-
-    var wBreak1 = document.createElement('br');
-
-    var wTextArea = document.createElement('textarea');
-    wTextArea.style.width = "360px";
-
-    var wBreak2 = document.createElement('br');
-
-    var wCmdLine = document.createElement('input');
-    wCmdLine.style.width = "300px";
-
-    var wSendButton = document.createElement('input');
-    wSendButton.type ="button";
-    wSendButton.value = "Send";
-    wSendButton.style.width = "60px";
-
-    wSection.appendChild(wMoveButton);
-    wSection.appendChild(wMinimizeButton);
-    wSection.appendChild(wBreak1);
-    wSection.appendChild(wTextArea);
-    wSection.appendChild(wBreak2);
-    wSection.appendChild(wCmdLine);
-    wSection.appendChild(wSendButton);
-    document.body.appendChild(wSection);
-
-    this.updateTextArea = function(){
-        wTextArea.value += this.getLatestLog();
-        wTextArea.scrollTop = wTextArea.scrollHeight;
-    }
-
-    this.pushCmdLineBt = function(){
-        var wInput = wCmdLine.value;
-        wCmdLine.value = "";
-        this.log(wInput);
-        for(var i = 0; i < this.mCmdCallbackList.length; ++i){
-            if(null != this.mCmdCallbackList[i]) this.mCmdCallbackList[i](wInput);
-        }
-    }
-
-    this.pushCmdLineKb = function(e){
-        if (e.keyCode == 13) {
-            this.pushCmdLineBt();
-        }
-    }
-
-    setInterval( this.updateTextArea.bind(this), 100 );
-        
-    wSendButton.onclick =  this.pushCmdLineBt.bind(this);
-        
-    wCmdLine.onkeyup = this.pushCmdLineKb.bind(this);
-
-    var wMouseDown = false;
-    var wMouseX = false;
-    var wMouseY = false;
-
-    wMoveButton.onmousedown = function (e) {
-        wMouseX = e.clientX;
-        wMouseY = e.clientY;
-        wMouseDown = true;
-    }
-        
-    wMoveButton.onmouseup = function () {
-        wMouseDown = false;
-    }
-
-    wMoveButton.onmouseleave = function() {
-        wMouseDown = false;
-    }
-
-    document.body.onmousemove = function(e) {
-            
-        if(true == wMouseDown )
-        {
-            wSection.style.left = stringToInt(wSection.style.left, 0) + e.clientX - wMouseX;
-            wSection.style.top =  stringToInt(wSection.style.top, 0) + e.clientY - wMouseY;
-
-            wMouseX = e.clientX;
-            wMouseY = e.clientY;
-        }
-    }
-
-    wMinimizeButton.onclick = function(){
-        if(wTextArea.style.display  != "none"){
-            wBreak1.style.display = "none";
-            wTextArea.style.display = "none";
-            wBreak2.style.display = "none";
-            wCmdLine.style.display = "none";
-            wSendButton.style.display = "none";
-        }
-        else{
-            wBreak1.style.display = "inline";
-            wTextArea.style.display = "inline";
-            wBreak2.style.display = "inline";
-            wCmdLine.style.display = "inline";
-            wSendButton.style.display = "inline";
-        }
-    }
-}
+  }
 
 
 -->
