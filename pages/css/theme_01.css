@@ -1,4 +1,11 @@
 /* body Layout */
+
+*{
+	margin: 0;
+	padding: 0;
+	box-sizing:boder-box;
+}
+
 body {
     margin: 0px;
     padding: 0px;
@@ -8,6 +15,11 @@ body {
     font-size: 16px;
     text-align: center;
     overflow: hidden;
+    background-image: url("../images/background.jpg");
+    background-repeat: no-repeat;
+    background-size: cover;
+    background-position-x: center;
+    background-position-y: center;
 }
 
 #main-content-div {
