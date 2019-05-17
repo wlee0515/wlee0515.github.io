@@ -1,9 +1,11 @@
 /* body Layout */
+@import "mechanics/scrollbar.css";
+@import "mechanics/tabs.css";
 
 *{
 	margin: 0;
 	padding: 0;
-	box-sizing:boder-box;
+	box-sizing:border-box;
 }
 
 body {
@@ -30,86 +32,4 @@ body {
     background-color: gray;
     height: 100vh;
     overflow: auto;
-}
-
-/* Scrollbar */
-/* width */
-::-webkit-scrollbar {
-  width: 10px;
-}
-
-/* Track */
-::-webkit-scrollbar-track {
-  background: #f1f1f1; 
-}
- 
-/* Handle */
-::-webkit-scrollbar-thumb {
-  background: #888; 
-}
-
-/* Handle on hover */
-::-webkit-scrollbar-thumb:hover {
-  background: #555; 
-}
-
-/*Navigation Bar*/
-.navbar {
-    text-align: left;
-    color: black;
-    margin: 0px;
-    padding: 0px;
-}
-
-.navbar-menu{
-}
-
-.nav-display {
-  
-}
-
-.nav-option-tab {
-    display: inline-block;
-    text-align: center;
-    padding: 5px;
-    margin: 0px;
-    font-weight: bold;
-    
-}
-
-.nav-option-radio-bt{
-    display: none;
-}
-
-.nav-option-display{
-    display: none;
-    padding: 10px;
-}
-
-.nav-option-radio-bt:checked+.nav-option-display {
-    display: block;
-}
-
-.option-01{
-    background-color: cyan;
-} 
-
-.option-02{
-    background-color: lime;
-}
-
-.option-03{
-    background-color: yellow;
-}
-
-.option-04{
-    background-color: magenta;
-}
-
-.option-05{
-    background-color: orange;
-}
-
-.option-06{
-    background-color: pink;
 }

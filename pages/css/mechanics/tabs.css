@@ -1,0 +1,61 @@
+
+/*Navigation Bar*/
+.navbar {
+  text-align: left;
+  color: black;
+  margin: 0px;
+  padding: 0px;
+}
+
+.navbar-menu{
+}
+
+.nav-display {
+
+}
+
+.nav-option-tab {
+  display: inline-block;
+  text-align: center;
+  padding: 5px;
+  margin: 0px;
+  font-weight: bold;
+  
+}
+
+.nav-option-radio-bt{
+  display: none;
+}
+
+.nav-option-display{
+  display: none;
+  padding: 10px;
+}
+
+.nav-option-radio-bt:checked+.nav-option-display {
+  display: block;
+}
+
+.option-01{
+  background-color: cyan;
+} 
+
+.option-02{
+  background-color: lime;
+}
+
+.option-03{
+  background-color: yellow;
+}
+
+.option-04{
+  background-color: magenta;
+}
+
+.option-05{
+  background-color: orange;
+}
+
+.option-06{
+  background-color: pink;
+}
