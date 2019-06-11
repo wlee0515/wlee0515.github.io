@@ -45,8 +45,11 @@ function Maze(iWidth, iHeight)
     this.toggleMazeIndex = function(iIndex) {
         if(iIndex < this.mMazeArray.length)
         {
-            this.mMazeArray[iIndex]++;
-            this.mMazeArray[iIndex] %= 2;
+            if (( iIndex != this.mMazeStartIndex ) && (iIndex != this.mMazeEndIndex))
+            {
+                this.mMazeArray[iIndex]++;
+                this.mMazeArray[iIndex] %= 2;    
+            }
         }
     }
 
