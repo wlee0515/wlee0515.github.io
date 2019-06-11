@@ -1,6 +1,3 @@
-/* body Layout */
-@import "mechanics/scrollbar.css";
-@import "mechanics/tabs.css";
 
 *{
 	margin: 0;
@@ -17,19 +14,37 @@ body {
     font-size: 16px;
     text-align: center;
     overflow: hidden;
-    background-image: url("../images/background.jpg");
-    background-repeat: no-repeat;
-    background-size: cover;
-    background-position-x: center;
-    background-position-y: center;
 }
 
+p {
+  padding: 3px;
+}
 #main-content-div {
     min-width: 300px;
     max-width: 800px;
     margin: auto;
     padding: 10px;
-    background-color: gray;
     height: 100vh;
     overflow: auto;
+}
+
+/* Scrollbar */
+/* width */
+::-webkit-scrollbar {
+  width: 10px;
+}
+  
+/* Track */
+::-webkit-scrollbar-track {
+  background: #f1f1f1; 
+}
+   
+/* Handle */
+::-webkit-scrollbar-thumb {
+  background: #888; 
+}
+  
+/* Handle on hover */
+::-webkit-scrollbar-thumb:hover {
+  background: #555; 
 }
