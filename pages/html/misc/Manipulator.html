@@ -1,0 +1,1480 @@
+﻿<html>
+<head>
+    <meta name="viewport" content="width=400" />
+    <title>Robot Manipulator Simulation</title>
+    <style>
+ 
+        body
+        {
+            background-color : rgb(0,0,0);
+        }
+        div
+        {
+            height : 100%;
+            width : 100%;
+        }
+        table
+        {
+            height : 100%;
+            width : 100%;
+        }
+
+        textArea
+        {
+            background-color : rgb(255,255,255);
+            height : 100%;
+            width : 100%;
+        }
+        canvas
+        {
+            border: 1px solid blue;
+        }
+        
+        input
+        {
+            width: 75px;
+        }
+
+    </style>
+    <script type="text/javascript">
+
+        // -------- utility --------------------------
+
+        function normalizeSignAngle(iAngle) {
+            while (iAngle > Math.PI) {
+                iAngle -= 2 * Math.PI;
+            }
+            while (iAngle < -Math.PI) {
+                iAngle += 2 * Math.PI;
+            }
+
+            return iAngle;
+        }
+
+        function Vector3D(iX,iY,iZ) {
+
+            this.x = iX;
+            this.y = iY;
+            this.z = iZ;
+
+            this.set = function (iVector) {
+
+                this.x = iVector.x;
+                this.y = iVector.y;
+                this.z = iVector.z;
+
+            }
+
+            this.add = function (iVector) {
+
+                var wTmp = new Vector3D(this.x, this.y, this.z);
+
+                wTmp.x += iVector.x;
+                wTmp.y += iVector.y;
+                wTmp.z += iVector.z;
+
+                return wTmp;
+            }
+
+
+            this.subtract = function (iVector) {
+
+                var wTmp = new Vector3D(this.x, this.y, this.z);
+
+                wTmp.x -= iVector.x;
+                wTmp.y -= iVector.y;
+                wTmp.z -= iVector.z;
+
+                return wTmp;
+            }
+
+            this.scale = function (iScaler) {
+
+                var wTmp = new Vector3D(this.x, this.y, this.z);
+
+                wTmp.x *= iScaler;
+                wTmp.y *= iScaler;
+                wTmp.z *= iScaler;
+
+                return wTmp;
+            }
+
+            this.dot = function (iVector) {
+
+                return iVector.x * this.x + iVector.y * this.y + iVector.z * this.z;
+            }
+
+            this.cross = function (iVector) {
+
+                var wX = this.y * iVector.z - this.z * iVector.y;
+                var wY = this.z * iVector.x - this.x * iVector.z;
+                var wZ = this.x * iVector.y - this.y * iVector.x;
+
+                var wTmp = new Vector3D(wX, wY, wZ);
+
+                return wTmp;
+            }
+
+            this.sqMag = function () {
+                return this.x * this.x + this.y * this.y + this.z * this.z;
+            }
+
+            this.magnitude = function () {
+
+                return Math.sqrt(this.sqMag());
+            }
+
+            this.XYMag = function () {
+                return Math.sqrt(this.x * this.x + this.y * this.y);
+            }
+
+            this.XZMag = function () {
+                return Math.sqrt(this.x * this.x + this.z * this.z);
+            }
+
+            this.YZMag = function () {
+                return Math.sqrt(this.y * this.y + this.z * this.z);
+            }
+
+            this.unitVector = function () {
+
+                var wMagnitude = this.magnitude();
+
+                if (wMagnitude > 0.001) {
+                    return this.scale(1 / wMagnitude);
+                }
+
+                return new Vector3D(1.0, 0.0, 0.0);
+
+            }
+
+            this.azimuth = function () {
+
+                return Math.atan2(this.y, this.x);
+            }
+
+            this.elevation = function () {
+
+                return Math.atan2(this.z, this.XYMag());
+            }
+
+
+            this.sin = function (iVector) {
+
+                var wThisMag = this.magnitude();
+                var wVectorMag = iVector.magnitude();
+                if ((0.0001 < wThisMag) && (0.0001 < wVectorMag)) {
+
+                    var wSine = this.cross(iVector).magnitude() / (wThisMag * wVectorMag);
+
+                    if (wSine > 1.0) wSine = 1.0;
+                    if (wSine < -1.0) wSine = -1.0;
+                    return wSine;
+                }
+
+                return 0.0;
+            }
+
+            this.cos = function (iVector) {
+
+                var wThisMag = this.magnitude();
+                var wVectorMag = iVector.magnitude();
+                if ((0.0001 < wThisMag) && (0.0001 < wVectorMag)) {
+                    var wCosine = this.dot(iVector) / (wThisMag * wVectorMag);
+                    if (wCosine > 1.0) wCosine = 1.0;
+                    if (wCosine < -1.0) wCosine = -1.0;
+                    return wCosine;
+                }
+
+                return 1.0;
+            }
+
+
+            this.angleOffset = function (iVector) {
+
+                return Math.acos(this.cos(iVector));
+            }
+
+            this.projection = function (iVector) {
+
+                var wVector = iVector.unitVector();
+                var wProjection = wVector.scale(this.dot(wVector));
+
+                return wProjection;
+            }
+
+        }
+
+        function Matrix3x3() {
+
+            this.Matrix = [ [ 1.0, 0.0, 0.0 ] , [ 0.0, 1.0, 0.0 ],  [ 0.0, 0.0, 1.0 ]];
+
+            this.multiplyVector3D = function ( iVector ) {
+                
+                var wX = this.Matrix[0][0] * iVector.x + this.Matrix[0][1] * iVector.y + this.Matrix[0][2] * iVector.z;
+                var wY = this.Matrix[1][0] * iVector.x + this.Matrix[1][1] * iVector.y + this.Matrix[1][2] * iVector.z;
+                var wZ = this.Matrix[2][0] * iVector.x + this.Matrix[2][1] * iVector.y + this.Matrix[2][2] * iVector.z;
+
+                var wTmp = new Vector3D(wX, wY, wZ);
+                return wTmp;
+            }
+
+            this.multiplyMatrix3x3 = function ( iMatrix ) {
+                
+                var wNewMat = new Matrix3x3();
+
+                for ( var i = 0 ; i < 3; ++i) {
+                    for ( var j = 0 ; j < 3; ++j) {
+                        wNewMat.Matrix[i][j] = 0;
+                        for( var k = 0; k < 3; ++k)
+                        {
+                            wNewMat.Matrix[i][j] += this.Matrix[i][k] * iMatrix.Matrix[k][j];
+                        }
+                    }
+                }
+
+                return wNewMat;
+            }
+
+            this.getTranspose = function () {
+
+                var wNewMat = new Matrix3x3();
+
+                for (var i = 0 ; i < 3; ++i) {
+                    for (var j = 0 ; j < 3; ++j) {
+                        wNewMat.Matrix[i][j] = this.Matrix[j][i];
+                    }
+                }
+
+                return wNewMat;
+
+            }
+
+        }
+
+        function EulerAngles(iRoll, iPitch, iYaw) {
+            this.roll = iRoll;
+            this.pitch = iPitch;
+            this.yaw = iYaw;
+            
+            this.set = function (iRotationMatrix) {
+                this.roll = iRotationMatrix.roll;
+                this.pitch = iRotationMatrix.pitch;
+                this.yaw = iRotationMatrix.yaw;
+            }
+
+            this.getMatrix = function () {
+
+                var wC_Roll = Math.cos(this.roll);
+                var wS_Roll = Math.sin(this.roll);
+
+                var wRollMat = new Matrix3x3();
+                wRollMat.Matrix = [[1.0, 0.0, 0.0], [0.0, wC_Roll, -wS_Roll], [0.0, wS_Roll, wC_Roll]];
+
+                var wC_Pitch = Math.cos(this.pitch);
+                var wS_Pitch = Math.sin(this.pitch);
+
+                var wPitchMat = new Matrix3x3();
+                wPitchMat.Matrix = [[wC_Pitch, 0.0, wS_Pitch], [0.0, 1.0, 0.0], [-wS_Pitch, 0.0, wC_Pitch]];
+
+                var wC_Yaw = Math.cos(this.yaw);
+                var wS_Yaw = Math.sin(this.yaw);
+
+                var wYawMat = new Matrix3x3();
+                wYawMat.Matrix = [[wC_Yaw, -wS_Yaw, 0.0], [wS_Yaw, wC_Yaw, 0.0], [0.0, 0.0, 1.0]];
+
+                return wYawMat.multiplyMatrix3x3(wPitchMat.multiplyMatrix3x3(wRollMat));
+
+            }
+
+            this.rotateVector = function (iVector) {
+
+                return this.getMatrix().multiplyVector3D(iVector);
+            }
+
+            this.rotateMatrix = function (iMatrix) {
+
+                return this.getMatrix().multiplyMatrix3x3(iMatrix);
+            }
+
+            this.getInverse = function () {
+
+                return this.getMatrix().getTranspose();
+            }
+        }
+
+        function TransformationMatrix(iX, iY, iZ, iRoll, iPitch, iYaw) {
+
+            this.useEulerAngles = true;
+            this.rotation = new EulerAngles(iRoll, iPitch, iYaw);
+            this.rotationMatrix = new Matrix3x3();
+
+            this.translation = new Vector3D(iX, iY, iZ);
+
+            this.getRotationMatrix = function () {
+
+                if (true == this.useEulerAngles) {
+                    return this.rotation.getMatrix();
+                }
+
+                return this.rotationMatrix;
+            }
+
+            this.applyVector = function (iVector) {
+
+                var wTmp = this.getRotationMatrix().multiplyVector3D(iVector);
+                var wResult = wTmp.add(this.translation);
+
+                return wResult;
+
+            }
+
+            this.applyInverseVector = function (iVector) {
+
+
+                var wRotateInv = this.getRotationMatrix().getTranspose();
+
+                var wTmp = iVector.subtract(this.translation);
+                var wResult = wRotateInv.multiplyVector3D(wTmp);
+
+                return wResult;
+            }
+
+            this.applyMatrix = function (iMatrix) {
+
+                var wResult = this.getRotationMatrix().multiplyMatrix3x3(iMatrix);
+                return wResult;
+
+            }
+
+            this.applyTransformationMatrix = function (iTransformationMatrix) {
+
+                var wResult = new TransformationMatrix(0.0, 0.0, 0.0, 0.0, 0.0, 0.0);
+                wResult.useEulerAngles = false;
+                wResult.rotationMatrix = this.getRotationMatrix().multiplyMatrix3x3(iTransformationMatrix.getRotationMatrix());
+                wResult.translation = this.applyVector(iTransformationMatrix.translation);
+
+                return wResult;
+            }
+
+
+            this.getInverseMatrix = function (iTransformationMatrix) {
+
+                var wResult = new TransformationMatrix(0.0, 0.0, 0.0, 0.0, 0.0, 0.0);
+                wResult.useEulerAngles = false;
+                wResult.rotationMatrix = this.getRotationMatrix().getTranspose();
+                wResult.translation = wResult.rotationMatrix.multiplyVector3D(this.translation.scale(-1));
+
+                return wResult;
+            }
+
+        }
+        
+        function RT_Matrix(iX, iY, iZ, iRoll, iPitch, iYaw) {
+
+            this.useEulerAngles = true;
+            this.rotation = new EulerAngles(iRoll, iPitch, iYaw);
+            this.rotationMatrix = new Matrix3x3();
+
+            this.translation = new Vector3D(iX, iY, iZ);
+
+            this.applyVector = function (iVector) {
+
+                var wResult = wTmp.add(this.translation);
+                var wTmp = this.getRotationMatrix().multiplyVector3D(iVector);
+
+                return wResult;
+
+            }
+        }
+
+        function makePoint(iX, iY) {
+            this.x = iX;
+            this.y = iY;
+
+        }
+
+        // -------- Vector Objects -------------------
+
+        function DrawCube(iWidth, iHeight, iDepth, iCenterX, iCenterY, iCenterZ) {
+            
+            var EdgeX1 = 0;
+            var EdgeX2 = iWidth;
+            
+            if (true == iCenterX) {
+                EdgeX1 -= iWidth / 2;
+                EdgeX2 -= iWidth / 2;
+            }
+
+
+            var EdgeY1 = 0;
+            var EdgeY2 = iHeight;
+
+            if (true == iCenterY) {
+                EdgeY1 -= iHeight / 2;
+                EdgeY2 -= iHeight / 2;
+            }
+
+            var EdgeZ1 = 0;
+            var EdgeZ2 = iDepth;
+
+            if (true == iCenterZ) {
+                EdgeZ1 -= iDepth / 2;
+                EdgeZ2 -= iDepth / 2;
+            }
+
+            var v1 = new Vector3D(EdgeX1, EdgeY1, EdgeZ1);
+            var v2 = new Vector3D(EdgeX2, EdgeY1, EdgeZ1);
+            var v3 = new Vector3D(EdgeX2, EdgeY2, EdgeZ1);
+            var v4 = new Vector3D(EdgeX1, EdgeY2, EdgeZ1);
+
+            var v5 = new Vector3D(EdgeX1, EdgeY1, EdgeZ2);
+            var v6 = new Vector3D(EdgeX2, EdgeY1, EdgeZ2);
+            var v7 = new Vector3D(EdgeX2, EdgeY2, EdgeZ2);
+            var v8 = new Vector3D(EdgeX1, EdgeY2, EdgeZ2);
+
+            var wObj = new Array();
+            wObj.push(v1); wObj.push(v2); wObj.push(v3); wObj.push(v4); wObj.push(v1);
+            wObj.push(v5); wObj.push(v6); wObj.push(v7); wObj.push(v8); wObj.push(v5);
+
+            wObj.push(v6); wObj.push(v2);
+            wObj.push(v3); wObj.push(v7);
+            wObj.push(v8); wObj.push(v4);
+
+            return wObj;
+        }
+
+        function g3DObjectCategory() {
+            this.eLine = 0;
+            this.eCircle = 1;
+        }
+        
+        function DrawAxis(iAxisLength) {
+
+            var v1 = new Vector3D(0, 0, 0);
+            var v2 = new Vector3D(iAxisLength, 0, 0);
+            var v3 = new Vector3D(0, iAxisLength, 0);
+            var v4 = new Vector3D(0, 0, iAxisLength);
+
+            var wObj = new Array();
+            wObj.push(v1); wObj.push(v2);
+            wObj.push(v1); wObj.push(v3);
+            wObj.push(v1); wObj.push(v4);
+            wObj.push(v1);
+
+            return wObj;
+        }
+
+        var g3DObjectIDCounter = 0;
+
+        function g3DObject() {
+            this.ObjectID = ++g3DObjectIDCounter;
+            this.Color = "cyan";
+            this.Category = "Line";
+            this.VertexList = new Array();
+            this.Radius = 20;
+
+            this.SubObjList = new Array();
+
+            this.Transformation = new TransformationMatrix(0.0,0.0,0.0,0.0,0.0,0.0);
+
+            this.getObjectIDTransformation = function (iId, iInertialTransformationMatrix) {
+
+                var wNewTransformation = null;
+                if (null == iInertialTransformationMatrix) {
+                    wNewTransformation = this.Transformation;
+                }
+                else {
+                    wNewTransformation = iInertialTransformationMatrix.applyTransformationMatrix(this.Transformation);
+                }
+
+                if (iId == this.ObjectID) {
+                    return wNewTransformation;
+
+                }
+
+                if (0 < this.SubObjList.length) {
+
+                    for (var j = 0; j < this.SubObjList.length; ++j) {
+
+                        var wChildTransform = this.SubObjList[j].getObjectIDTransformation(iId, wNewTransformation);
+
+                        if (null != wChildTransform) {
+                            return wChildTransform;
+                        }
+                    }
+                }
+
+                return null;
+            }
+
+
+            this.plotOnCanvas = function (iCtx, iInertialTransformationMatrix) {
+
+                var wNewTransformation = iInertialTransformationMatrix.applyTransformationMatrix(this.Transformation);
+                iCtx.fillStyle = this.Color;
+                iCtx.strokeStyle = this.Color;
+
+                if ("Line" == this.Category) {
+                    if (this.VertexList.length > 1) {
+                        var wLastPoint = wNewTransformation.applyVector(this.VertexList[0]);
+
+                        for (var j = 1; j < this.VertexList.length; ++j) {
+                            var wNextPoint = wNewTransformation.applyVector(this.VertexList[j]);
+
+
+                            iCtx.beginPath();
+                            iCtx.moveTo(wLastPoint.y, -wLastPoint.z);
+                            iCtx.lineTo(wNextPoint.y, -wNextPoint.z);
+                            iCtx.stroke();
+
+                            wLastPoint = wNextPoint;
+                        }
+                    }
+                }
+                else if ("Sphere" == this.Category) {
+
+                    for (var j = 0; j < this.VertexList.length; ++j) {
+                        var wPoint = wNewTransformation.applyVector(this.VertexList[j]);
+
+                        iCtx.beginPath();
+                        iCtx.arc(wPoint.y, -wPoint.z, this.Radius, 0.0, 2 * Math.PI);
+                        iCtx.stroke();
+
+                    }
+                }
+
+                if (0 < this.SubObjList.length) {
+                    
+                    for (var j = 0; j < this.SubObjList.length; ++j) {
+                        this.SubObjList[j].plotOnCanvas(iCtx, wNewTransformation);
+                    }
+                }
+            }
+        }
+
+        function RobotSegment(iLength, iWidth) {
+            this.g3DObject = new g3DObject();
+            this.g3DObject.Transformation.translation.z = iLength;
+
+
+            this.axis1 = new g3DObject();
+            this.axis1.VertexList = DrawAxis(iLength/4);
+            this.axis1.Transformation.translation.z = -iLength;
+            this.axis1.Color = "pink";
+            this.g3DObject.SubObjList.push(this.axis1);
+
+            this.box = new g3DObject();
+            this.box.VertexList = DrawCube(iWidth, iWidth, iLength, true, true, false);
+            this.box.Transformation.translation.z = - iLength;
+            this.g3DObject.SubObjList.push(this.box);
+
+            this.ball = new g3DObject();
+            this.ball.VertexList.push(new Vector3D(0, 0, 0));
+            this.ball.Category = "Sphere";
+            this.ball.Radius = iWidth / 2;
+            this.ball.Color = "lime";
+            this.g3DObject.SubObjList.push(this.ball);
+
+            this.cmdRoll = 0.0;
+            this.cmdPitch = 0.0;
+            this.cmdYaw = 0.0;
+
+            this.axis2 = new g3DObject();
+            this.axis2.VertexList = DrawAxis(iLength / 4);
+            this.axis2.Transformation.translation.z = iLength;
+            this.axis2.Color = "red";
+            this.box.SubObjList.push(this.axis2);
+
+            
+            this.appendPart = function (iRobotSegment) {
+                this.ball.SubObjList.push(iRobotSegment.g3DObject);
+            }
+
+
+            this.setRoll = function (iRoll) {
+                this.ball.Transformation.rotation.roll = iRoll;
+            }
+
+            this.setPitch = function (iPitch) {
+                this.ball.Transformation.rotation.pitch = iPitch;
+            }
+
+            this.setYaw = function (iYaw) {
+                this.ball.Transformation.rotation.yaw = iYaw;
+            }
+
+
+            this.setCmdRoll = function (iRoll) {
+                this.cmdRoll = iRoll;
+            }
+
+            this.setCmdPitch = function (iPitch) {
+                this.cmdPitch = iPitch;
+            }
+
+            this.setCmdYaw = function (iYaw) {
+                this.cmdYaw = iYaw;
+            }
+
+
+            this.getRoll = function () {
+                return this.ball.Transformation.rotation.roll;
+            }
+
+            this.getPitch = function () {
+                return this.ball.Transformation.rotation.pitch;
+            }
+
+            this.getYaw = function () {
+                return this.ball.Transformation.rotation.yaw;
+            }
+
+            this.processTick = function (iDt) {
+
+                var wRoll = this.getRoll();
+                var wPitch = this.getPitch();
+                var wYaw = this.getYaw();
+
+                var wDRoll = this.cmdRoll - wRoll;
+                var wDPitch = this.cmdPitch - wPitch;
+                var wDYaw = this.cmdYaw - wYaw;
+
+                var wTau = 0.9*iDt;
+                this.setRoll(wRoll + wTau * wDRoll);
+                this.setPitch(wPitch + wTau * wDPitch);
+                this.setYaw(wYaw + wTau * wDYaw);
+            }
+
+            this.getObjectID = function () {
+                return this.ball.ObjectID;
+            }
+        }
+
+        // -------- Program --------------------------
+
+        var gCameraYaw = new TransformationMatrix(0.0, 0.0, 0.0, 0.0, 0.0, Math.PI/4);
+        var gCameraPitch = new TransformationMatrix(100.0, 0.0, 0.0, 0.0, Math.PI / 4, 0);
+        var gCanvasObj = new g3DObject();
+        var gScale = 2;
+
+        var gBase = new RobotSegment(40, 50);
+        var gSeg2 = new RobotSegment(100, 20);
+        var gSeg3 = new RobotSegment(100, 15);
+        var gSeg4 = new RobotSegment(50, 10);
+
+        var gGripperPivot1 = new RobotSegment(0, 0);
+        var gGripperBase1 = new RobotSegment(25, 10);
+        var gGripperTip1 = new RobotSegment(25, 10);
+
+        var gGripperPivot2 = new RobotSegment(0, 0);
+        var gGripperBase2 = new RobotSegment(25, 10);
+        var gGripperTip2 = new RobotSegment(25, 10);
+
+        var gTargetBall = new g3DObject();
+        var gTargetX = 100;
+        var gTargetY = 100;
+        var gTargetZ = 100;
+
+        var gTargetRoll = 0.0;
+        var gTargetElevation = 0.0;
+        var gTargetAzimuth = 0.0;
+        var gSolutionAngle = 0;
+
+        var gTargetRoll_transition = 0.0;
+        var gTargetElevation_transition = 0.0;
+        var gTargetAzimuth_transition = 0.0;
+        var gSolutionAngle_transition = 0;
+
+        var gBone = new g3DObject();
+
+        var gMouseHandler = {
+            mouseIsDown : false,
+            mouseDownLocation : new makePoint(0,0),
+            mouseRelativeNodeLocation: new makePoint(0, 0),
+            selectedNode: -1,
+
+            InitCameraRoll: 0.0,
+            InitCameraPitch: 0.0,
+            InitCameraYaw: 0.0
+        }
+
+        function init() {
+
+
+            gGripperPivot1.appendPart(gGripperBase1);
+            gGripperBase1.appendPart(gGripperTip1);
+            gGripperPivot1.setCmdPitch(-Math.PI / 4);
+            gGripperBase1.setCmdPitch(Math.PI / 3);
+
+
+            gGripperPivot2.appendPart(gGripperBase2);
+            gGripperBase2.appendPart(gGripperTip2);
+            gGripperPivot2.setCmdPitch(Math.PI / 4);
+            gGripperBase2.setCmdPitch(-Math.PI / 3);
+
+            gBase.appendPart(gSeg2);
+            gSeg2.appendPart(gSeg3);
+            gSeg3.appendPart(gSeg4);
+            gSeg4.appendPart(gGripperPivot1);
+            gSeg4.appendPart(gGripperPivot2);
+
+            gCanvasObj.SubObjList.push(gBase.g3DObject);
+
+            gTargetBall = new g3DObject();
+            gTargetBall.VertexList.push(new Vector3D(0, 0, 0));
+            gTargetBall.Transformation.translation.x = 100;
+            gTargetBall.Transformation.translation.y = 100;
+            gTargetBall.Transformation.translation.z = 100;
+            gTargetBall.Category = "Sphere";
+            gTargetBall.Radius = 5;
+            gTargetBall.Color = "red";
+
+
+
+            axis1 = new g3DObject();
+            axis1.VertexList = DrawAxis(20);
+            axis1.Color = "pink";
+            gTargetBall.SubObjList.push(axis1);
+
+            gCanvasObj.SubObjList.push(gTargetBall);
+
+            gBone.Color = "white";
+            gBone.VertexList.push(new Vector3D(0, 0, 0));
+            gBone.VertexList.push(new Vector3D(0, 0, 0));
+            gBone.VertexList.push(new Vector3D(0, 0, 0));
+            gBone.VertexList.push(new Vector3D(0, 0, 0));
+            gBone.VertexList.push(new Vector3D(0, 0, 0));
+            gCanvasObj.SubObjList.push(gBone);
+
+
+            var wCanvas = document.getElementById("OuputCanvas");
+            wCanvas.addEventListener("mousedown", canvasMouseClick, false);
+            wCanvas.addEventListener("mousemove", canvasMouseMove, false);
+
+            resize();
+
+            
+            setInterval(processTick, 100);
+        }
+
+
+        function resize() {
+            var wCanvas = document.getElementById("OuputCanvas");
+            var wSize = wCanvas.parentElement.clientHeight;
+            if (wSize > wCanvas.parentElement.clientWidth) wSize = wCanvas.parentElement.clientWidth;
+
+            wCanvas.height = wSize - 2;
+            wCanvas.width = wSize - 2;
+        }
+
+        function canvasMouseClick(iEvent) {
+            
+            if (null != iEvent) {
+
+                var wCanvas = document.getElementById("OuputCanvas");
+
+                x = iEvent.x - wCanvas.offsetLeft - document.body.scrollLeft;
+                y = iEvent.y - wCanvas.offsetTop - document.body.scrollTop;
+
+
+                if (false == gMouseHandler.mouseIsDown) {
+                    gMouseHandler.mouseIsDown = true;
+                    gMouseHandler.mouseDownLocation.x = x;
+                    gMouseHandler.mouseDownLocation.y = y;
+/*
+                    var wClosestPoint = getClosestPoint(gMouseHandler.mouseDownLocation, gRoadDefinition);
+
+                    gMouseHandler.selectedNode = wClosestPoint.index;
+                    gMouseHandler.mouseRelativeNodeLocation.x = wClosestPoint.location.x - gMouseHandler.mouseDownLocation.x;
+                    gMouseHandler.mouseRelativeNodeLocation.y = wClosestPoint.location.y - gMouseHandler.mouseDownLocation.y;
+                    */
+
+                    
+                    gMouseHandler.InitCameraRoll = gCameraPitch.rotation.roll;
+                    gMouseHandler.InitCameraPitch = gCameraPitch.rotation.pitch;
+                    gMouseHandler.InitCameraYaw = gCameraYaw.rotation.yaw;
+                }
+                else {
+                    gMouseHandler.mouseIsDown = false;
+                }
+            }
+
+            canvasMouseMove(iEvent);
+        }
+        
+        function canvasMouseMove(iEvent) {
+
+
+            var wCanvas = document.getElementById("OuputCanvas");
+
+            x = iEvent.x - wCanvas.offsetLeft - document.body.scrollLeft;
+            y = iEvent.y - wCanvas.offsetTop - document.body.scrollTop;
+            
+            if (true == gMouseHandler.mouseIsDown) {
+
+      //          gRoadDefinition[gMouseHandler.selectedNode].x = x + gMouseHandler.mouseRelativeNodeLocation.x;
+                //         gRoadDefinition[gMouseHandler.selectedNode].y = y + gMouseHandler.mouseRelativeNodeLocation.y;
+
+                gCameraPitch.rotation.roll = gMouseHandler.InitCameraRoll;
+                gCameraPitch.rotation.pitch = gMouseHandler.InitCameraPitch + Math.atan2(y - gMouseHandler.mouseDownLocation.y, gCameraPitch.translation.x);
+                gCameraYaw.rotation.yaw = gMouseHandler.InitCameraYaw + Math.atan2(x - gMouseHandler.mouseDownLocation.x, gCameraPitch.translation.x);
+
+            }
+
+        }
+
+        function processTick() {
+
+            var dTime = 0.1;
+            gBase.processTick(dTime);
+            gSeg2.processTick(dTime);
+            gSeg3.processTick(dTime);
+            gSeg4.processTick(dTime);
+
+            gGripperPivot1.processTick(dTime);
+            gGripperBase1.processTick(dTime);
+            gGripperTip1.processTick(dTime);
+
+            gGripperPivot2.processTick(dTime);
+            gGripperBase2.processTick(dTime);
+            gGripperTip2.processTick(dTime);
+
+            gTargetBall.Transformation.translation.x += dTime * ( gTargetX - gTargetBall.Transformation.translation.x);
+            gTargetBall.Transformation.translation.y += dTime * ( gTargetY - gTargetBall.Transformation.translation.y);
+            gTargetBall.Transformation.translation.z += dTime * ( gTargetZ - gTargetBall.Transformation.translation.z);
+
+
+            gTargetRoll_transition += dTime * (gTargetRoll - gTargetRoll_transition);
+            gTargetElevation_transition += dTime * (gTargetElevation - gTargetElevation_transition);
+            gTargetAzimuth_transition += dTime * (gTargetAzimuth - gTargetAzimuth_transition);
+            gSolutionAngle_transition += dTime * (gSolutionAngle - gSolutionAngle_transition);
+
+
+            CommandGripperToTarget();
+
+            var wCanvas = document.getElementById("OuputCanvas");
+
+            drawCanvas(wCanvas);
+
+        }
+
+        function CommandGripperToTarget() {
+
+            var BaseTransformMat = gCanvasObj.getObjectIDTransformation(gBase.getObjectID());
+            var Seg2TransformMat = gCanvasObj.getObjectIDTransformation(gSeg2.getObjectID());
+            var Seg3TransformMat = gCanvasObj.getObjectIDTransformation(gSeg3.getObjectID());
+            var Seg4TransformMat = gCanvasObj.getObjectIDTransformation(gSeg4.getObjectID());
+
+            var GripperTip1TransformMat = gCanvasObj.getObjectIDTransformation(gGripperTip1.getObjectID());
+            var GripperTip2TransformMat = gCanvasObj.getObjectIDTransformation(gGripperTip2.getObjectID());
+
+            var BaseLocation = BaseTransformMat.translation
+            var Seg2Location = Seg2TransformMat.translation
+            var Seg3Location = Seg3TransformMat.translation
+            var Seg4Location = Seg4TransformMat.translation
+            var GripperTip1Location = GripperTip1TransformMat.translation
+            var GripperTip2Location = GripperTip2TransformMat.translation
+
+            var GripperTipLocation = GripperTip1Location.add(GripperTip2Location).scale(0.5);
+
+            var EffectorLength = GripperTipLocation.subtract(Seg3Location).magnitude();
+            var MidSectionLength = Seg3Location.subtract(Seg2Location).magnitude();
+            var UpperSectionLength = Seg2Location.subtract(BaseLocation).magnitude();
+
+            var wContactEuler = new EulerAngles(gTargetRoll_transition, gTargetElevation_transition, gTargetAzimuth_transition);
+
+            var wTargetLocation = new Vector3D(0.0, 0.0, 0.0);
+            wTargetLocation.set(gTargetBall.Transformation.translation);
+
+            var wEffectorDirection = wContactEuler.rotateVector(new Vector3D(EffectorLength, 0.0, 0.0));
+            var wEffectorBase = wTargetLocation.subtract(wEffectorDirection);
+            var wEffectorUp = wContactEuler.rotateVector(new Vector3D(0.0, 0.0, 1.0));
+
+            var wBaseToEffectorBase = wEffectorBase.subtract(BaseLocation);
+            var wBaseToEffectorBaseMag = wBaseToEffectorBase.magnitude();
+            // Law of Cosine
+            var wMidPointAngleCosine = wBaseToEffectorBaseMag * wBaseToEffectorBaseMag - MidSectionLength * MidSectionLength - UpperSectionLength * UpperSectionLength;
+            wMidPointAngleCosine /= -2 * MidSectionLength * UpperSectionLength;
+
+            var wMidPointAngle = Math.PI;
+            var wDeltaAngleEFfector = 0;
+            var wDeltaAngleBase = 0;
+
+            
+            // assume that the Mid Section and the BaseSection forms a line
+            var wStraightArmLength = MidSectionLength + UpperSectionLength;
+            var wBaseToTarget = wTargetLocation.subtract(BaseLocation);
+            var wBaseToTargetMag = wBaseToTarget.magnitude();
+
+            // Law of Cosine
+            var wEffectorBaseAngleCosine = wBaseToTargetMag * wBaseToTargetMag - wStraightArmLength * wStraightArmLength - EffectorLength * EffectorLength;
+            wEffectorBaseAngleCosine /= -2 * wStraightArmLength * EffectorLength;
+
+
+            var wMidPointLocation = new Vector3D(0.0, 0.0, 0.0);
+
+            if (1.0 > Math.abs(wMidPointAngleCosine)) {
+                // need to be less than one for solution
+
+                wMidPointAngle = Math.acos(wMidPointAngleCosine);
+                wDeltaAngleEFfector = Math.asin((Math.sin(wMidPointAngle) / wBaseToEffectorBaseMag) * UpperSectionLength);
+                wDeltaAngleBase = Math.asin((Math.sin(wMidPointAngle) / wBaseToEffectorBaseMag) * MidSectionLength);
+
+                var wMidPointPlaneX = wEffectorBase.subtract(BaseLocation).unitVector();
+                var wMidPointPlaneY = wMidPointPlaneX.cross(wEffectorDirection).unitVector();
+                var wMidPointPlaneZ = wMidPointPlaneX.cross(wMidPointPlaneY).unitVector();
+                
+                var wMidPointComponentX = wMidPointPlaneX.scale(UpperSectionLength * Math.cos(wDeltaAngleBase));
+                var wMidPointComponentY = wMidPointPlaneY.scale(UpperSectionLength * Math.sin(wDeltaAngleBase) * Math.sin(gSolutionAngle_transition));
+                var wMidPointComponentZ = wMidPointPlaneZ.scale(UpperSectionLength * Math.sin(wDeltaAngleBase) * Math.cos(gSolutionAngle_transition));
+                
+                var wMidPointOffsetFromBase = wMidPointComponentX.add(wMidPointComponentY.add(wMidPointComponentZ));
+                wMidPointLocation = BaseLocation.add(wMidPointOffsetFromBase);
+
+            }
+            else {
+                // The target Location is too far
+
+                
+                if (1.0 > Math.abs(wEffectorBaseAngleCosine)) {
+                    var wNewEffectorBaseLocation = 
+
+                    wEffectorBasePointAngle = Math.acos(wEffectorBaseAngleCosine);
+                    wDeltaAngleTarget = Math.asin((Math.sin(wEffectorBasePointAngle) / wBaseToTargetMag) * wStraightArmLength);
+                    wDeltaAngleBase = Math.asin((Math.sin(wEffectorBasePointAngle) / wBaseToTargetMag) * EffectorLength);
+
+                    var wEffectorBasePointPlaneX = wBaseToTarget.unitVector();
+                    var wEffectorBasePointPlaneY = wBaseToTarget.cross(wEffectorDirection).unitVector();
+                    var wEffectorBasePointPlaneZ = wEffectorBasePointPlaneX.cross(wEffectorBasePointPlaneY).unitVector();
+
+                    var wEffectorBaseX = wEffectorBasePointPlaneX.scale(wStraightArmLength * Math.cos(wDeltaAngleBase));
+                    var wEffectorBaseZ = wEffectorBasePointPlaneZ.scale(wStraightArmLength * Math.sin(wDeltaAngleBase));
+
+                    var wEffectorBaseOffsetFromBase = wEffectorBaseX.add(wEffectorBaseZ);
+                    wEffectorBase.set(BaseLocation.add(wEffectorBaseOffsetFromBase));
+
+                    var wMidPointX = wEffectorBasePointPlaneX.scale(UpperSectionLength * Math.cos(wDeltaAngleBase));
+                    var wMidPointZ = wEffectorBasePointPlaneZ.scale(UpperSectionLength * Math.sin(wDeltaAngleBase));
+
+
+                    var wMidPointOffsetFromBase = wMidPointX.add(wMidPointZ);
+                    wMidPointLocation = BaseLocation.add(wMidPointOffsetFromBase);
+
+
+                }
+                else {
+                    // Target is too far with compensated result.
+                }
+
+            }
+            
+            gBone.VertexList[0].set(BaseLocation);
+            gBone.VertexList[1].set(wMidPointLocation);
+            gBone.VertexList[2].set(wEffectorBase);
+            gBone.VertexList[3].set(wTargetLocation);
+            gBone.VertexList[4].set(wTargetLocation.add(wEffectorUp));
+            
+            if (1.0 > Math.abs(wMidPointAngleCosine)) {
+                gBone.Color = "white";
+            }
+            else {
+                gBone.Color = "red";
+
+            }
+            //-------- Setting points in Robot -----------
+
+            if (1.0 > Math.abs(wMidPointAngleCosine))
+            {
+                var wBaseToMidZ = wMidPointLocation.subtract(BaseLocation);
+                var wMidToEndZ = wEffectorBase.subtract(wMidPointLocation);
+                var wEndToTargetZ = wTargetLocation.subtract(wEffectorBase);
+
+                var wTargetX = wEffectorUp;
+
+                var wBasToMedY = new Vector3D(0.0, 0.0, 1.0).cross(wBaseToMidZ).unitVector();
+                var wMidToEndY = wBaseToMidZ.cross(wMidToEndZ).unitVector();
+                var wEndToTgtY = wMidToEndZ.cross(wEndToTargetZ).unitVector();
+
+                var wBasToMedX = wBasToMedY.cross(wBaseToMidZ).unitVector();
+                var wMidToEndX = wMidToEndY.cross(wMidToEndZ).unitVector();
+                var wEndToTgtX = wEndToTgtY.cross(wEndToTargetZ).unitVector();
+
+                var FlipSolution = false;
+
+                // ----- Base Component Input -------------------
+                wYaw_Base = wBaseToMidZ.azimuth();
+                wPitch_Base = new Vector3D(0.0, 0.0, 1.0).angleOffset(wBaseToMidZ);
+
+
+                if (Math.PI / 2 < Math.abs(wYaw_Base)) {
+                    if (wYaw_Base > 0) {
+                        wYaw_Base -= Math.PI;
+                    }
+                    else {
+                        wYaw_Base += Math.PI;
+                    }
+
+                    wPitch_Base *= -1;
+                    FlipSolution = true;
+                }
+
+                gBase.setCmdYaw(wYaw_Base);
+                gBase.setCmdPitch(wPitch_Base);
+
+
+                // ----- Mid Component Input -------------------
+
+                var wMidToEndProg = wMidToEndZ.projection(wBaseToMidZ);
+                var wMidToEndPlanar = wMidToEndZ.subtract(wMidToEndProg);
+
+                var wCross_Mid = wBasToMedX.cross(wMidToEndPlanar);
+                var wDot_Mid = wCross_Mid.dot(wBaseToMidZ);
+
+                var wYaw_Mid = wBasToMedX.angleOffset(wMidToEndPlanar);
+
+                if (wDot_Mid < 0) {
+                    wYaw_Mid *= -1;
+                }
+
+                if (true == FlipSolution) {
+                    if (wYaw_Mid > 0) {
+                        wYaw_Mid -= Math.PI;
+                    }
+                    else {
+                        wYaw_Mid += Math.PI;
+                    }
+                    FlipSolution = !FlipSolution;
+                }
+
+                var wPitch_Mid = wMidToEndZ.angleOffset(wBaseToMidZ);
+
+                if (Math.PI / 2 < Math.abs(wYaw_Mid)) {
+                    if (wYaw_Mid > 0) {
+                        wYaw_Mid -= Math.PI;
+                    }
+                    else {
+                        wYaw_Mid += Math.PI;
+                    }
+
+                    wPitch_Mid *= -1;
+                    FlipSolution = !FlipSolution;
+                }
+
+                gSeg2.setCmdYaw(wYaw_Mid);
+                gSeg2.setCmdPitch(wPitch_Mid);
+
+                // ----- End Component Input -------------------
+
+                var wEndToTgtProg = wEndToTargetZ.projection(wMidToEndZ);
+                var wEndToTgtPlanar = wEndToTargetZ.subtract(wEndToTgtProg);
+
+                var wCross_End = wMidToEndX.cross(wEndToTgtPlanar);
+                var wDot_End = wCross_End.dot(wMidToEndZ);
+
+                var wYaw_End = wMidToEndX.angleOffset(wEndToTgtPlanar);
+
+                if (wDot_End < 0) {
+                    wYaw_End *= -1;
+                }
+
+                if (true == FlipSolution) {
+                    if (wYaw_End > 0) {
+                        wYaw_End -= Math.PI;
+                    }
+                    else {
+                        wYaw_End += Math.PI;
+                    }
+                    FlipSolution = !FlipSolution;
+                }
+
+                var wPitch_End = wEndToTargetZ.angleOffset(wMidToEndZ);
+
+                if (Math.PI / 2 < Math.abs(wYaw_End)) {
+                    if (wYaw_End > 0) {
+                        wYaw_End -= Math.PI;
+                    }
+                    else {
+                        wYaw_End += Math.PI;
+                    }
+
+                    wPitch_End *= -1;
+                    FlipSolution = !FlipSolution;
+                }
+
+                gSeg3.setCmdYaw(wYaw_End);
+                gSeg3.setCmdPitch(wPitch_End);
+
+                // ------------ Tip Rotation ------------------------
+                var wTgtProg = wTargetX.projection(wEndToTargetZ);
+                var wTgtUpPlanar = wTargetX.subtract(wTgtProg);
+
+                var wCross_Tip = wEndToTgtX.cross(wTgtUpPlanar);
+                var wDot_Tip = wCross_Tip.dot(wEndToTargetZ);
+
+                var wYaw_Tip = wEndToTgtX.angleOffset(wTgtUpPlanar);
+
+                if (wDot_Tip < 0) {
+                    wYaw_Tip *= -1;
+                }
+
+                if (true == FlipSolution) {
+                    if (wYaw_Tip > 0) {
+                        wYaw_Tip -= Math.PI;
+                    }
+                    else {
+                        wYaw_Tip += Math.PI;
+                    }
+                    FlipSolution = !FlipSolution;
+                }
+
+
+                gSeg4.setCmdYaw(wYaw_Tip);
+            }
+            else if (1.0 > Math.abs(wEffectorBaseAngleCosine)) {
+
+                var wBaseToEndBaseZ = wEffectorBase.subtract(BaseLocation);
+                var wEndToTargetZ = wTargetLocation.subtract(wEffectorBase);
+
+                var wBasToEndBaseY = new Vector3D(0.0, 0.0, 1.0).cross(wBaseToEndBaseZ).unitVector();
+                var wEndToTgtY = wBaseToEndBaseZ.cross(wEndToTargetZ).unitVector();
+
+                var wBasToEndBaseX = wBasToEndBaseY.cross(wBaseToEndBaseZ).unitVector();
+                var wEndToTgtX = wEndToTgtY.cross(wEndToTargetZ).unitVector();
+
+                var wTargetX = wEffectorUp;
+
+                var FlipSolution = false;
+
+                // ----- Base Component Input -------------------
+                wYaw_Base = wBaseToEndBaseZ.azimuth();
+                wPitch_Base = new Vector3D(0.0, 0.0, 1.0).angleOffset(wBaseToEndBaseZ);
+
+
+                if (Math.PI / 2 < Math.abs(wYaw_Base)) {
+                    if (wYaw_Base > 0) {
+                        wYaw_Base -= Math.PI;
+                    }
+                    else {
+                        wYaw_Base += Math.PI;
+                    }
+
+                    wPitch_Base *= -1;
+                    FlipSolution = true;
+                }
+
+                gBase.setCmdYaw(wYaw_Base);
+                gBase.setCmdPitch(wPitch_Base);
+
+                // ---------End Component Input -------
+
+                var wEndToTgtProg = wEndToTargetZ.projection(wBaseToEndBaseZ);
+                var wEndToTgtPlanar = wEndToTargetZ.subtract(wEndToTgtProg);
+
+                var wCross_End = wBasToEndBaseX.cross(wEndToTgtPlanar);
+                var wDot_End = wCross_End.dot(wBaseToEndBaseZ);
+
+                var wYaw_End = wBasToEndBaseX.angleOffset(wEndToTgtPlanar);
+
+                if (wDot_End < 0) {
+                    wYaw_End *= -1;
+                }
+
+                if (true == FlipSolution) {
+                    if (wYaw_End > 0) {
+                        wYaw_End -= Math.PI;
+                    }
+                    else {
+                        wYaw_End += Math.PI;
+                    }
+                    FlipSolution = !FlipSolution;
+                }
+
+                var wPitch_End = wEndToTargetZ.angleOffset(wBaseToEndBaseZ);
+
+                if (Math.PI / 2 < Math.abs(wYaw_End)) {
+                    if (wYaw_End > 0) {
+                        wYaw_End -= Math.PI;
+                    }
+                    else {
+                        wYaw_End += Math.PI;
+                    }
+
+                    wPitch_End *= -1;
+                    FlipSolution = !FlipSolution;
+                }
+
+
+                gSeg2.setCmdYaw(wYaw_End / 2);
+                gSeg2.setCmdPitch(0.0);
+
+                gSeg3.setCmdYaw(wYaw_End / 2);
+                gSeg3.setCmdPitch(wPitch_End);
+
+                // ------------ Tip Rotation ------------------------
+
+                var wTgtProg = wTargetX.projection(wEndToTargetZ);
+                var wTgtUpPlanar = wTargetX.subtract(wTgtProg);
+
+                var wCross_Tip = wEndToTgtX.cross(wTgtUpPlanar);
+                var wDot_Tip = wCross_Tip.dot(wEndToTargetZ);
+
+                var wYaw_Tip = wEndToTgtX.angleOffset(wTgtUpPlanar);
+
+                if (wDot_Tip < 0) {
+                    wYaw_Tip *= -1;
+                }
+
+                if (true == FlipSolution) {
+                    if (wYaw_Tip > 0) {
+                        wYaw_Tip -= Math.PI;
+                    }
+                    else {
+                        wYaw_Tip += Math.PI;
+                    }
+                    FlipSolution = !FlipSolution;
+                }
+
+
+                gSeg4.setCmdYaw(wYaw_Tip);
+            }
+        }
+
+        function drawCanvas(iCanvas) {
+
+
+            var wCtx = iCanvas.getContext("2d");
+            var wCanvasHeight = iCanvas.height;
+            var wCanvasWidth = iCanvas.width;
+
+            wCtx.clearRect(0, 0, wCanvasWidth, wCanvasHeight);
+
+            wCtx.translate(wCanvasWidth / 2, wCanvasHeight / 2);
+            wCtx.scale(gScale, gScale);
+
+            gCanvasObj.plotOnCanvas(wCtx, gCameraPitch.applyTransformationMatrix(gCameraYaw));
+
+            wCtx.scale(1 / gScale, 1 / gScale);
+
+            wCtx.translate(-wCanvasWidth / 2, -wCanvasHeight / 2);
+
+
+            
+        }
+
+        function getClosestPoint(iLocation, iLocationList) {
+        
+            var wIndex = 0;
+            var wDX = iLocation.x - iLocationList[wIndex].x;
+            var wDY = iLocation.y - iLocationList[wIndex].y;
+
+            var wDistance = wDX * wDX + wDY * wDY;
+
+            for (var i = 0; i < iLocationList.length; ++i) {
+                wDX = iLocation.x - iLocationList[i].x;
+                wDY = iLocation.y - iLocationList[i].y;
+
+                var wNewDistance = wDX * wDX + wDY * wDY;
+
+                if (wNewDistance < wDistance) {
+                    wIndex = i;
+                    wDistance = wNewDistance;
+                }
+            }
+
+            return {
+                index : wIndex,
+                location : iLocationList[wIndex]
+            }
+        }
+
+        function buttonPress(iType) {
+
+            switch (iType) {
+                case "LL":
+                    gCameraYaw.rotation.yaw += 15 * Math.PI / 180;
+                    break;
+                case "L":
+                    gCameraYaw.rotation.yaw += 7.5 * Math.PI / 180;
+                    break;
+                case "R":
+                    gCameraYaw.rotation.yaw -= 7.5 * Math.PI / 180;
+                    break;
+                case "RR":
+                    gCameraYaw.rotation.yaw -= 15 * Math.PI / 180;
+                    break;
+                case "U":
+                    gCameraPitch.rotation.pitch += 15 * Math.PI / 180;
+                    break;
+                case "D":
+                    gCameraPitch.rotation.pitch -= 15 * Math.PI / 180;
+                    break;
+            }
+        }
+
+        function moveRobot(iType, iValue) {
+
+            /*
+        var gBase = new RobotSegment(40, 50);
+        var gSeg2 = new RobotSegment(75, 20);
+        var gSeg3 = new RobotSegment(50, 15);
+        var gSeg4 = new RobotSegment(50, 10);
+
+        var gGripperPivot1 = new RobotSegment(0, 0);
+        var gGripperBase1 = new RobotSegment(25, 10);
+        var gGripperTip1 = new RobotSegment(25, 10);
+
+        var gGripperPivot2 = new RobotSegment(0, 0);
+        var gGripperBase2 = new RobotSegment(25, 10);
+        var gGripperTip2 = new RobotSegment(25, 10);
+
+        
+        var gTargetRoll = 0.0;
+        var gTargetElevation = 0.0;
+        var gTargetAzimuth = 0.0;
+        var gSolutionAngle = Math.PI / 2;
+
+        */
+            var wValue = parseFloat(iValue);
+            if (true == isNaN(wValue)) {
+                return;
+            }
+            
+            switch (iType) {
+                case "base_roll":
+                    gBase.setCmdRoll(wValue * Math.PI / 180);
+                    break;
+                case "base_pitch":
+                    gBase.setCmdPitch(wValue * Math.PI / 180);
+                    break;
+                case "base_yaw":
+                    gBase.setCmdYaw(wValue * Math.PI / 180);
+                    break;
+
+                case "seg2_roll":
+                    gSeg2.setCmdRoll(wValue * Math.PI / 180);
+                    break;
+                case "seg2_pitch":
+                    gSeg2.setCmdPitch(wValue * Math.PI / 180);
+                    break;
+                case "seg2_yaw":
+                    gSeg2.setCmdYaw(wValue * Math.PI / 180);
+                    break;
+
+                case "seg3_roll":
+                    gSeg3.setCmdRoll(wValue * Math.PI / 180);
+                    break;
+                case "seg3_pitch":
+                    gSeg3.setCmdPitch(wValue * Math.PI / 180);
+                    break;
+                case "seg3_yaw":
+                    gSeg3.setCmdYaw(wValue * Math.PI / 180);
+                    break;
+
+                case "seg4_roll":
+                    gSeg4.setCmdRoll(wValue * Math.PI / 180);
+                    break;
+                case "seg4_pitch":
+                    gSeg4.setCmdPitch(wValue * Math.PI / 180);
+                    break;
+                case "seg4_yaw":
+                    gSeg4.setCmdYaw(wValue * Math.PI / 180);
+                    break;
+
+
+                case "ball_x":
+                    
+                    var wCanvas = document.getElementById("OuputCanvas");
+                    var wSize = wCanvas.parentElement.clientHeight;
+                    if (wSize > wCanvas.parentElement.clientWidth) wSize = wCanvas.parentElement.clientWidth;
+
+                    gTargetX = wValue;
+                    break;
+                case "ball_y":
+
+                    var wCanvas = document.getElementById("OuputCanvas");
+                    var wSize = wCanvas.parentElement.clientHeight;
+                    if (wSize > wCanvas.parentElement.clientWidth) wSize = wCanvas.parentElement.clientWidth;
+
+                    gTargetY = wValue;
+                    break;
+                case "ball_z":
+                    var wCanvas = document.getElementById("OuputCanvas");
+                    var wSize = wCanvas.parentElement.clientHeight;
+                    if (wSize > wCanvas.parentElement.clientWidth) wSize = wCanvas.parentElement.clientWidth;
+
+                    gTargetZ = wValue;
+                    break;
+                case 'ball_r':
+                    gTargetRoll = wValue * Math.PI / 180;
+                    break;
+                case 'ball_p':
+                    gTargetElevation = wValue * Math.PI / 180;
+                    break;
+                case 'ball_q':
+                    gTargetAzimuth = wValue * Math.PI / 180;
+                    break;
+                case 'ball_a':
+                    gSolutionAngle = wValue * Math.PI / 180;
+                    break;
+            }
+        }
+
+        
+    </script>
+</head>
+<body onload="init()" onresize ="resize()">
+    <div>
+        <table>
+            <tr>
+                <td>
+                    <canvas id="OuputCanvas"></canvas>
+                </td>
+                <td>
+                    <input type="button" value="<<" onclick="buttonPress('LL')" />
+                    <input type="button" value="<" onclick="buttonPress('L')" />
+                    <input type="button" value=">" onclick="buttonPress('R')" />
+                    <input type="button" value=">>" onclick="buttonPress('RR')" />
+                    <br />
+                    <input type="button" value="^" onclick="buttonPress('U')" />
+                    <input type="button" value="v" onclick="buttonPress('D')" />
+                    <br />
+                    <input type="number" min="-180" max="180" onchange="moveRobot('base_roll', this.value)"  onmouseover="moveRobot('base_roll', this.value)"  />
+                    <input type="number" min="-180" max="180" onchange="moveRobot('base_pitch', this.value)" onmouseover="moveRobot('base_pitch', this.value)" />
+                    <input type="number" min="-180" max="180" onchange="moveRobot('base_yaw', this.value)"   onmouseover="moveRobot('base_yaw', this.value)"   />
+                    <br />
+                    <input type="number" min="-180" max="180" onchange="moveRobot('seg2_roll', this.value)"  onmouseover="moveRobot('seg2_roll', this.value)"  />
+                    <input type="number" min="-180" max="180" onchange="moveRobot('seg2_pitch', this.value)" onmouseover="moveRobot('seg2_pitch', this.value)" />
+                    <input type="number" min="-180" max="180" onchange="moveRobot('seg2_yaw', this.value)"   onmouseover="moveRobot('seg2_yaw', this.value)"   />
+                    <br />
+                    <input type="number" min="-180" max="180" onchange="moveRobot('seg3_roll', this.value)"  onmouseover="moveRobot('seg3_roll', this.value)"  />
+                    <input type="number" min="-180" max="180" onchange="moveRobot('seg3_pitch', this.value)" onmouseover="moveRobot('seg3_pitch', this.value)" />
+                    <input type="number" min="-180" max="180" onchange="moveRobot('seg3_yaw', this.value)"   onmouseover="moveRobot('seg3_yaw', this.value)"   />
+                    <br />
+                    <input type="number" min="-180" max="180" onchange="moveRobot('seg4_roll', this.value)"  onmouseover="moveRobot('seg4_roll', this.value)"  />
+                    <input type="number" min="-180" max="180" onchange="moveRobot('seg4_pitch', this.value)" onmouseover="moveRobot('seg4_pitch', this.value)" />
+                    <input type="number" min="-180" max="180" onchange="moveRobot('seg4_yaw', this.value)"   onmouseover="moveRobot('seg4_yaw', this.value)"   />
+                    <br />
+                    <br />
+                    
+                    <input type="number" min="-1000" max="1000" onchange="moveRobot('ball_x', this.value)"   onmouseover="moveRobot('ball_x', this.value)"  onkeyup="moveRobot('ball_x', this.value)" />
+                    <input type="number" min="-1000" max="1000" onchange="moveRobot('ball_y', this.value)"   onmouseover="moveRobot('ball_y', this.value)"  onkeyup="moveRobot('ball_y', this.value)" />
+                    <input type="number" min="-1000" max="1000" onchange="moveRobot('ball_z', this.value)"   onmouseover="moveRobot('ball_z', this.value)"  onkeyup="moveRobot('ball_z', this.value)" />
+                    
+                    <br />
+                    
+                    
+                    <input type="number" min="-180" max="180" onchange="moveRobot('ball_r', this.value)"   onmouseover="moveRobot('ball_r', this.value)"  onkeyup="moveRobot('ball_r', this.value)" />
+                    <input type="number" min="-180" max="180" onchange="moveRobot('ball_p', this.value)"   onmouseover="moveRobot('ball_p', this.value)"  onkeyup="moveRobot('ball_p', this.value)" />
+                    <input type="number" min="-180" max="180" onchange="moveRobot('ball_q', this.value)"   onmouseover="moveRobot('ball_q', this.value)"  onkeyup="moveRobot('ball_q', this.value)" />
+                    
+                    <br />
+                    
+                    <input type="number" min="-180" max="180" onchange="moveRobot('ball_a', this.value)"   onmouseover="moveRobot('ball_a', this.value)"  onkeyup="moveRobot('ball_a', this.value)" />
+
+                </td>
+            </tr>
+        </table>
+    </div>
+</body>
+</html>

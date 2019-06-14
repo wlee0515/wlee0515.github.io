@@ -1,0 +1,710 @@
+﻿<html>
+<head>
+  <script src="GamePad.js"></script>
+  <!-- fill iPhone screen with canvas -->
+  <meta name="viewport" content="width=400" />
+  <title>Stock Calculator</title>
+  <style>
+    body {
+      background-color : midnightblue;
+    }
+
+    div {
+      padding: 15px;
+    }
+    header {
+      font-family: Courier;
+      color: white;
+      font-size: 25px;
+    }
+
+    input {
+      width: 80px;
+    }
+
+    table, th, td {
+      background-color : white;
+      border-collapse: collapse;
+      border: 1px solid black;
+      padding: 5px;
+    }
+
+    .OutputTable td{
+    }
+  </style>
+  <script type="text/javascript">
+
+    function convertInterest(iRate, iToTerm) {
+      return (100 * (Math.pow(1 + iRate / 100, iToTerm) - 1)).toFixed(3);
+    }
+
+    function computeCommisionRate(iPrincipal, iCommision) {
+      return 100.0 * ((iPrincipal + iCommision) / iPrincipal - 1);
+    }
+
+    function computePostTaxGrowthRate(iGrowthRate, iTaxRate) {
+
+      return iGrowthRate / (1.0 - 0.5 * iTaxRate / 100.0);
+    }
+
+    function computeRequiredGrowthRate(iPrincipal, iCommision, iGrowth, iTaxRate) {
+      var wCommisionRate = computeCommisionRate(iPrincipal, iCommision);
+      var wGrowth = iGrowth + 2 * wCommisionRate;
+      return computePostTaxGrowthRate(wGrowth, iTaxRate);
+    }
+
+    function computePrincipalEfficientcy(iPrincipal, iCommision, iGrowth, iTaxRate) {
+      var wCommisionRate = computeCommisionRate(iPrincipal, iCommision);
+      var wGrowth = iGrowth + 2 * wCommisionRate;
+      var wPosttaxGrowthRate = computePostTaxGrowthRate(wGrowth, iTaxRate);
+      var wEfficientcy = 100.0 * iGrowth / wPosttaxGrowthRate;
+
+      return {
+        CommisionRate: wCommisionRate,
+        PostTaxGrowthRate: wPosttaxGrowthRate,
+        PrincipalEfficientcy: wEfficientcy,
+      }
+    }
+
+    //----------------------------------------------------
+    // Interest Converter
+    //----------------------------------------------------
+
+    function InterestConverter_UpdateAnnual() {
+
+      var wInput = document.getElementById("IRC - Annual");
+      var wMonthlyRateBox = document.getElementById("IRC - Annual to Monthly");
+      var wWeeklyRateBox = document.getElementById("IRC - Annual to Weekly");
+
+      wMonthlyRateBox.innerHTML = convertInterest(wInput.value, 1 / 12);
+      wWeeklyRateBox.innerHTML = convertInterest(wInput.value, 1 / 52);
+    }
+
+    function InterestConverter_UpdateMonthly() {
+
+      var wInput = document.getElementById("IRC - Monthly");
+      var wAnnualRateBox = document.getElementById("IRC - Monthly to Annual");
+      var wWeeklyRateBox = document.getElementById("IRC - Monthly to Weekly");
+
+      wAnnualRateBox.innerHTML = convertInterest(wInput.value, 12);
+      wWeeklyRateBox.innerHTML = convertInterest(wInput.value, 1/4);
+    }
+
+    function InterestConverter_UpdateWeekly() {
+
+      var wInput = document.getElementById("IRC - Weekly");
+      var wAnnualRateBox = document.getElementById("IRC - Weekly to Annual");
+      var wWeeklyRateBox = document.getElementById("IRC - Weekly to Monthly");
+
+      wAnnualRateBox.innerHTML = convertInterest(wInput.value, 52);
+      wWeeklyRateBox.innerHTML = convertInterest(wInput.value, 4);
+    }
+
+    //----------------------------------------------------
+    // Principal Efficientcy Calculator
+    //----------------------------------------------------
+
+    function updateEfficiencyCalculation() {
+
+      var wPrincipal = document.getElementById("PEC - Principal");
+      var wCommision = document.getElementById("PEC - Commision");
+      var wGrowth = document.getElementById("PEC - Growth");
+      var wTaxRate = document.getElementById("PEC - TaxRate");
+      var wOutput = document.getElementById("PEC - Output Box");
+
+      var wResult = computePrincipalEfficientcy(Number(wPrincipal.value), Number(wCommision.value), Number(wGrowth.value), Number(wTaxRate.value));
+
+      var wOutputString = "";
+      wOutputString += "Commison Rate is                   " + wResult.CommisionRate.toFixed(3) + " % \n";
+      wOutputString += "Post Tax Growth Required is  " + wResult.PostTaxGrowthRate.toFixed(3) + " % \n";
+      wOutputString += "Principal Efificientcy is           " + wResult.PrincipalEfficientcy.toFixed(3) + " %  \n";
+      wOutput.innerText = wOutputString;
+    }
+
+    //----------------------------------------------------
+    // Stock Variation Calculator
+    //----------------------------------------------------
+
+    function updateStockVariationCalculation() {
+
+      var wHigh = document.getElementById("SVC - High");
+      var wLow = document.getElementById("SVC - Low");
+      var wVariatoinD = document.getElementById("SVC - VariationD");
+      var wVariatoinP = document.getElementById("SVC - VariationP");
+
+      var wVarD = Number(wHigh.value) - Number(wLow.value);
+      wVariatoinD.innerText = wVarD.toFixed(2);
+      wVariatoinP.innerText = ((wVarD / Number(wLow.value)) * 100).toFixed(3);
+    }
+
+    //----------------------------------------------------
+    // Sell Price Calculator
+    //----------------------------------------------------
+
+    function addSellPriceCalculatorRow() {
+      var wTable = document.getElementById("SPC - OutputTable");
+
+      if (0 == wTable.rows.length) {
+        var wRow = wTable.insertRow(wTable.rows.length);
+        var wCell = wRow.insertCell(wRow.cells.length);
+        wCell.innerHTML = "Buy Price ($)";
+        wCell = wRow.insertCell(wRow.cells.length);
+        wCell.innerHTML = "Quantity (#)";
+        wCell = wRow.insertCell(wRow.cells.length);
+        wCell.innerHTML = "Book Value ($)";
+        wCell = wRow.insertCell(wRow.cells.length);
+        wCell.innerHTML = "Book Price ($)";
+        wCell = wRow.insertCell(wRow.cells.length);
+        wCell.innerHTML = "Sell Price ($)";
+        wCell = wRow.insertCell(wRow.cells.length);
+        wCell.innerHTML = "Price Change ($)";
+        wCell = wRow.insertCell(wRow.cells.length);
+        wCell.innerHTML = "Price Change (%)";
+        wCell = wRow.insertCell(wRow.cells.length);
+        wCell.innerHTML = "Sell Value ($)";
+        wCell = wRow.insertCell(wRow.cells.length);
+        wCell.innerHTML = "Gross Profit ($)";
+        wCell = wRow.insertCell(wRow.cells.length);
+        wCell.innerHTML = "Net Profit ($)";
+      }
+
+      var wRow = wTable.insertRow(wTable.rows.length);
+      var wCell = wRow.insertCell(wRow.cells.length);
+      wCell.innerHTML = '<input type="number" id="SPC - Buy Price ' + (wTable.rows.length - 1) + '" value ="10.0" onkeyup ="updateSellPriceCalculatorTable()" onchange ="updateSellPriceCalculatorTable()"/>'
+      wCell = wRow.insertCell(wRow.cells.length);
+      wCell.innerHTML = '<input type="number" id="SPC - Quantity ' + (wTable.rows.length - 1) + '" value ="50" onkeyup ="updateSellPriceCalculatorTable()" onchange ="updateSellPriceCalculatorTable()"/>'
+      //wCell.innerHTML = "Quantity (#)";
+      wCell = wRow.insertCell(wRow.cells.length);
+      //wCell.innerHTML = "Book Value ($)";
+      wCell = wRow.insertCell(wRow.cells.length);
+      //wCell.innerHTML = "Book Price ($)";
+      wCell = wRow.insertCell(wRow.cells.length);
+      //wCell.innerHTML = "Sell Price ($)";
+      wCell = wRow.insertCell(wRow.cells.length);
+      //wCell.innerHTML = "Price Change ($)";
+      wCell = wRow.insertCell(wRow.cells.length);
+      //wCell.innerHTML = "Price Change (%)";
+      wCell = wRow.insertCell(wRow.cells.length);
+      //wCell.innerHTML = "Sell Value ($)";
+      wCell = wRow.insertCell(wRow.cells.length);
+      //wCell.innerHTML = "Gross Profit($)";
+      wCell = wRow.insertCell(wRow.cells.length);
+      //wCell.innerHTML = "Net Profit ($)";
+
+
+      if (wTable.rows.length > 2) {
+
+        var wIndex = wTable.rows.length - 2;
+        var wBuyPrice1 = Number((document.getElementById("SPC - Buy Price " + wIndex)).value);
+        var wQuantity1 = Number((document.getElementById("SPC - Quantity " + wIndex)).value);
+
+        var wIndex = wTable.rows.length - 1;
+        var wBuyPrice2 = document.getElementById("SPC - Buy Price " + wIndex);
+        var wQuantity2 = document.getElementById("SPC - Quantity " + wIndex);
+
+        wBuyPrice2.value = wBuyPrice1.toFixed(2);
+        wQuantity2.value = Math.round(wQuantity1);
+      }
+
+      updateSellPriceCalculatorTable();
+    }
+
+    function removeSellPriceCalculatorRow() {
+      var wTable = document.getElementById("SPC - OutputTable");
+
+      if (wTable.rows.length > 2) {
+        wTable.deleteRow(wTable.rows.length - 1);
+      }
+    }
+
+    function updateSellPriceCalculatorTable() {
+
+      //            var wPrincipal = Number(document.getElementById("SPC - Principal").value);
+      var wCommision = Number(document.getElementById("SPC - Commision").value);
+      var wGrowth = Number(document.getElementById("SPC - Growth").value);
+      var wTaxRate = Number(document.getElementById("SPC - TaxRate").value);
+
+      var wTable = document.getElementById("SPC - OutputTable");
+
+      for (var i = 1; i < wTable.rows.length; ++i) {
+        var wBuyPrice = Number((document.getElementById("SPC - Buy Price " + i)).value);
+        var wQuantity = Number((document.getElementById("SPC - Quantity " + i)).value);
+
+        //var wQuantity = Math.floor(wPrincipal / wBuyPrice);
+        var wActualPricipal = wBuyPrice * wQuantity;
+        var wBookCost = wActualPricipal + wCommision;
+        var wBookPrice = wBookCost / wQuantity;
+        var wRequiredGrowth = computeRequiredGrowthRate(wActualPricipal, wCommision, wGrowth, wTaxRate);
+        var wPriceChange = wBuyPrice * wRequiredGrowth / 100;
+        var wPriceChangeP = 100 * wPriceChange / wBuyPrice;
+        var wSellPrice = wPriceChange + wBuyPrice;
+        var wSellValue = wSellPrice * wQuantity;
+        var wGrossProfit = wSellValue - wBookCost;
+        var wNetProfit = (wGrossProfit - wCommision) * (1 - 0.5 * wTaxRate / 100);
+        if (0 > wNetProfit) wNetProfit = wGrossProfit - wCommision;
+
+
+        //wTable.rows[i].cells[1].innerText = wQuantity;
+        wTable.rows[i].cells[2].innerText = wBookCost.toFixed(2);
+        wTable.rows[i].cells[3].innerText = wBookPrice.toFixed(2);
+        wTable.rows[i].cells[4].innerText = wSellPrice.toFixed(2);
+        wTable.rows[i].cells[5].innerText = wPriceChange.toFixed(2);
+        wTable.rows[i].cells[6].innerText = wPriceChangeP.toFixed(3) + "%";
+        wTable.rows[i].cells[7].innerText = wSellValue.toFixed(2);
+        wTable.rows[i].cells[8].innerText = wGrossProfit.toFixed(2);
+        wTable.rows[i].cells[9].innerText = wNetProfit.toFixed(2);
+      }
+    }
+
+    //----------------------------------------------------
+    // Buy Price Profit Calculator
+    //----------------------------------------------------
+
+    function addBuyPriceProfitCalculatorRow() {
+      var wTable = document.getElementById("BPPC - OutputTable");
+
+      if (0 == wTable.rows.length) {
+        var wRow = wTable.insertRow(wTable.rows.length);
+        var wCell = wRow.insertCell(wRow.cells.length);
+        wCell.innerHTML = "Buy Price ($)";
+        wCell = wRow.insertCell(wRow.cells.length);
+        wCell.innerHTML = "Quantity (#)";
+        wCell = wRow.insertCell(wRow.cells.length);
+        wCell.innerHTML = "Book Value ($)";
+        wCell = wRow.insertCell(wRow.cells.length);
+        wCell.innerHTML = "Book Price ($)";
+        wCell = wRow.insertCell(wRow.cells.length);
+        wCell.innerHTML = "Sell Price ($)";
+        wCell = wRow.insertCell(wRow.cells.length);
+        wCell.innerHTML = "Price Change ($)";
+        wCell = wRow.insertCell(wRow.cells.length);
+        wCell.innerHTML = "Price Change (%)";
+        wCell = wRow.insertCell(wRow.cells.length);
+        wCell.innerHTML = "Sell Value ($)";
+        wCell = wRow.insertCell(wRow.cells.length);
+        wCell.innerHTML = "Gross Profit ($)";
+        wCell = wRow.insertCell(wRow.cells.length);
+        wCell.innerHTML = "Net Profit ($)";
+      }
+
+      var wRow = wTable.insertRow(wTable.rows.length);
+      var wCell = wRow.insertCell(wRow.cells.length);
+      wCell.innerHTML = '<input type="number" id="BPPC - Buy Price ' + (wTable.rows.length - 1) + '" value ="10.00" onkeyup ="updateBuyPriceProfitCalculatorTable()" onchange ="updateBuyPriceProfitCalculatorTable()"/>'
+      wCell = wRow.insertCell(wRow.cells.length);
+      wCell.innerHTML = '<input type="number" id="BPPC - Quantity ' + (wTable.rows.length - 1) + '" value ="50" onkeyup ="updateBuyPriceProfitCalculatorTable()" onchange ="updateBuyPriceProfitCalculatorTable()"/>'
+      //wCell.innerHTML = "Quantity (#)";
+      wCell = wRow.insertCell(wRow.cells.length);
+      //wCell.innerHTML = '<input type="number" id="BVPC - Book Value ' + (wTable.rows.length - 1) + '" value ="1000.0" onkeyup ="updateBuyPriceProfitCalculatorTable()" onchange ="updateBuyPriceProfitCalculatorTable()"/>'
+      //wCell.innerHTML = "Book Cost ($)";
+      wCell = wRow.insertCell(wRow.cells.length);
+      //wCell.innerHTML = "Book Price ($)";
+      wCell = wRow.insertCell(wRow.cells.length);
+      wCell.innerHTML = '<input type="number" id="BPPC - Sell Price ' + (wTable.rows.length - 1) + '" value ="100.00" onkeyup ="updateBuyPriceProfitCalculatorTable()" onchange ="updateBuyPriceProfitCalculatorTable()"/>'
+      //wCell.innerHTML = "Sell Price ($)";
+      wCell = wRow.insertCell(wRow.cells.length);
+      //wCell.innerHTML = "Price Change ($)";
+      wCell = wRow.insertCell(wRow.cells.length);
+      //wCell.innerHTML = "Price Change (%)";
+      wCell = wRow.insertCell(wRow.cells.length);
+      //wCell.innerHTML = "Sell Value ($)";
+      wCell = wRow.insertCell(wRow.cells.length);
+      //wCell.innerHTML = "Gross Profit($)";
+      wCell = wRow.insertCell(wRow.cells.length);
+      //wCell.innerHTML = "Net Profit ($)";
+
+
+      if (wTable.rows.length > 2) {
+
+        var wIndex = wTable.rows.length - 2;
+        var wBuyPrice1 = Number((document.getElementById("BPPC - Buy Price " + wIndex)).value);
+        var wQuantity1 = Number((document.getElementById("BPPC - Quantity " + wIndex)).value);
+        var wSellPrice1 = Number((document.getElementById("BPPC - Sell Price " + wIndex)).value);
+
+        var wIndex = wTable.rows.length - 1;
+        var wBuyPrice2 = document.getElementById("BPPC - Buy Price " + wIndex);
+        var wQuantity2 = document.getElementById("BPPC - Quantity " + wIndex);
+        var wSellPrice2 = document.getElementById("BPPC - Sell Price " + wIndex);
+
+        wSellPrice1++;
+
+        wBuyPrice2.value = wBuyPrice1.toFixed(2);
+        wQuantity2.value = Math.round(wQuantity1);
+        wSellPrice2.value = wSellPrice1.toFixed(2);
+      }
+
+      updateBuyPriceProfitCalculatorTable();
+    }
+
+    function removeBuyPriceProfitCalculatorRow() {
+      var wTable = document.getElementById("BPPC - OutputTable");
+
+      if (wTable.rows.length > 2) {
+        wTable.deleteRow(wTable.rows.length - 1);
+      }
+    }
+
+    function updateBuyPriceProfitCalculatorTable() {
+
+      var wCommision = Number(document.getElementById("BPPC - Commision").value);
+      var wTaxRate = Number(document.getElementById("BPPC - TaxRate").value);
+
+      var wTable = document.getElementById("BPPC - OutputTable");
+
+      for (var i = 1; i < wTable.rows.length; ++i) {
+
+        var wBuyPrice = Number((document.getElementById("BPPC - Buy Price " + i)).value);
+        var wQuantity = Number((document.getElementById("BPPC - Quantity " + i)).value);
+        var wSellPrice = Number((document.getElementById("BPPC - Sell Price " + i)).value);
+
+        var wBookValue = wBuyPrice * wQuantity + wCommision;
+        var wBookPrice = wBookValue / wQuantity;
+        var wBuyPrice = (wBookValue - wCommision) / wQuantity;
+        var wPriceChange = wSellPrice - wBuyPrice;
+        var wPriceChangeP = 100 * wPriceChange / wBuyPrice;
+        var wSellValue = wSellPrice * wQuantity;
+        var wGrossProfit = wSellValue - wBookValue;
+        var wNetProfit = (wGrossProfit - wCommision) * (1 - 0.5 * wTaxRate / 100);
+        if (0 > wNetProfit) wNetProfit = wGrossProfit - wCommision;
+
+        //wTable.rows[i].cells[0].innerText = wBuyPrice.toFixed(2);
+        //wTable.rows[i].cells[1].innerText = wQuantity;
+        wTable.rows[i].cells[2].innerText = wBookValue.toFixed(2);
+        wTable.rows[i].cells[3].innerText = wBookPrice.toFixed(2);
+        //wTable.rows[i].cells[4].innerText = wSellPrice.toFixed(2);
+        wTable.rows[i].cells[5].innerText = wPriceChange.toFixed(2);
+        wTable.rows[i].cells[6].innerText = wPriceChangeP.toFixed(3) + "%";
+        wTable.rows[i].cells[7].innerText = wSellValue.toFixed(2);
+        wTable.rows[i].cells[8].innerText = wGrossProfit.toFixed(2);
+        wTable.rows[i].cells[9].innerText = wNetProfit.toFixed(2);
+      }
+    }
+
+    //----------------------------------------------------
+    // Book Value Profit Calculator
+    //----------------------------------------------------
+
+    function addBookValueProfitCalculatorRow() {
+      var wTable = document.getElementById("BVPC - OutputTable");
+
+      if (0 == wTable.rows.length) {
+        var wRow = wTable.insertRow(wTable.rows.length);
+        var wCell = wRow.insertCell(wRow.cells.length);
+        wCell.innerHTML = "Buy Price ($)";
+        wCell = wRow.insertCell(wRow.cells.length);
+        wCell.innerHTML = "Quantity (#)";
+        wCell = wRow.insertCell(wRow.cells.length);
+        wCell.innerHTML = "Book Value ($)";
+        wCell = wRow.insertCell(wRow.cells.length);
+        wCell.innerHTML = "Book Price ($)";
+        wCell = wRow.insertCell(wRow.cells.length);
+        wCell.innerHTML = "Sell Price ($)";
+        wCell = wRow.insertCell(wRow.cells.length);
+        wCell.innerHTML = "Price Change ($)";
+        wCell = wRow.insertCell(wRow.cells.length);
+        wCell.innerHTML = "Price Change (%)";
+        wCell = wRow.insertCell(wRow.cells.length);
+        wCell.innerHTML = "Sell Value ($)";
+        wCell = wRow.insertCell(wRow.cells.length);
+        wCell.innerHTML = "Gross Profit ($)";
+        wCell = wRow.insertCell(wRow.cells.length);
+        wCell.innerHTML = "Net Profit ($)";
+      }
+
+      var wRow = wTable.insertRow(wTable.rows.length);
+      var wCell = wRow.insertCell(wRow.cells.length);
+      //wCell.innerHTML = '<input type="number" id="BVPC - Buy Price ' + (wTable.rows.length - 1) + '" value ="10.00" onkeyup ="updateBookValueProfitCalculatorTable()" onchange ="updateBookValueProfitCalculatorTable()"/>'
+      wCell = wRow.insertCell(wRow.cells.length);
+      wCell.innerHTML = '<input type="number" id="BVPC - Quantity ' + (wTable.rows.length - 1) + '" value ="50" onkeyup ="updateBookValueProfitCalculatorTable()" onchange ="updateBookValueProfitCalculatorTable()"/>'
+      //wCell.innerHTML = "Quantity (#)";
+      wCell = wRow.insertCell(wRow.cells.length);
+      wCell.innerHTML = '<input type="number" id="BVPC - Book Value ' + (wTable.rows.length - 1) + '" value ="5000.00" onkeyup ="updateBookValueProfitCalculatorTable()" onchange ="updateBookValueProfitCalculatorTable()"/>'
+      //wCell.innerHTML = "Book Cost ($)";
+      wCell = wRow.insertCell(wRow.cells.length);
+      //wCell.innerHTML = "Book Price ($)";
+      wCell = wRow.insertCell(wRow.cells.length);
+      wCell.innerHTML = '<input type="number" id="BVPC - Sell Price ' + (wTable.rows.length - 1) + '" value ="100.00" onkeyup ="updateBookValueProfitCalculatorTable()" onchange ="updateBookValueProfitCalculatorTable()"/>'
+      //wCell.innerHTML = "Sell Price ($)";
+      wCell = wRow.insertCell(wRow.cells.length);
+      //wCell.innerHTML = "Price Change ($)";
+      wCell = wRow.insertCell(wRow.cells.length);
+      //wCell.innerHTML = "Price Change (%)";
+      wCell = wRow.insertCell(wRow.cells.length);
+      //wCell.innerHTML = "Sell Value ($)";
+      wCell = wRow.insertCell(wRow.cells.length);
+      //wCell.innerHTML = "Gross Profit($)";
+      wCell = wRow.insertCell(wRow.cells.length);
+      //wCell.innerHTML = "Net Profit ($)";
+
+      if (wTable.rows.length > 2) {
+
+        var wIndex = wTable.rows.length - 2;
+        var wQuantity1 = Number((document.getElementById("BVPC - Quantity " + wIndex)).value);
+        var wBookValue1 = Number((document.getElementById("BVPC - Book Value " + wIndex)).value);
+        var wSellPrice1 = Number((document.getElementById("BVPC - Sell Price " + wIndex)).value);
+
+        var wIndex = wTable.rows.length - 1;
+        var wQuantity2 = document.getElementById("BVPC - Quantity " + wIndex);
+        var wBookValue2 = document.getElementById("BVPC - Book Value " + wIndex);
+        var wSellPrice2 = document.getElementById("BVPC - Sell Price " + wIndex);
+
+        wSellPrice1++;
+
+        wQuantity2.value = Math.round(wQuantity1);
+        wBookValue2.value = wBookValue1.toFixed(2);
+        wSellPrice2.value = wSellPrice1.toFixed(2);
+      }
+
+      updateBookValueProfitCalculatorTable();
+    }
+
+    function removeBookValueProfitCalculatorRow() {
+      var wTable = document.getElementById("BVPC - OutputTable");
+
+      if (wTable.rows.length > 2) {
+        wTable.deleteRow(wTable.rows.length - 1);
+      }
+    }
+
+    function updateBookValueProfitCalculatorTable() {
+
+      var wCommision = Number(document.getElementById("BVPC - Commision").value);
+      var wTaxRate = Number(document.getElementById("BVPC - TaxRate").value);
+
+      var wTable = document.getElementById("BVPC - OutputTable");
+
+      for (var i = 1; i < wTable.rows.length; ++i) {
+        var wQuantity = Number((document.getElementById("BVPC - Quantity " + i)).value);
+        var wBookValue = Number((document.getElementById("BVPC - Book Value " + i)).value);
+        var wSellPrice = Number((document.getElementById("BVPC - Sell Price " + i)).value);
+
+        var wBookPrice = wBookValue / wQuantity;
+        var wBuyPrice = (wBookValue - wCommision) / wQuantity;
+        var wPriceChange = wSellPrice - wBuyPrice;
+        var wPriceChangeP = 100.0*wPriceChange / wBuyPrice;
+        var wSellValue = wSellPrice * wQuantity;
+        var wGrossProfit = wSellValue - wBookValue;
+        var wNetProfit = (wGrossProfit - wCommision) * (1 - 0.5 * wTaxRate / 100);
+        if (0 > wNetProfit) wNetProfit = wGrossProfit - wCommision;
+
+        wTable.rows[i].cells[0].innerText = wBuyPrice.toFixed(2);
+        //wTable.rows[i].cells[1].innerText = wQuantity;
+        //wTable.rows[i].cells[2].innerText = wBookCost.toFixed(2);
+        wTable.rows[i].cells[3].innerText = wBookPrice.toFixed(2);
+        //wTable.rows[i].cells[4].innerText = wSellPrice.toFixed(2);
+        wTable.rows[i].cells[5].innerText = wPriceChange.toFixed(2);
+        wTable.rows[i].cells[6].innerText = wPriceChangeP.toFixed(3) + "%";
+        wTable.rows[i].cells[7].innerText = wSellValue.toFixed(2);
+        wTable.rows[i].cells[8].innerText = wGrossProfit.toFixed(2);
+        wTable.rows[i].cells[9].innerText = wNetProfit.toFixed(2);
+      }
+    }
+
+    //----------------------------------------------------
+    // Initialization
+    //----------------------------------------------------
+
+    function init() {
+
+      var wDisableLoginCheck = true;
+      if (true == wDisableLoginCheck)
+      {
+        var LoginBox = document.getElementById("Login Box");
+        var MainBody = document.getElementById("Main Body");
+        LoginBox.style.display = "none";
+
+      }
+      else
+      {
+        var LoginBox = document.getElementById("Login Box");
+        var MainBody = document.getElementById("Main Body");
+        MainBody.style.display = "none";
+      }
+
+
+      InterestConverter_UpdateAnnual();
+      InterestConverter_UpdateMonthly();
+      InterestConverter_UpdateWeekly();
+
+
+      updateEfficiencyCalculation();
+      updateStockVariationCalculation();
+
+      addSellPriceCalculatorRow();
+      addBookValueProfitCalculatorRow();
+      addBuyPriceProfitCalculatorRow();
+    }
+
+    function checkPassword(iUsername, iPassword)
+    {
+      if (iUsername == "user")
+      {
+        if (iPassword == "1234")
+        {
+          return true;
+        }
+      }
+      return false;
+    }
+
+    function LoginCheck() {
+
+      var wUsername = document.getElementById("Login Username Box");
+      var wPassword = document.getElementById("Login Password Box");
+
+      if (true == checkPassword(wUsername.value, wPassword.value))
+      {
+        var LoginBox = document.getElementById("Login Box");
+        var MainBody = document.getElementById("Main Body");
+        LoginBox.style.display = "none";
+        MainBody.style.display = "initial";
+      }
+      else
+      {
+        var wErrorBox = document.getElementById("Login Error Box");
+        wErrorBox.innerText = "Username and Password combination is not found";
+      }
+    }
+  </script>
+</head>
+<body onload="init()">
+  <div id="Login Box">
+    User Name : <input type="text" id="Login Username Box" /> <br/>
+    Password : <input type="password" id="Login Password Box" /><br />
+    <button onclick="LoginCheck()">Login</button><br />
+    <span id="Login Error Box"></span>
+  </div>
+  <div id="Main Body">
+    <div>
+      <header>Interest Rate Converter</header>
+      <table>
+        <tr>
+          <td>Time</td>
+          <td>Annual</td>
+          <td>Monthly</td>
+          <td>Weekly</td>
+        </tr>
+        <tr>
+          <td>Annual</td>
+          <td><input type="number" value="3.000" id="IRC - Annual" onkeyup="InterestConverter_UpdateAnnual(this.value)" onchange="InterestConverter_UpdateAnnual(this.value)" /></td>
+          <td id="IRC - Annual to Monthly"></td>
+          <td id="IRC - Annual to Weekly"></td>
+        </tr>
+        <tr>
+          <td>Monthly</td>
+          <td id="IRC - Monthly to Annual"></td>
+          <td><input type="number" value="3.000" id="IRC - Monthly" onkeyup="InterestConverter_UpdateMonthly(this.value)" onchange="InterestConverter_UpdateMonthly(this.value)" /></td>
+          <td id="IRC - Monthly to Weekly"></td>
+        </tr>
+        <tr>
+          <td>Weekly</td>
+          <td id="IRC - Weekly to Annual"></td>
+          <td id="IRC - Weekly to Monthly"></td>
+          <td><input type="number" value="3.000" id="IRC - Weekly" onkeyup="InterestConverter_UpdateWeekly()" onchange="InterestConverter_UpdateWeekly()" /></td>
+        </tr>
+      </table>
+    </div>
+    <br />
+    <div>
+      <header>Principal Efficientcy Calculator</header>
+      <table>
+        <tr>
+          <td>Setup</td>
+          <td>Calculations</td>
+        </tr>
+        <tr>
+          <td align="right" valign="top">
+            Principal ($) : <input type="number" value="1000.00" id="PEC - Principal" onkeyup="updateEfficiencyCalculation()" onchange="updateEfficiencyCalculation()" /></br>
+            Commision Rate ($) : <input type="number" value="10.00" id="PEC - Commision" onkeyup="updateEfficiencyCalculation()" onchange="updateEfficiencyCalculation()" /></br>
+            Growth Rate (%) : <input type="number" value="1.000" id="PEC - Growth" onkeyup="updateEfficiencyCalculation()" onchange="updateEfficiencyCalculation()" /></br>
+            Marginal Tax Rate (%) : <input type="number" value="25.00" id="PEC - TaxRate" onkeyup="updateEfficiencyCalculation()" onchange="updateEfficiencyCalculation()" /></br>
+          </td>
+          <td id="PEC - Output Box" valign="top"></td>
+        </tr>
+      </table>
+    </div>
+    <br />
+    <div>
+      <header>Stock Variation Calculator</header>
+      <table>
+        <tr>
+          <td>Setup</td>
+          <td>Variation</td>
+        </tr>
+        <tr>
+          <td align="right">
+            High ($) : <input type="number" value="60.00" id="SVC - High" onkeyup="updateStockVariationCalculation()" onchange="updateStockVariationCalculation()" /><br />
+            Low ($) : <input type="number" value="60.00" id="SVC - Low" onkeyup="updateStockVariationCalculation()" onchange="updateStockVariationCalculation()" /><br />
+          </td>
+          <td>
+            <span id="SVC - VariationD"></span> $ <br />
+            <span id="SVC - VariationP"></span> %<br />
+          </td>
+        </tr>
+      </table>
+    </div>
+    <br />
+    <div>
+      <header>Sell Price Calculator</header>
+      <table>
+        <tr>
+          <td>Setup</td>
+        </tr>
+        <tr>
+          <td align="right" valign="top">
+            <!-- Principal ($) : <input type="number" value ="1000.0"       id="SPC - Principal" onkeyup ="updateSellPriceCalculatorTable()" onchange ="updateSellPriceCalculatorTable()"/></br>-->
+            Commision Rate ($) : <input type="number" value="10.00" id="SPC - Commision" onkeyup="updateSellPriceCalculatorTable()" onchange="updateSellPriceCalculatorTable()" /></br>
+            Growth Rate (%) : <input type="number" value="1.000" id="SPC - Growth" onkeyup="updateSellPriceCalculatorTable()" onchange="updateSellPriceCalculatorTable()" /></br>
+            Marginal Tax Rate (%) : <input type="number" value="25.00" id="SPC - TaxRate" onkeyup="updateSellPriceCalculatorTable()" onchange="updateSellPriceCalculatorTable()" /></br>
+            <button onclick="addSellPriceCalculatorRow()">Add Row</button>
+            <button onclick="removeSellPriceCalculatorRow()">Remove Row</button>
+          </td>
+        </tr>
+      </table>
+      <br />
+      <table id="SPC - OutputTable" class="OutputTable"></table>
+    </div>
+    <br />
+    <div>
+      <header>Buy Price Profit Calculator</header>
+      <table>
+        <tr>
+          <td>Setup</td>
+        </tr>
+        <tr>
+          <td align="right" valign="top">
+            Commision Rate ($) : <input type="number" value="10.00" id="BPPC - Commision" onkeyup="updateBuyPriceProfitCalculatorTable()" onchange="updateBuyPriceProfitCalculatorTable()" /></br>
+            Marginal Tax Rate (%) : <input type="number" value="25.00" id="BPPC - TaxRate" onkeyup="updateBuyPriceProfitCalculatorTable()" onchange="updateBuyPriceProfitCalculatorTable()" /></br>
+            <button onclick="addBuyPriceProfitCalculatorRow()">Add Row</button>
+            <button onclick="removeBuyPriceProfitCalculatorRow()">Remove Row</button>
+          </td>
+        </tr>
+      </table>
+      <br />
+      <table id="BPPC - OutputTable" class="OutputTable"></table>
+
+    </div>
+    <br />
+    <div>
+      <header>Book Value Profit Calculator</header>
+      <table>
+        <tr>
+          <td>Setup</td>
+        </tr>
+        <tr>
+          <td align="right" valign="top">
+            Commision Rate ($) : <input type="number" value="10.00" id="BVPC - Commision" onkeyup="updateBookValueProfitCalculatorTable()" onchange="updateBookValueProfitCalculatorTable()" /></br>
+            Marginal Tax Rate (%) : <input type="number" value="25.00" id="BVPC - TaxRate" onkeyup="updateBookValueProfitCalculatorTable()" onchange="updateBookValueProfitCalculatorTable()" /></br>
+            <button onclick="addBookValueProfitCalculatorRow()">Add Row</button>
+            <button onclick="removeBookValueProfitCalculatorRow()">Remove Row</button>
+          </td>
+        </tr>
+      </table>
+      <br />
+      <table id="BVPC - OutputTable" class="OutputTable"></table>
+
+    </div>
+    <div style="height :60%">
+    </div>
+  </div>
+</body>
+</html>
