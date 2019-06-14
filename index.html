@@ -14,7 +14,6 @@
       background-position-x: center;
       background-position-y: center;
       text-align: center;
-      overflow: hidden;
     }
 
     #splash-img {
@@ -22,17 +21,17 @@
         margin: 25px;
     }
 
-    #main-content-div {
-      min-width: 300px;
-      max-width: 800px;
-      margin: auto;
-      padding: 10px;
-      height: 100vh;
-      overflow: hidden;
-    }
-
 
     @media only screen and (min-width: 500px){
+
+      body {
+        overflow: hidden;
+      }
+
+      #main-content-div {
+        height: 100vh;
+        overflow: hidden;
+      }
 
       #splash-img {
         width: 50%;
@@ -108,6 +107,7 @@
           <a href="pages/html/pathfinding/PathFinding.html">Path Finding Demo</a></br>
           <a href="https://wlee0515.github.io/US_Baby_Names/">US Baby Name Count from 1910 to 2017</a></br>
         </div>
+        
       </div>
     </div>
   </div>
