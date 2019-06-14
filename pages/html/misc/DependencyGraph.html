@@ -1,0 +1,494 @@
+﻿<html>
+<head>
+    <script src="ConsoleBox.js"></script> 
+    <!-- fill iPhone screen with canvas -->
+    <meta name="viewport" content="width=400" />
+    <title>Dependency Graph Creator</title>
+    <script type="text/javascript">
+
+        var gNodeCount = 5;
+        var gInputIterationCount = 0;
+        var gIterationInputData = [];
+
+        function init() {
+            updateForm();
+        }
+
+        function updateForm() {
+            var wNodeCountDOM = document.getElementById("NodeCount");
+            var wTableDOM = document.getElementById("DependencyTable");
+
+            if ((null != wNodeCountDOM) && (null != wTableDOM)) {
+                gNodeCount = wNodeCountDOM.value;
+
+                var wRowCount = parseFloat(gNodeCount) + 1;
+                while (wRowCount <= wTableDOM.rows.length) {
+                    wTableDOM.deleteRow(wTableDOM.rows.length - 1);
+                }
+
+                while (wRowCount > wTableDOM.rows.length) {
+                    wTableDOM.insertRow(wTableDOM.rows.length );
+                }
+
+                for (var i = 0; i < wRowCount; ++i) {
+                    while (wRowCount <= wTableDOM.rows[i].cells.length) {
+                        wTableDOM.rows[i].deleteCell(wTableDOM.rows[i].cells.length - 1);
+                    }
+
+                    while (wRowCount > wTableDOM.rows[i].cells.length) {
+                        var cell = wTableDOM.rows[i].insertCell(-1);
+                    }
+
+                    for (var k = 0; k < wRowCount; ++k) {
+
+                        
+                        if (0 != i) {
+                            if (0 != k) {
+                                
+                        
+                                if (k != i) {
+                                    wTableDOM.rows[i].cells[k].innerHTML = "<input type='checkbox' onchange='updateMatrix()' id='iValueGrid_" + (i - 1) + "_" + (k - 1) + "'/>";
+                                }
+                            }
+                            else {
+                                wTableDOM.rows[i].cells[k].innerHTML = "<span>" + i + "</span>";
+                            }
+                        }
+                        else {
+                            if (0 != k) {
+                                wTableDOM.rows[i].cells[k].innerHTML = "<span>" + k + "</span>";
+                            }
+                        }
+                    }
+                }
+            }
+        }
+
+        var gValueGrid = new Array();
+
+        function updateMatrix() {
+
+            if (gNodeCount <= gValueGrid.length) {
+                gValueGrid.length = gNodeCount;
+            }
+
+            while (gNodeCount > gValueGrid.length) {
+                gValueGrid.push(new Array());
+            }
+
+            for (var i = 0; i < gNodeCount; ++i) {
+
+                if (gNodeCount <= gValueGrid[i].length) {
+                    gValueGrid[i].length = gNodeCount;
+                }
+
+
+                while (gNodeCount > gValueGrid[i].length) {
+                    var wNewEntry = false;
+                    gValueGrid[i].push(wNewEntry);
+                }
+
+                for (var k = 0; k < gNodeCount; ++k) {
+
+                    var wDOM = document.getElementById("iValueGrid_" + i + "_" + k);
+
+                    if (null != wDOM) {
+                        gValueGrid[i][k] = wDOM.checked;
+                    }
+                }
+            }
+
+
+
+            for (var i = 0; i < gNodeCount; ++i) {
+
+                for (var k = 0; k < gNodeCount; ++k) {
+
+                    var wDOM = document.getElementById("iValueGrid_" + i + "_" + k);
+                    if (null != wDOM) {
+                        if (true == checkIfRelationShipWillCauseCircularDependency(gValueGrid, i, k)) {
+                            wDOM.style.visibility = "hidden";
+                        }
+                        else {
+                            wDOM.style.visibility = "visible";
+                        }
+                    }
+
+                }
+            }
+
+
+            var wNodeTierArray = getGridRowTierList(gValueGrid);
+
+
+            var wNodeTierMap = createNodeTierMap(gValueGrid, wNodeTierArray);
+
+            
+            var wCanvasDOM = document.getElementById("PlotCanvas");
+
+            if(null != wCanvasDOM)
+            {
+                drawTierMap(wCanvasDOM, wNodeTierMap);
+            }
+
+            var wPrint = "";
+
+            if (null != wNodeTierArray) {
+
+                for (var i = 0; i < gNodeCount; ++i) {
+
+                    wPrint += "Node " + (i + 1) + " : Tier " + wNodeTierArray[i];
+                    wPrint += "\n";
+                }
+            }
+            else {
+
+                alert("Circular Dependency Encounterd, Escaping Sequence");
+            }
+
+            var wOutDOM = document.getElementById("print");
+            wOutDOM.innerText = wPrint;
+            
+        }
+
+        function drawTierMap(iDOM, iTierMap) {
+
+            var wCtx = iDOM.getContext("2d");
+            var wCanvasHeight = iDOM.height;
+            var wCanvasWidth = iDOM.width;
+
+            wCtx.clearRect(0, 0, wCanvasWidth, wCanvasHeight);
+            var wCanvasHeightCenter = iDOM.height / 2;
+            var wCanvasWidthCenter = iDOM.width / 2;
+
+            wCtx.translate(wCanvasWidthCenter, wCanvasHeightCenter);
+
+            var wHSpacing = iDOM.width / (parseFloat(gNodeCount) + 1)
+            var wVSpacing = iDOM.height / (parseFloat(gNodeCount) + 1)
+
+            for (var i = 0; i < iTierMap.length; ++i) {
+
+                for (var k = 0; k < iTierMap[i].length; ++k) {
+
+                    var wLocationX = iTierMap[i][k].LocationX * wHSpacing - iTierMap.length*wHSpacing / 2.0;
+                    var wLocationY = iTierMap[i][k].LocationY * wVSpacing - iTierMap[i].length*wVSpacing/2.0;
+
+                    wCtx.translate(wLocationX, wLocationY);
+
+                    wCtx.fillStyle = "cyan";
+                    wCtx.strokeStyle = "cyan";
+                    wCtx.lineWidth = 2;
+
+                    wCtx.beginPath();
+                    wCtx.arc(0, 0, 30, 0, 2 * Math.PI);
+                    wCtx.stroke();
+
+                    wCtx.font = "30px Arial";
+                    wCtx.textAlign = "center";
+                    wCtx.textBaseline="middle"; 
+                    wCtx.fillText((iTierMap[i][k].NodeID + 1) ,0,0);
+
+                    wCtx.translate(-wLocationX, -wLocationY);
+
+
+                    for(var j=0; j < iTierMap[i][k].DependsOn.length; ++j){
+                        var wDepend = findNodeFromTierMap(iTierMap, iTierMap[i][k].DependsOn[j]);
+
+                        if(null != wDepend)
+                        {
+
+                            var wLocationX2 = wDepend.LocationX * wHSpacing - iTierMap.length*wHSpacing / 2.0;
+                            var wLocationY2 = wDepend.LocationY * wVSpacing - iTierMap[wDepend.LocationX].length*wVSpacing/2.0;
+
+                    wCtx.beginPath();
+                    wCtx.moveTo(wLocationX2, wLocationY2);
+                    wCtx.lineTo(wLocationX, wLocationY);
+                    wCtx.stroke();
+                        }
+                    }
+                }
+            }
+
+
+            wCtx.translate(-wCanvasWidthCenter, -wCanvasHeightCenter);
+        }
+
+
+        function cloneGrid(iGrid) {
+
+            var wGridClone = new Array();
+            for (var i = 0; i < iGrid.length; ++i) {
+
+                wGridClone.push(new Array());
+
+                for (var k = 0; k < iGrid[i].length; ++k) {
+
+                    var wValue = iGrid[i][k];
+                    wGridClone[i].push(wValue)
+
+                }
+            }
+
+            return wGridClone;
+        }
+
+        function getGridTranspose(iGrid) {
+
+            var wGridTranspose = new Array();
+            for (var i = 0; i < iGrid.length; ++i) {
+
+                wGridTranspose.push(new Array());
+
+                for (var k = 0; k < iGrid[i].length; ++k) {
+
+                    var wValue = iGrid[k][i];
+                    wGridTranspose[i].push(wValue)
+
+                }
+
+            }
+
+            return wGridTranspose;
+        }
+
+        function getGridRowTierList(iGrid) {
+
+
+            var wNewGridTranspose = getGridTranspose(iGrid);
+
+            var wNodeTierArray = new Array();
+            for (var i = 0; i < wNewGridTranspose.length; ++i) {
+                wNodeTierArray.push(0);
+            }
+
+
+            do {
+                var wChanged = false;
+                var wError = false;
+                for (var i = 0; i < wNewGridTranspose.length; ++i) {
+
+                    for (var k = 0; k < wNewGridTranspose[i].length; ++k) {
+
+                        if (i != k) {
+                            if (true == wNewGridTranspose[i][k]) {
+
+                                if (wNodeTierArray[i] >= wNodeTierArray[k]) {
+                                    wNodeTierArray[k] = wNodeTierArray[i] + 1;
+
+                                    if (wNodeTierArray[k] > gNodeCount) {
+                                        wError = true;
+                                        break;
+                                    }
+
+                                    wChanged = true;
+                                }
+                            }
+                        }
+                    }
+
+                    if (true == wError) {
+                        break;
+                    }
+                }
+            } while ((true == wChanged) && (false == wError));
+
+            if (true == wError) {
+                return null;
+            }
+          /*
+            var wStartingTier = 0;
+            for (var i = 0; i < wNodeTierArray.length; ++i) {
+              if(wStartingTier > wNodeTierArray[i])
+              {
+                wStartingTier = wNodeTierArray[i];
+              }
+            }
+
+            for (var i = 0; i < wNodeTierArray.length; ++i) {
+              wNodeTierArray[i] -= wStartingTier;
+            }
+          */
+            return wNodeTierArray;
+        }
+        
+        function checkGridCircularDependency(iGrid) {
+            if(null == getGridRowTierList(iGrid)) {
+                return true;
+            }
+
+            return false;
+        }
+
+        function checkIfRelationShipWillCauseCircularDependency(iGrid, iNode, iDependsOn) {
+            var wHypothesis = cloneGrid(iGrid);
+
+            wHypothesis[iNode][iDependsOn] = true;
+
+            return checkGridCircularDependency(wHypothesis);
+        }
+
+        function createNodeTierMap(iGrid, iNodeTierArray) {
+
+            var wTierCount = 0;
+            for (var i = 0; i < iNodeTierArray.length; ++i) {
+
+                if (wTierCount < iNodeTierArray[i]) {
+                    wTierCount = iNodeTierArray[i];
+                }
+            }
+
+            wTierCount += 1;
+
+            var wNodeTierMap = new Array()
+
+            for (var i = 0; i < wTierCount; ++i) {
+                wNodeTierMap.push(new Array());
+            }
+
+            for (var i = 0; i < iNodeTierArray.length; ++i) {
+
+                var wNewDependsOnArray = new Array();
+
+                for (var k = 0; k < iGrid[i].length; ++k) {
+
+                    if(true == iGrid[i][k])
+                    {
+                        var wDependsOnNode = k
+                        wNewDependsOnArray.push(k);
+                    }
+                }
+
+                var wNewObj = {
+                    NodeID : i,
+                    DependsOn : wNewDependsOnArray,
+                    LocationX : iNodeTierArray[i],
+                    LocationY : wNodeTierMap[iNodeTierArray[i]].length
+                }
+
+                wNodeTierMap[iNodeTierArray[i]].push(wNewObj)
+            }
+          
+
+          //remove repeaded dependents in previouse tiers
+          
+            for (var i = 0; i < wNodeTierMap.length; ++i) {
+
+              for (var j = 0; j < wNodeTierMap[i].length; ++j) {
+                
+                var wDeleteIndex = new Array();
+                for (var k = 0; k < wNodeTierMap[i][j].DependsOn.length; ++k) {
+                  if (true == checkDuplicatedDependency(iGrid, wNodeTierMap[i][j].NodeID, wNodeTierMap[i][j].DependsOn[k])) {
+                    var wNewIndex = k;
+                    wDeleteIndex.push(wNewIndex);
+                  }
+                }
+
+                var wStart = wDeleteIndex.length - 1;
+                for (var k = wStart; k >= 0; --k) {
+
+                    for (var p = wDeleteIndex[k]; p < wNodeTierMap[i][j].DependsOn.length - 1; ++p) {
+                      wNodeTierMap[i][j].DependsOn[p] = wNodeTierMap[i][j].DependsOn[p + 1];
+                    }
+                    wNodeTierMap[i][j].DependsOn.length = wNodeTierMap[i][j].DependsOn.length - 1;
+                  
+                }
+              }
+            }
+
+           
+            return wNodeTierMap;
+        }
+
+        function findNodeFromTierMap(iTierMap, iNodeID) {
+
+            for (var i = 0; i < iTierMap.length; ++i) {
+
+
+                for (var k = 0; k < iTierMap[i].length; ++k) {
+
+                    if (iNodeID == iTierMap[i][k].NodeID) {
+                        return iTierMap[i][k];
+                    }
+                }
+            }
+
+            return null;
+        }
+
+        function checkDependency(iGrid, iNode, iDependend) {
+
+          if ( iNode < iGrid.length) {
+
+            for (var i = 0; i < iGrid[iNode].length; ++i) {
+              if (true == iGrid[iNode][i]) {
+
+                if (iDependend == i) {
+                  return true;
+                }
+                else {
+                  if (true == checkDependency(iGrid, i, iDependend)) {
+                    return true;
+                  }
+                }
+              }
+            }
+          }
+          return false;
+        }
+
+        function checkDuplicatedDependency(iGrid, iNode, iDependend) {
+
+          if (iNode < iGrid.length) {
+
+            for (var i = 0; i < iGrid[iNode].length; ++i) {
+              if (true == iGrid[iNode][i]) {
+
+                if (iDependend == i) {
+
+                }
+                else {
+                  if(true ==  checkDependency(iGrid, i, iDependend))
+                  {
+                    return true;
+                  }
+                }
+              }
+            }
+          }
+          return false;
+        }
+
+
+    </script>
+</head>
+<body onload="init()">
+    <div>
+        <span>Node Count :</span><input id="NodeCount" type="number" onchange="updateForm()" value="5"/></br>
+    </div>
+    <div id="DependencyDefinition">
+        <table id="Table1" style="text-align:center">
+            <tr>
+                <td>
+                </td>
+                <td>
+                    <span>Dependent On</span>
+                </td>
+            </tr>
+            <tr>
+                <td>
+                    Nodes
+                </td>
+                <td>
+                    <table id="DependencyTable" style="text-align:center">
+                    </table>
+                </td>
+            </tr>
+        </table>
+    </div>
+    <div id="PlotArea" width="100%" style="background-color: black;">
+        <canvas id="PlotCanvas" width="1000px" height="1000px"></canvas>
+    </div>
+    <div id="print"></div>
+
+</body>
+</html>
