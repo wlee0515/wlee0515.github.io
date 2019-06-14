@@ -13,7 +13,6 @@ body {
     color: white;
     font-size: 16px;
     text-align: center;
-    overflow: hidden;
 }
 
 p {
@@ -25,8 +24,6 @@ p {
     max-width: 800px;
     margin: auto;
     padding: 10px;
-    height: 100vh;
-    overflow: auto;
 }
 
 .section-div {
