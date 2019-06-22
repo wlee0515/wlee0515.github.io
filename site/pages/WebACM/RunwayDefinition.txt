@@ -1,0 +1,26 @@
+function getRunwayDefinition() {
+
+	return [
+		{
+			Id:"RunwayOne",
+			Latitude : 0.87143104,
+			Longitude : 0.19086694,
+			Elevation : 249.936,
+			Bearing : 3.909537,
+			Length : 2037.2,
+			Width : 50,
+		}
+		,
+		
+		{
+			Id:"AusiOne",
+			Latitude : -0.57227501,
+			Longitude : 2.64984799,
+			Elevation : 8.37145615,
+			Bearing : 2.27406,
+			Length : 2037.2,
+			Width : 50,
+		}
+	]
+
+}
