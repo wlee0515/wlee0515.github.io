@@ -4,114 +4,101 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <meta name="apple-mobile-web-app-capable" content="yes" />
   <title>WLee0515's Github Page</title>
-  <link rel="stylesheet" type="text/css" href="pages/css/theme_01.css">
+  <!-- Add icon library -->
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/4.7.0/css/font-awesome.min.css">
   <style>
     
     body {
-      background-image: url("./pages/images/background01.jpg");
-      background-repeat: no-repeat;
-      background-size: cover;
-      background-position-x: center;
-      background-position-y: center;
-      text-align: center;
+      background-color: black;
     }
 
-    #splash-img {
-        width: 50%;
-        margin: 25px;
+    #top-menu {
+      position: fixed;
+      top: 0px;
+      left: 0px;
+      width: 100vw;
+      height: 0px;
+      background-color: none;
+    }
+    
+    #bottom-menu {
+      position: fixed;
+      bottom: 0px;
+      left: 0px;
+      width: 100vw;
+      height: 20px;
     }
 
+    #viewport {
+      background-color: white;
+      position: fixed;
+      top: 0px; /* this is the height of the top -menu*/
+      left: 0px;
+      width: 100vw;
+      height: calc(100vh - 20px); /* minus the height of the top and bottom menu*/
+      border: 0px;
+      overflow:hidden;
+    }
 
-    @media only screen and (min-width: 500px){
+    #bottom-menu-context {
+      color: white;
+      background-color: black;
+      border-top : 5px solid blue;
+    }
 
-      body {
-        overflow: hidden;
-      }
+    #home-button {
+      position: absolute;
+      bottom: 5px;
+      left: 5px;
+    }
 
-      #main-content-div {
-        height: 100vh;
-        overflow: hidden;
-      }
-
-      #splash-img {
-        width: 50%;
-        position: absolute;
-        top: 50%;
-        left: 50%;
-        transform: translate(-50%, -50%);
-        margin: 0px;
-      }
+    button {
+      width: 50px;
+      height: 50px;
+      background-color: black;
+      border : 5px solid blue;
+      border-radius: 50% 50% 50% 50%;
+      margin: 0;
+      padding: 0;
+    }
 
     
-      #title-div {
-        position: relative;
-        float: left;
-        width: 50%;
-        height: 100%;
-        overflow: hidden;
-      }
-
-      #context-center-div {
-        width: 100%;
-        max-height: 95%;
-        position: absolute;
-        top: 50%;
-        left: 50%;
-        transform: translate(-50%, -50%);
-        margin: 0px;
-        padding-right: 10px;
-        overflow-y: auto;
-      }
-
-      #context-div {
-        position: relative;
-        width: 50%;
-        height: 100%;
-        float: left;
-        margin: 0px;
-        overflow: hidden;
-      }
-      /*
-      ::-webkit-scrollbar {
-        display: none;
-      }*/
+    button i {
+      color: white;
+      font-size: 40px;
+      margin: auto;
+      position: relative;
+      top: -5px;
     }
 
   </style>
   <script type="text/javascript">
-  
+
+      var gHomePage="./site/pages/homepage/index.html";
+
+      function page_load(){
+        wViewPort = document.getElementById("viewport");
+        if (null != wViewPort) {
+          wViewPort.src = gHomePage;
+        }
+      }
+
+      function home_button_click(){
+        wViewPort = document.getElementById("viewport");
+        if (null != wViewPort) {
+          wViewPort.src = gHomePage;
+        }
+      }
+
   </script>
 </head>
-
-<body>
-  <div id="main-content-div">
-    <div id="title-div">
-      <img src="favicon.ico" alt="WLee0515" id="splash-img">
-    </div>
-    <div id="context-div">
-      <div id="context-center-div">
-        <div class="section-div">
-          <h2>Greetings</h2>
-          <p>Welcome to my personal page. As you might have suspected, I am WLee0515.
-             I plan on providing a brief explanation of my projects through this page.
-             I hope you will find it enjoyable.</p>
-          <p>Thank-you for dropping by</p>
-          <p><i><b>WLee0515</b></i></p>
-        </div>
-        <div class="section-div">
-          <h2>Home Made Tools</h2>
-          <a href="pages/html/misc/DependencyGraph.html">Dependency Graph Creator</a></br>
-          <a href="pages/html/functionalmap/index.html">Software Developer Functional Map</a></br>
-          <a href="pages/html/misc/Stock Calculator.html">Stock Calculator</a></br>
-        </div>
-        <div class="section-div">
-          <h2>Projects</h2>
-          <a href="pages/html/pathfinding/PathFinding.html">Path Finding Demo</a></br>
-          <a href="pages/html/misc/Manipulator.html">Robot Manipulator Simulation</a></br>
-          <a href="https://wlee0515.github.io/US_Baby_Names/">US Baby Name Count from 1910 to 2017</a></br>
-        </div>
-        
-      </div>
+<body onload="page_load()">
+  <div id="top-menu">
+  </div>
+  <iframe id="viewport"></iframe>
+  <div id="bottom-menu">
+    <div id="bottom-menu-context">
+      <button id="home-button" onclick="home_button_click()"><i>⌂</i></button>
     </div>
   </div>
 </body>
