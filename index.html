@@ -1,7 +1,7 @@
 <!DOCTYPE html>
 <html>
 <head>
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="viewport" content="user-scalable=no,width=device-width, initial-scale=1.0">
   <!--
   <meta name="apple-mobile-web-app-capable" content="yes" />
   -->
@@ -33,17 +33,6 @@
       text-align: center;
     }
 
-    #viewport-div1 {
-      width: 100vw;
-      height: calc(100vh - 50px); /* minus the height of the top and bottom menu*/
-      margin : auto;
-      padding: 0px;
-      position: fixed;
-      top: 0px;
-      -webkit-overflow-scrolling: touch;
-      overflow-y: scroll;
-    }
-
     #viewport-div {
       position: fixed; 
       left: 0;
@@ -71,10 +60,6 @@
       height: 100%;
     }
 
-    #home-button {
-      margin: auto;
-    }
-
     button {
       width: 50px;
       height: 50px;
@@ -86,26 +71,45 @@
       padding: 0;
       vertical-align: top;
     }
-
     
     button span {
       color: white;
-      font-size: 40px;
       margin: 0;
       padding: 0;
-      vertical-align: top;
+      vertical-align: middle;
     }
 
+    #home-button {
+      font-size: 40px;
+    }
+    
+    #home-button span {
+      position: relative;
+      top: -5px;
+    }
+
+    #cv-button {
+      font-size: 30px;
+    }
+    
   </style>
   <script type="text/javascript">
 
       var gHomePage="./site/pages/homepage/index.html";
+      page_resize();
 
       function page_load(){
+
+        page_resize();
+
         wViewPort = document.getElementById("viewport");
         if (null != wViewPort) {
           wViewPort.src = gHomePage;
         }
+      }
+
+      function page_resize(){
+        document.body.height = window.innerHeight;
       }
 
       function home_button_click(){
@@ -117,7 +121,7 @@
 
   </script>
 </head>
-<body onload="page_load()">
+<body onload="page_load()" onresize="page_resize()">
   <div id="top-menu">
   </div>
   <div id="viewport-div">
@@ -125,7 +129,13 @@
   </div>
   <div id="bottom-menu">
     <div id="bottom-menu-context">
-      <button id="home-button" onclick="home_button_click()"><span>⌂</span></button>
+      <button id="home-button" onclick="home_button_click()"><span><b>⌂</b></span></button>
+ <!--
+     <button id="cv-button" onclick="home_button_click()"><span><b>CV</b></span></button>
+      <button id="cv-button" onclick="home_button_click()"><span><b>CV</b></span></button>
+      <button id="cv-button" onclick="home_button_click()"><span><b>CV</b></span></button>
+      <button id="cv-button" onclick="home_button_click()"><span><b>CV</b></span></button>
+ -->
     </div>
   </div>
 </body>
