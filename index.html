@@ -44,7 +44,6 @@
       overflow: auto;
     
       width: 100vw;
-      height: calc(100vh - 50px); /* minus the height of the top and bottom menu*/
     }
 
     #viewport {
@@ -74,6 +73,7 @@
       var gHomePage="./site/pages/homepage/index.html";
       page_resize();
 
+
       function page_load(){
 
         page_resize();
@@ -85,7 +85,27 @@
       }
 
       function page_resize(){
-        document.body.style.height = window.innerHeight + "px";
+        
+        wViewPortDiv = document.getElementById("viewport-div");
+        wTopMenuDiv = document.getElementById("top-menu");
+        wBottomDiv = document.getElementById("bottom-menu");
+        
+        if (null != wViewPortDiv) {
+          var wMenuheight = 0;
+          if (null != wTopMenuDiv)
+          {
+            wMenuheight += wTopMenuDiv.clientHeight;
+          }
+          
+          if (null != wBottomDiv)
+          {
+            wMenuheight += wBottomDiv.clientHeight;
+          }
+          
+          var height =  window.innerHeight - wMenuheight;
+          
+          wViewPortDiv.style.height = height + "px";
+        }
       }
 
       function home_button_click(){
