@@ -8,6 +8,9 @@
   <title>WLee0515's Github Page</title>
   <!-- Add icon library -->
   <style>
+    ::-webkit-scrollbar {
+    width: 3px;
+    }
     
     body {
       background-color: black;
@@ -59,37 +62,10 @@
       width: 100%;
       height: 100%;
     }
-
-    button {
-      width: 50px;
-      height: 50px;
-      background-color: black;
-      border: 0px;
-     /* border : 5px solid blue;
-      border-radius: 50% 50% 50% 50%;*/
-      margin: 0;
-      padding: 0;
-      vertical-align: top;
-    }
     
-    button span {
-      color: white;
-      margin: 0;
-      padding: 0;
-      vertical-align: middle;
-    }
-
-    #home-button {
-      font-size: 40px;
-    }
-    
-    #home-button span {
-      position: relative;
-      top: -5px;
-    }
-
-    #cv-button {
-      font-size: 30px;
+    .control-button {
+      width: 30px;
+      margin: 5px;
     }
     
   </style>
@@ -129,7 +105,7 @@
   </div>
   <div id="bottom-menu">
     <div id="bottom-menu-context">
-      <button id="home-button" onclick="home_button_click()"><span><b>⌂</b></span></button>
+      <input class="control-button" type="image" src="./site/icons/icon-home-white.svg" onclick="home_button_click()"/>
  <!--
      <button id="cv-button" onclick="home_button_click()"><span><b>CV</b></span></button>
       <button id="cv-button" onclick="home_button_click()"><span><b>CV</b></span></button>
