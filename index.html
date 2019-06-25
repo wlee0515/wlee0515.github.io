@@ -1,7 +1,7 @@
 <!DOCTYPE html>
 <html>
 <head>
-  <meta name="viewport" content="user-scalable=no,width=device-width, initial-scale=1.0">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
   <!--
   <meta name="apple-mobile-web-app-capable" content="yes" />
   -->
@@ -16,40 +16,32 @@
       background-color: black;
       margin: 0;
       padding: 0;
+      overflow: hidden;
     }
 
     #top-menu {
-      position: fixed;
-      top: 0px;
-      left: 0px;
       width: 100vw;
       height: 0px;
       background-color: none;
     }
     
     #bottom-menu {
-      position: fixed;
-      bottom: 0px;
-      left: 0px;
       width: 100vw;
       height: 50px;
       text-align: center;
     }
 
     #viewport-div {
-      position: fixed; 
-      left: 0;
-      top: 0;
       -webkit-overflow-scrolling: touch;
       overflow: auto;
-    
-      width: 100vw;
+      margin: 0;
+      padding: 0;
+      border: 0px;
     }
 
     #viewport {
       width: 100%;
       height: 100%;
-
       background-color: white;
       border: 0px;
     }
@@ -71,7 +63,6 @@
   <script type="text/javascript">
 
       var gHomePage="./site/pages/homepage/index.html";
-      page_resize();
 
 
       function page_load(){
@@ -94,18 +85,21 @@
           var wMenuheight = 0;
           if (null != wTopMenuDiv)
           {
-            wMenuheight += wTopMenuDiv.clientHeight;
+            wMenuheight += wTopMenuDiv.offsetHeight;
           }
           
           if (null != wBottomDiv)
           {
-            wMenuheight += wBottomDiv.clientHeight;
+            wMenuheight += wBottomDiv.offsetHeight;
           }
           
           var height =  window.innerHeight - wMenuheight;
           
           wViewPortDiv.style.height = height + "px";
+          wViewPortDiv.style.width = window.innerWidth + "px";
+          
         }
+
       }
 
       function home_button_click(){
@@ -120,7 +114,7 @@
 <body onload="page_load()" onresize="page_resize()">
   <div id="top-menu">
   </div>
-  <div id="viewport-div">
+  <div id="viewport-div" onresize="viewport_div_resize()">
       <iframe id="viewport"></iframe>
   </div>
   <div id="bottom-menu">
