@@ -26,11 +26,19 @@
       latitude: 0.0,
       longitude: 0.0,
       altitudeMSL: 0.0,
-      Entity: {
+      Entity: [{
         Name: "",
         IsAlive: true,
         
-      }
+      },{
+        Name: "",
+        IsAlive: true,
+        
+      },{
+        Name: "",
+        IsAlive: true,
+        
+      },]
     };
 
     var gFormDatabase = {
@@ -39,9 +47,7 @@
 
     function form_submit_click(iFormIdStr) {
       var wJSONString = getObjFormJSONStr(iFormIdStr, gFormDatabase[iFormIdStr]);
-      alert(JSON.stringify(wObj));
       var wObj = JSON.parse(wJSONString);
-
       alert(JSON.stringify(wObj));
     }
 
@@ -93,36 +99,43 @@
 
     function getObjFormJSONStr(iIdPrefix, iJSONObject) {
 
+      var wIsArray = false;
+      if (true == Array.isArray(iJSONObject)) {
+        wIsArray = true;
+      }
+
       var wJSONStr = "";
-      wJSONStr += '{';
+
+
+      wJSONStr += wIsArray? '[' : '{';
       for (key in iJSONObject) {
         var wIdName = iIdPrefix + "." + key;
 
         var wCheckBox = document.getElementById(wIdName + '_checkbox');
         if (true == wCheckBox.checked) {
 
-          if ("{" != wJSONStr){
+          if (("[" != wJSONStr) && ("{" != wJSONStr)){
             wJSONStr += ",";
           }
 
           if (typeof (iJSONObject[key]) === "object") {
-            wJSONStr += '\"' + key + '\" : ';
+            wJSONStr += wIsArray? "" : '\"' + key + '\" : ';
             wJSONStr += getObjFormJSONStr(wIdName, iJSONObject[key]);
           }
           else if (typeof (iJSONObject[key]) === "string") {
-            wJSONStr += '\"' + key + '\" : ';
+            wJSONStr += wIsArray? "" : '\"' + key + '\" : ';
             wJSONStr += '\"' + document.getElementById(wIdName + '_text').value + '\" ';
           }
           else if (typeof (iJSONObject[key]) === "number") {
             var wValue = document.getElementById(wIdName + '_number').value;
-
             if ("" == wValue) wValue = 0;
-            wJSONStr += '\"' + key + '\" : ';
+
+            wJSONStr += wIsArray? "" : '\"' + key + '\" : ';
             wJSONStr += wValue;
           }
           else if (typeof (iJSONObject[key]) === "boolean") {
             
-            wJSONStr += '\"' + key + '\" : ';
+            wJSONStr += wIsArray? "" : '\"' + key + '\" : ';
             if ("TRUE" == document.getElementById(wIdName + '_boolean').value) {
               wJSONStr += "true";
             }
@@ -132,7 +145,8 @@
           }
         }
       }
-      wJSONStr += '}';
+
+      wJSONStr += wIsArray? ']' : '}';
       return wJSONStr;
     }
 
