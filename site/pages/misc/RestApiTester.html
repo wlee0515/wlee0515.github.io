@@ -1,0 +1,130 @@
+<html>
+
+<head>
+    <meta name="GENERATOR" content="Microsoft Visual Studio">
+    <meta charset="utf-8">
+    <title>REST API Test</title>
+
+    <style type="text/css">
+        html,
+        body {
+            width: 100%;
+            height: 100%;
+            margin: 0px;
+            padding: 5px;
+
+        }
+        
+        #Input_Url {
+        
+            width: 300px;
+        }
+        
+        textarea {
+        
+            width: 400px;
+            height: 100px;
+        }
+        
+    </style>
+
+    <script>
+
+        function sendRequest(iReqType, iURL, iHeader, iBody) {
+
+            if (null == iURL) {
+                alert("No URL provided")
+                return;
+            }
+
+            var http = new XMLHttpRequest();
+            http.open(iReqType, iURL, true);
+
+            //Send the proper header information along with the request
+            if (null != iHeader) {
+                for (i = 0; i < iHeader.length; ++i) {
+                    if (2 != iHeader[i].length) {
+                        http.setRequestHeader(iHeader[i][0], iHeader[i][1]);
+
+                    }
+                }
+            }
+
+            http.onreadystatechange = function () {
+                //Call a function when the state changes.
+                processHttp(http);
+            }
+
+            http.send(iBody);
+        }
+
+
+        function processHttp(iHttp) {
+
+            var wResponseDOM = document.getElementById("Output_Response");
+            var wResponseCodeDOM = document.getElementById("Output_ResponseCode");
+            
+            var wStatusStr = "Ready State : " + iHttp.readyState + "\n";
+            wStatusStr += "Response Status : " + iHttp.status + "\n";
+
+            wResponseCodeDOM.innerText = wStatusStr
+            wResponseDOM.value = iHttp.responseText;
+            /*
+                        if (iHttp.readyState == 4 && iHttp.status == 200) {
+            
+            //                    var wtxt = http.responseText;
+                                
+                                var wResponseDOM = document.getElementById("Output_Response");
+            
+                                wResponseDOM.value = JSON.stringify(iHttp);
+            
+                            }
+                        }
+                        */
+        }
+
+        function sendUserInput() {
+            var wReqType = document.getElementById("Input_RequestType").value;
+            var wURL = document.getElementById("Input_Url").value;
+            var wBody = document.getElementById("Input_Body").value;
+
+            var wResponseDOM = document.getElementById("Output_Response");
+            var wResponseCodeDOM = document.getElementById("Output_ResponseCode");
+
+            wResponseDOM.value = "";
+            wResponseCodeDOM.innerText = "";
+
+            sendRequest(wReqType, wURL, null, wBody);
+
+        }
+
+    </script>
+
+</head>
+
+<body>
+    <h1>REST API Test Tool</h1>
+    <h2>Request Form</h2>
+    <select id="Input_RequestType">
+        <option value="GET">GET</option>
+        <option value="POST">POST</option>
+        <option value="PUT">PUT</option>
+        <option value="HEAD">HEAD</option>
+        <option value="DELETE">DELETE</option>
+        <option value="CONNECT">CONNECT</option>
+        <option value="OPTIONS">OPTIONS</option>
+        <option value="TRACE">TRACE</option>
+    </select>
+    <input id="Input_Url" type="text" value="http://localhost">
+    </br>
+    <p>Body:</p>
+    <textarea id="Input_Body"></textarea>
+    </br>
+    <button onclick="sendUserInput()">Send</button>
+    </br>
+    <h2>Response</h2>
+    <div id="Output_ResponseCode"></div>
+    <textarea id="Output_Response"></textarea>
+</body>
+
+</html>

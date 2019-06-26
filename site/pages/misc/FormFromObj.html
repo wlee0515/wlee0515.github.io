@@ -1,0 +1,161 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
+  <!--
+  <meta name="apple-mobile-web-app-capable" content="yes" />
+  -->
+  <title>WLee0515's Github Page</title>
+  <!-- Add icon library -->
+  <style>
+    .input_object {
+      display: table;
+    }
+
+    .input_property {
+      display: table-row;
+    }
+
+    .input_cell {
+      display: table-cell;
+    }
+  </style>
+  <script type="text/javascript">
+    var gObjJSON = {
+      latitude: 0.0,
+      longitude: 0.0,
+      altitudeMSL: 0.0,
+      Entity: {
+        Name: "",
+        IsAlive: true,
+        
+      }
+    };
+
+    var gFormDatabase = {
+
+    }
+
+    function form_submit_click(iFormIdStr) {
+      var wJSONString = getObjFormJSONStr(iFormIdStr, gFormDatabase[iFormIdStr]);
+      alert(JSON.stringify(wObj));
+      var wObj = JSON.parse(wJSONString);
+
+      alert(JSON.stringify(wObj));
+    }
+
+    function createForm(iFormIdStr, iJSONObject) {
+
+      gFormDatabase[iFormIdStr] = iJSONObject;
+      var wFormhtml = "";
+      wFormhtml += '<div id="' + iFormIdStr + '_form" class="input_form" >';
+      wFormhtml += createObjFormHtmlStr(iFormIdStr, iJSONObject);
+      wFormhtml += '<button id="' + iFormIdStr + '_submit" class="input_submit" onclick="form_submit_click(\'' + iFormIdStr + '\')" >Submit</button>';
+      wFormhtml += '</div>';
+
+      return wFormhtml;
+    }
+
+    function createObjFormHtmlStr(iIdPrefix, iJSONObject) {
+
+      var wForm = "";
+      wForm += '<div class="input_object">';
+      for (key in iJSONObject) {
+        var wIdName = iIdPrefix + "." + key;
+
+        wForm += '<div class="input_property">';
+        wForm += '<input type="checkbox" id="' + wIdName + '_checkbox" class="input_checkbox input_cell">';
+        wForm += '<div id="' + wIdName + '_label" class="key_label input_cell">' + key + '</div>';
+
+        if (typeof (iJSONObject[key]) === "object") {
+          wForm += createObjFormHtmlStr(wIdName, iJSONObject[key]);
+        }
+        else if (typeof (iJSONObject[key]) === "string") {
+          wForm += '<input type="text" id="' + wIdName + '_text" class="input_text input_cell">';
+        }
+        else if (typeof (iJSONObject[key]) === "number") {
+          wForm += '<input type="number" id="' + wIdName + '_number" class="input_number input_cell">';
+        }
+        else if (typeof (iJSONObject[key]) === "boolean") {
+          wForm += '<select id="' + wIdName + '_boolean" class="input_boolean input_cell">';
+          wForm += '<option value="TRUE">TRUE</option>';
+          wForm += '<option value="FALSE">FALSE</option>';
+          wForm += '</select>';
+        }
+
+        wForm += '</div>';
+      }
+      wForm += '</div>';
+      return wForm;
+    }
+
+
+    function getObjFormJSONStr(iIdPrefix, iJSONObject) {
+
+      var wJSONStr = "";
+      wJSONStr += '{';
+      for (key in iJSONObject) {
+        var wIdName = iIdPrefix + "." + key;
+
+        var wCheckBox = document.getElementById(wIdName + '_checkbox');
+        if (true == wCheckBox.checked) {
+
+          if ("{" != wJSONStr){
+            wJSONStr += ",";
+          }
+
+          if (typeof (iJSONObject[key]) === "object") {
+            wJSONStr += '\"' + key + '\" : ';
+            wJSONStr += getObjFormJSONStr(wIdName, iJSONObject[key]);
+          }
+          else if (typeof (iJSONObject[key]) === "string") {
+            wJSONStr += '\"' + key + '\" : ';
+            wJSONStr += '\"' + document.getElementById(wIdName + '_text').value + '\" ';
+          }
+          else if (typeof (iJSONObject[key]) === "number") {
+            var wValue = document.getElementById(wIdName + '_number').value;
+
+            if ("" == wValue) wValue = 0;
+            wJSONStr += '\"' + key + '\" : ';
+            wJSONStr += wValue;
+          }
+          else if (typeof (iJSONObject[key]) === "boolean") {
+            
+            wJSONStr += '\"' + key + '\" : ';
+            if ("TRUE" == document.getElementById(wIdName + '_boolean').value) {
+              wJSONStr += "true";
+            }
+            else {
+              wJSONStr += "false";
+            }
+          }
+        }
+      }
+      wJSONStr += '}';
+      return wJSONStr;
+    }
+
+    function page_load() {
+      alert(JSON.stringify(gObjJSON));
+
+      var wFormDom = document.getElementById("Div_ObjForm");
+      var wFormHtmlStr = "";
+      wFormHtmlStr += createForm("formobj1", gObjJSON);
+      wFormHtmlStr += createForm("formobj2", gObjJSON);
+      wFormHtmlStr += createForm("formobj3", gObjJSON);
+      wFormDom.innerHTML = wFormHtmlStr;
+
+      alert(JSON.stringify(gFormDatabase));
+    }
+
+  </script>
+</head>
+
+<body onload="page_load()">
+  <div id="Div_ObjForm">
+
+  </div>
+</body>
+
+</html>

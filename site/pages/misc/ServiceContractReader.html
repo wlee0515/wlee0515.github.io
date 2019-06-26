@@ -1,0 +1,413 @@
+<html>
+
+<head>
+    <meta name="GENERATOR" content="Microsoft Visual Studio">
+    <meta charset="utf-8">
+    <title>Service Contract Reader</title>
+
+    <style type="text/css">
+        body {
+            margin: 0px;
+            padding: 0px;
+
+        }
+
+        #mainbody {
+            margin: auto;
+            width: 90%;
+        }
+
+        .child_data {
+            display: none;
+            position: relative;
+            left: 25px;
+        }
+
+        .data_row {}
+
+        .data_row_button_add {
+            display: inline-block;
+            width: 25px;
+            margin: 3px;
+        }
+
+        .data_row_label {
+            display: inline-block;
+            min-width: 100px;
+        }
+
+        .data_row_value {
+            display: inline-block;
+            min-width: 100px;
+        }
+
+        .div_definition_table {
+            display: table;
+            position: relative;
+            left: 25px;
+            border: 1px solid black;
+            padding: 3px;
+        }
+
+        .div_definition_Header {
+            display: table-cell;
+            min-width: 150px;
+            font-weight: bold;
+            border: 0.5px solid gray;
+            padding: 3px;
+        }
+
+        .div_definition_row {
+            display: table-row;
+            border: 0.5px solid gray;
+            padding: 3px;
+        }
+
+        .div_definition_cell {
+            display: table-cell;
+            border: 0.5px solid gray;
+            padding: 3px;
+        }
+
+        #div_FileEntry {
+            padding: 5px;
+        }
+
+        #div_display {
+            border: 2px solid black;
+            border-radius: 5px;
+            width: 100%;
+            min-height: 100px;
+            padding: 5px;
+            margin: auto;
+        }
+    </style>
+
+    <script>
+
+        function sendRequest(iReqType, iURL, iHeader, iBody) {
+
+            if (null == iURL) {
+                alert("No URL provided")
+                return;
+            }
+
+            var http = new XMLHttpRequest();
+            http.open(iReqType, iURL, true);
+
+            //Send the proper header information along with the request
+            if (null != iHeader) {
+                for (i = 0; i < iHeader.length; ++i) {
+                    if (2 != iHeader[i].length) {
+                        http.setRequestHeader(iHeader[i][0], iHeader[i][1]);
+
+                    }
+                }
+            }
+
+            http.onreadystatechange = function () {
+                //Call a function when the state changes.
+                processHttp(http);
+            }
+
+            http.send(iBody);
+        }
+
+
+        function processHttp(iHttp) {
+
+            var wResponseDOM = document.getElementById("Output_Response");
+
+            wResponseDOM.value = iHttp.responseText;
+            /*
+                        if (iHttp.readyState == 4 && iHttp.status == 200) {
+            
+            //                    var wtxt = http.responseText;
+                                
+                                var wResponseDOM = document.getElementById("Output_Response");
+            
+                                wResponseDOM.value = JSON.stringify(iHttp);
+            
+                            }
+                        }
+                        */
+        }
+
+        function sendUserInput() {
+            var wReqType = document.getElementById("Input_RequestType").value;
+            var wURL = document.getElementById("Input_Url").value;
+            var wBody = document.getElementById("Input_Body").value;
+
+            sendRequest(wReqType, wURL, null, wBody);
+
+        }
+
+        function processFile(evt) {
+            // Reset progress indicator on new file selection.
+
+            reader = new FileReader();
+
+            reader.onabort = function (e) {
+                alert('File read cancelled');
+            };
+
+            reader.onload = function (e) {
+                var wObj = parseJSON(e.target.result);
+                update_display(wObj);
+            }
+
+            // Read in the image file as a binary string.
+            reader.readAsText(evt.target.files[0]);
+        }
+
+        function parseJSON(iString) {
+            var wJSONString = iString;
+            wJSONString = wJSONString.replace(/\n/g, "");
+            wJSONString = wJSONString.replace(/\r/g, "");
+            wJSONString = wJSONString.replace(/    /g, " ");
+            wJSONString = wJSONString.replace(/    /g, " ");
+            wJSONString = wJSONString.replace(/    /g, " ");
+            wJSONString = wJSONString.replace(/  /g, " ");
+            wJSONString = wJSONString.replace(/  /g, " ");
+            wJSONString = wJSONString.replace(/  /g, " ");
+            wJSONString = wJSONString.replace(/  /g, " ");
+            wJSONString = wJSONString.replace(/  /g, " ");
+            wJSONString = wJSONString.replace(/  /g, " ");
+            wJSONString = wJSONString.replace(/  /g, " ");
+            wJSONString = wJSONString.replace(/, }/g, "}");
+
+            return JSON.parse(wJSONString);
+        }
+
+        var gElementIDCounter = 0;
+        var gElementIDPrefix = "id_div_data_row_child_data_";
+
+        function printObjHtmlStr(iJSONObjParentKey, iJSONObjKey, iJSONObj, iJSONObjRoot) {
+
+            var wReturnValue = "";
+            if ("definitions" == iJSONObjParentKey) {
+                wReturnValue = printObjHtmlStr_definitions(iJSONObjParentKey, iJSONObjKey, iJSONObj, iJSONObjRoot);
+            }
+            else {
+                wReturnValue = printObjHtmlStr_JSON(iJSONObjParentKey, iJSONObjKey, iJSONObj, iJSONObjRoot);
+            }
+            return wReturnValue;
+        }
+
+        function printObjHtmlStr_JSON(iJSONObjParentKey, iJSONObjKey, iJSONObj, iJSONObjRoot) {
+
+            if (null != iJSONObj) {
+
+                wDisplayHtml = "";
+                for (var key in iJSONObj) {
+
+                    if (null != key) {
+                        wDisplayHtml += "<div class='data_row'>"
+
+                        if (typeof (iJSONObj[key]) === "object") {
+                            gElementIDCounter += 1;
+                            var wElementIDTag = gElementIDPrefix + gElementIDCounter;
+                            var wElementIDButton = gElementIDPrefix + gElementIDCounter + "_button";
+
+                            wDisplayHtml += "<button class='data_row_button_add' id='" + wElementIDButton + "' + onclick=\"toggle_visibility('" + wElementIDButton + "','" + wElementIDTag + "')\">+</button>";
+                            wDisplayHtml += "<div class='data_row_label'>" + key + "</div>"
+                            wDisplayHtml += "<div class='data_row_value'>" + "</div>"
+
+                            wDisplayHtml += "<div class='child_data' id='" + wElementIDTag + "'>"
+                            wDisplayHtml += printObjHtmlStr(iJSONObjKey, key, iJSONObj[key], iJSONObjRoot);
+                            wDisplayHtml += "</div>";
+                        }
+
+                        else if (("$ref" == key) && (null != iJSONObjRoot)) {
+
+                            gElementIDCounter += 1;
+                            var wElementIDTag = gElementIDPrefix + gElementIDCounter;
+                            var wElementIDButton = gElementIDPrefix + gElementIDCounter + "_button";
+
+                            wDisplayHtml += "<button class='data_row_button_add' id='" + wElementIDButton + "' + onclick=\"toggle_visibility('" + wElementIDButton + "','" + wElementIDTag + "')\">+</button>";
+                            wDisplayHtml += "<div class='data_row_label'>" + key + "</div>"
+                            wDisplayHtml += "<div class='data_row_value'>" + iJSONObj[key] + "</div>"
+
+                            var wRefArray = iJSONObj[key].split("/");
+
+                            wDisplayHtml += "<div class='child_data' id='" + wElementIDTag + "'>"
+                            wDisplayHtml += printObjHtmlStr(wRefArray[1], wRefArray[2], iJSONObjRoot[wRefArray[1]][wRefArray[2]], iJSONObjRoot);
+                            wDisplayHtml += "</div>";
+                        }
+
+                        else {
+                            wDisplayHtml += "<div class='data_row_button_add'></div>";
+                            wDisplayHtml += "<div class='data_row_label'>" + key + "</div>"
+                            wDisplayHtml += "<div class='data_row_value'>" + iJSONObj[key] + "</div>"
+                        }
+                        wDisplayHtml += "</div>";
+
+                    }
+                    else {
+                        break;
+                    }
+                }
+
+                return wDisplayHtml;
+            }
+            return "";
+        }
+
+        function printObjHtmlStr_definitions(iJSONObjParentKey, iJSONObjKey, iJSONObj, iJSONObjRoot) {
+
+            var wDisplayHtml = "";
+            wDisplayHtml += "<div class='div_definition'>";
+            wDisplayHtml += "<div class='div_definition_object_name'>" + iJSONObjKey + "</div>";
+
+            if (null != iJSONObj["required"]) {
+
+                var wReqPropHtml = "";
+                wReqPropHtml += "<div class='div_definition_row'>Required Properties</div>";
+
+                wReqPropHtml += "<div class='div_definition_table'>";
+                wReqPropHtml += "<div class='div_definition_row'>";
+                wReqPropHtml += "<div class='div_definition_Header'>Key</div>";
+                wReqPropHtml += "<div class='div_definition_Header'>Type</div>";
+                wReqPropHtml += "<div class='div_definition_Header'>Description</div>";
+                wReqPropHtml += "</div>";
+
+                var wCount = 0;
+                for (var key in iJSONObj["required"]) {
+
+                    wCount += 1;
+                    var wNewKey = iJSONObj["required"][key];
+                    var wObjRef = iJSONObj["properties"][wNewKey];
+                    if (null == wObjRef["$ref"]) {
+                        wReqPropHtml += "<div class='div_definition_row'>";
+                        wReqPropHtml += "<div class='div_definition_cell'>" + wNewKey + "</div>";
+                        wReqPropHtml += "<div class='div_definition_cell'>" + wObjRef["type"] + "</div>";
+                        wReqPropHtml += "<div class='div_definition_cell'>" + wObjRef["description"] + "</div>";
+                        wReqPropHtml += "</div>";
+                    }
+                    else {
+
+                        wReqPropHtml += "<div class='div_definition_row'>";
+                        wReqPropHtml += "<div class='div_definition_row'>" + wNewKey + "</div>";
+                        wReqPropHtml += printObjHtmlStr("properties", key, wObjRef, iJSONObjRoot)
+                        wReqPropHtml += "</div>";
+                    }
+                }
+                wReqPropHtml += "</div>";
+
+                if (0 != wCount) {
+                    wDisplayHtml += wReqPropHtml;
+                }
+            }
+
+            if (null != iJSONObj["properties"]) {
+
+                var wOpPropHtml = "";
+                wOpPropHtml += "<div class='div_definition_row'>Optional Properties</div>";
+                wOpPropHtml += "<div class='div_definition_table'>";
+                wOpPropHtml += "<div class='div_definition_row'>";
+                wOpPropHtml += "<div class='div_definition_Header'>Key</div>";
+                wOpPropHtml += "<div class='div_definition_Header'>Type</div>";
+                wOpPropHtml += "<div class='div_definition_Header'>Description</div>";
+                wOpPropHtml += "</div>";
+
+                var wCount = 0;
+                for (var key in iJSONObj["properties"]) {
+
+                    var wSkip = false;
+                    for (var key2 in iJSONObj["required"]) {
+                        var wNewKey = iJSONObj["required"][key2];
+                        if (key == wNewKey) {
+                            wSkip = true;
+                            break;
+                        }
+                    }
+
+                    if (true == wSkip) {
+                        continue;
+                    }
+
+                    wCount += 1;
+                    var wObjRef = iJSONObj["properties"][key];
+                    if (null == wObjRef["$ref"]) {
+                        wOpPropHtml += "<div class='div_definition_row'>";
+                        wOpPropHtml += "<div class='div_definition_cell'>" + key + "</div>";
+                        wOpPropHtml += "<div class='div_definition_cell'>" + wObjRef["type"] + "</div>";
+                        wOpPropHtml += "<div class='div_definition_cell'>" + wObjRef["description"] + "</div>";
+                        wOpPropHtml += "</div>";
+                    }
+                    else {
+
+                        wOpPropHtml += "<div class='div_definition_row'>";
+                        wOpPropHtml += "<div class='div_definition_row'>" + key + "</div>";
+                        wOpPropHtml += printObjHtmlStr("properties", key, wObjRef, iJSONObjRoot)
+                        wOpPropHtml += "</div>";
+                    }
+                }
+
+                wOpPropHtml += "</div>";
+
+                if (0 != wCount) {
+                    wDisplayHtml += wOpPropHtml;
+                }
+
+            }
+
+            wDisplayHtml += "</div>";
+
+            return wDisplayHtml;
+        }
+
+        function update_display(iServiceContractJSON) {
+            if (null == iServiceContractJSON) {
+                alert("Error Reading File. Please enter a valid JSON file");
+            }
+
+            var wDisplay = document.getElementById('div_display');
+
+            if (null != wDisplay) {
+
+                gElementIDCounter = 0;
+                wDisplayHtml = printObjHtmlStr("", "", iServiceContractJSON, iServiceContractJSON);
+
+                wDisplay.innerHTML = wDisplayHtml;
+            }
+        }
+
+        function onload() {
+            document.getElementById('input_ServiceContractFile').addEventListener('change', processFile, false);
+        }
+
+        function toggle_visibility(iButtonId, iDOMId) {
+
+            var wButton = document.getElementById(iButtonId);
+            var wDisplay = document.getElementById(iDOMId);
+
+            if ((null != wButton) && (null != wDisplay)) {
+                if ("+" == wButton.innerText) {
+                    wButton.innerText = "-";
+                    wDisplay.style.display = "block";
+                }
+                else {
+                    wButton.innerText = "+";
+                    wDisplay.style.display = "none";
+
+                }
+            }
+
+        }
+    </script>
+
+</head>
+
+<body onload="onload()">
+    <div id="mainbody">
+        <h1>Service Contract Reader</h1>
+        <div id="div_FileEntry">
+            Select a Service Contract file: <input type="file" id="input_ServiceContractFile" accept=".json">
+        </div>
+        <div id="div_display">
+        </div>
+    </div>
+</body>
+
+</html>
