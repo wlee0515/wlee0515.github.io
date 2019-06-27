@@ -41,16 +41,45 @@
             min-width: 100px;
         }
 
-        .div_definition_table {
+        .paths_table {
             display: table;
+        }
+
+        .paths_row {
+            display: table-row;
+        }
+
+        .paths_row_main {
+            background-color: lightcyan;
+        }
+
+        .paths_cell {
+            display: table-cell;
+        }
+
+        .paths_child_data {
+            display: none;
+        }
+
+        .paths_method_form_button {
+            width: 50px;
+            font-size: 10px;
+            margin: 3px;
+        }
+
+        .paths_method_type_label {
+            font-weight: bold;
+        }
+
+        .div_definition_table {
             position: relative;
             left: 25px;
             border: 1px solid black;
             padding: 3px;
+            background-color: white;
         }
 
         .div_definition_Header {
-            display: table-cell;
             min-width: 150px;
             font-weight: bold;
             border: 0.5px solid gray;
@@ -58,19 +87,23 @@
         }
 
         .div_definition_row {
-            display: table-row;
             border: 0.5px solid gray;
             padding: 3px;
         }
 
         .div_definition_cell {
-            display: table-cell;
             border: 0.5px solid gray;
             padding: 3px;
+            min-width: 150px;
+            max-width: 400px;
         }
 
-        #div_FileEntry {
+        #div_FileEntry , #div_ServerAddressEntry {
             padding: 5px;
+        }
+        #input_ServiceProvider {
+            max-width : 70%;
+            min-width : 300px;
         }
 
         #div_display {
@@ -81,11 +114,198 @@
             padding: 5px;
             margin: auto;
         }
+
+        .input_object {
+            display: table;
+        }
+
+        .input_property {
+            display: table-row;
+        }
+
+        .input_cell {
+            display: table-cell;
+        }
     </style>
 
     <script>
+        function FormManager(iIdPrefix) {
+            this.mCallBackFunction = null;
+            this.mFormDatabase = {};
 
-        function sendRequest(iReqType, iURL, iHeader, iBody) {
+            this.setCallBackFunction = function (iCallBackFunction) {
+                this.mCallBackFunction = iCallBackFunction;
+            }
+
+            this.processFormSumitClick = function (iFormIdStr) {
+                var wFormObject = this.mFormDatabase[iFormIdStr];
+
+                if (null != wFormObject) {
+                    var wJSONString = this.getObjFormJSONStr(iFormIdStr, wFormObject.FormObj);
+                    var wObj = JSON.parse(wJSONString);
+
+                    if (null != this.mCallBackFunction) {
+                        var wEvent = {
+                            FormId: wFormObject.FormId,
+                            FormMetadata: wFormObject.FormMetadata,
+                            FormFilled: wObj
+                        };
+
+                        this.mCallBackFunction(wEvent);
+                    }
+                }
+
+                else {
+                    alert("Error : Form Object does not exist");
+                }
+            }
+
+            this.createForm = function (iFormIdStr, iJSONObject, iMetaData) {
+
+                if (("" == iFormIdStr)) {
+                    return "";
+                }
+
+                var wFormId = iIdPrefix == null ? iFormIdStr : iIdPrefix + "_" + iFormIdStr;
+                var wObject = null == iJSONObject ? null : JSON.parse(JSON.stringify(iJSONObject))
+                var wMetadata = null == iMetaData ? null : JSON.parse(JSON.stringify(iMetaData))
+
+                this.mFormDatabase[wFormId] = {
+                    FormId: iFormIdStr,
+                    FormMetadata: wMetadata,
+                    FormObj: wObject,
+                };
+
+                var wFormhtml = "";
+                wFormhtml += '<div id="' + wFormId + '_form" class="input_form">';
+                wFormhtml += this.createObjFormHtmlStr(wFormId, wObject);
+                wFormhtml += '<button id="' + wFormId + '_submit" class="input_submit" onclick = "form_submit_click(\'' + wFormId + '\')" >Submit</button > ';
+                wFormhtml += '</div>';
+
+                return wFormhtml;
+            }
+
+            this.createObjFormHtmlStr = function (iIdPrefix, iJSONObject) {
+
+                var wForm = "";
+                wForm += '<div class="input_object">';
+                for (key in iJSONObject) {
+                    var wIdName = iIdPrefix + "." + key;
+                    var wCurrentKey = key;
+
+                    wForm += '<div class="input_property">';
+
+                    if (typeof (iJSONObject[wCurrentKey]) === "object") {
+                        wForm += '<div id="' + wIdName + '_checkbox" class="input_checkbox input_cell"></div>';
+                        wForm += '<div id="' + wIdName + '_label" class="key_label input_cell">' + wCurrentKey + '</div>';
+                        wForm += '<div class="child_property_form">';
+                        wForm += this.createObjFormHtmlStr(wIdName, iJSONObject[wCurrentKey]);
+                        wForm += '</div>';
+                    }
+                    else {
+                        wForm += '<input type="checkbox" id="' + wIdName + '_checkbox" class="input_checkbox input_cell" title = "Use Checkbox to include property" > ';
+                        wForm += '<div id="' + wIdName + '_label" class="key_label input_cell">' + wCurrentKey + '</div>';
+                        if (typeof (iJSONObject[wCurrentKey]) === "string") {
+                            wForm += '<input type="text" id="' + wIdName + '_text" class="input_text input_cell">';
+                        }
+                        else if (typeof (iJSONObject[wCurrentKey]) === "number") {
+                            wForm += '<input type="number" id="' + wIdName + '_number" class="input_number input_cell">';
+                        }
+                        else if (typeof (iJSONObject[wCurrentKey]) === "boolean") {
+                            wForm += '<select id="' + wIdName + '_boolean" class="input_boolean input_cell">';
+                            wForm += '<option value="TRUE">TRUE</option>';
+                            wForm += '<option value="FALSE">FALSE</option>';
+                            wForm += '</select>';
+                        }
+                    }
+
+                    wForm += '</div>';
+                }
+                wForm += '</div>';
+                return wForm;
+            }
+
+            this.getObjFormJSONStr = function (iIdPrefix, iJSONObject) {
+
+                var wIsArray = false;
+                if (true == Array.isArray(iJSONObject)) {
+                    wIsArray = true;
+                }
+
+                var wJSONStr = "";
+
+
+                wJSONStr += wIsArray ? '[' : '{';
+
+                for (key in iJSONObject) {
+                    var wIdName = iIdPrefix + "." + key;
+                    var wCurrentKey = key;
+
+                    if (typeof (iJSONObject[wCurrentKey]) === "object") {
+
+                        var wFormObjStr = this.getObjFormJSONStr(wIdName, iJSONObject[wCurrentKey]);
+
+                        if (("{}" != wFormObjStr) && ("[]" != wFormObjStr)) {
+                            if (("[" != wJSONStr) && ("{" != wJSONStr)) {
+                                wJSONStr += ",";
+                            }
+
+                            wJSONStr += wIsArray ? "" : '\"' + wCurrentKey + '\" : ';
+                            wJSONStr += wFormObjStr;
+                        }
+                    }
+                    else {
+
+                        var wCheckBox = document.getElementById(wIdName + '_checkbox');
+                        if (true == wCheckBox.checked) {
+
+                            if (("[" != wJSONStr) && ("{" != wJSONStr)) {
+                                wJSONStr += ",";
+                            }
+
+                            if (typeof (iJSONObject[wCurrentKey]) === "string") {
+                                wJSONStr += wIsArray ? "" : '\"' + wCurrentKey + '\" : ';
+                                wJSONStr += '\"' + document.getElementById(wIdName + '_text').value + '\" ';
+                            }
+                            else if (typeof (iJSONObject[wCurrentKey]) === "number") {
+                                var wValue = document.getElementById(wIdName + '_number').value;
+                                if ("" == wValue) wValue = 0;
+
+                                wJSONStr += wIsArray ? "" : '\"' + wCurrentKey + '\" : ';
+                                wJSONStr += wValue;
+                            }
+                            else if (typeof (iJSONObject[wCurrentKey]) === "boolean") {
+
+                                wJSONStr += wIsArray ? "" : '\"' + wCurrentKey + '\" : ';
+                                if ("TRUE" == document.getElementById(wIdName + '_boolean').value) {
+                                    wJSONStr += "true";
+                                }
+                                else {
+                                    wJSONStr += "false";
+                                }
+                            }
+                        }
+                    }
+                }
+
+                wJSONStr += wIsArray ? ']' : '}';
+                return wJSONStr;
+            }
+        }
+
+        var gFormManager = new FormManager("Main");
+        function getFormManager() {
+            return gFormManager;
+        }
+
+        function form_submit_click(iFormIdStr) {
+            getFormManager().processFormSumitClick(iFormIdStr);
+        }
+
+    </script>
+    <script>
+
+        function sendRequest(iReqType, iURL, iHeader, iBody, iCallback) {
 
             if (null == iURL) {
                 alert("No URL provided")
@@ -100,14 +320,13 @@
                 for (i = 0; i < iHeader.length; ++i) {
                     if (2 != iHeader[i].length) {
                         http.setRequestHeader(iHeader[i][0], iHeader[i][1]);
-
                     }
                 }
             }
 
             http.onreadystatechange = function () {
                 //Call a function when the state changes.
-                processHttp(http);
+                iCallback(http);
             }
 
             http.send(iBody);
@@ -133,14 +352,8 @@
                         */
         }
 
-        function sendUserInput() {
-            var wReqType = document.getElementById("Input_RequestType").value;
-            var wURL = document.getElementById("Input_Url").value;
-            var wBody = document.getElementById("Input_Body").value;
-
-            sendRequest(wReqType, wURL, null, wBody);
-
-        }
+    </script>
+    <script>
 
         function processFile(evt) {
             // Reset progress indicator on new file selection.
@@ -179,13 +392,33 @@
             return JSON.parse(wJSONString);
         }
 
+        function update_display(iServiceContractJSON) {
+            if (null == iServiceContractJSON) {
+                alert("Error Reading File. Please enter a valid JSON file");
+            }
+
+            var wDisplay = document.getElementById('div_display');
+
+            if (null != wDisplay) {
+
+                gElementIDCounter = 0;
+                wDisplayHtml = printObjHtmlStr("", "", iServiceContractJSON, iServiceContractJSON);
+
+                wDisplay.innerHTML = wDisplayHtml;
+            }
+        }
+
         var gElementIDCounter = 0;
         var gElementIDPrefix = "id_div_data_row_child_data_";
 
         function printObjHtmlStr(iJSONObjParentKey, iJSONObjKey, iJSONObj, iJSONObjRoot) {
 
             var wReturnValue = "";
-            if ("definitions" == iJSONObjParentKey) {
+
+            if ("paths" == iJSONObjKey) {
+                wReturnValue = printObjHtmlStr_paths(iJSONObjParentKey, iJSONObjKey, iJSONObj, iJSONObjRoot);
+            }
+            else if ("definitions" == iJSONObjParentKey) {
                 wReturnValue = printObjHtmlStr_definitions(iJSONObjParentKey, iJSONObjKey, iJSONObj, iJSONObjRoot);
             }
             else {
@@ -224,7 +457,7 @@
                             var wElementIDTag = gElementIDPrefix + gElementIDCounter;
                             var wElementIDButton = gElementIDPrefix + gElementIDCounter + "_button";
 
-                            wDisplayHtml += "<button class='data_row_button_add' id='" + wElementIDButton + "' + onclick=\"toggle_visibility('" + wElementIDButton + "','" + wElementIDTag + "')\">+</button>";
+                            wDisplayHtml += "<button class='data_row_button_add' id='" + wElementIDButton + "' onclick=\"toggle_visibility('" + wElementIDButton + "','" + wElementIDTag + "')\">+</button>";
                             wDisplayHtml += "<div class='data_row_label'>" + key + "</div>"
                             wDisplayHtml += "<div class='data_row_value'>" + iJSONObj[key] + "</div>"
 
@@ -253,23 +486,103 @@
             return "";
         }
 
+
+        function printObjHtmlStr_paths(iJSONObjParentKey, iJSONObjKey, iJSONObj, iJSONObjRoot) {
+
+            if (null != iJSONObj) {
+
+                wDisplayHtml = "";
+                wDisplayHtml += "<div class='paths_table'>"
+                for (var key in iJSONObj) {
+
+                    if (null != key) {
+
+                        if (typeof (iJSONObj[key]) === "object") {
+                            gElementIDCounter += 1;
+                            var wElementIDTag = gElementIDPrefix + gElementIDCounter;
+                            var wElementIDButton = gElementIDPrefix + gElementIDCounter + "_button";
+
+                            wDisplayHtml += "<div class='paths_row paths_row_main'>"
+                            wDisplayHtml += "<button class='data_row_button_add paths_cell' id='" + wElementIDButton + "' onclick=\"toggle_visibility('" + wElementIDButton + "','" + wElementIDTag + "')\">+</button>";
+                            wDisplayHtml += "<div class='paths_row_label paths_cell'>" + key + "</div>";
+                            wDisplayHtml += "<div class='paths_row_value'>"
+
+                            var wCurrentPathObj = iJSONObj[key];
+
+                            var wMethodList = {};
+                            for (var key2 in wCurrentPathObj) {
+
+                                var wElementIDTag2 = gElementIDPrefix + gElementIDCounter + "_" + key2;
+                                wMethodList[key2] = {
+                                    methodType: key2,
+                                    formId: wElementIDTag2
+                                };
+
+                                wDisplayHtml += "<button class='paths_method_form_button paths_cell' onclick=\"toggle_visibility_v2('" + wElementIDTag2 + "')\" title='Toggle REST method form'>" + key2.toUpperCase() + "</button>";
+
+                            }
+
+                            wDisplayHtml += "</div>";
+                            wDisplayHtml += "</div>";
+
+                            wDisplayHtml += "<div class='paths_row'>"
+                            wDisplayHtml += "<div class='data_row_button_add paths_cell'></div>";
+                            wDisplayHtml += "<div class='paths_cell'>";
+                            wDisplayHtml += "<div class='paths_child_data' id='" + wElementIDTag + "'>"
+                            wDisplayHtml += printObjHtmlStr(iJSONObjKey, key, iJSONObj[key], iJSONObjRoot);
+                            wDisplayHtml += "</div>";
+                            wDisplayHtml += "</div>";
+                            wDisplayHtml += "</div>";
+
+
+                            for (var key3 in wMethodList) {
+
+                                var wFormID = wMethodList[key3].formId + "_contract";
+                                var wFormDisplayID = wMethodList[key3].formId + "_display";
+                                var wForm = generateFormObject(key, key3, wCurrentPathObj[key3], wFormDisplayID, iJSONObjRoot);
+
+                                wDisplayHtml += "<div class='paths_row'>"
+                                wDisplayHtml += "<div class='data_row_button_add paths_cell'></div>";
+                                wDisplayHtml += "<div class='paths_cell'>";
+                                wDisplayHtml += "<div class='paths_child_data' id='" + wMethodList[key3].formId + "'>"
+                                wDisplayHtml += "<div class='paths_method_type_label'>" + wMethodList[key3].methodType.toUpperCase() + " Form</div>";
+                                wDisplayHtml += getFormManager().createForm(wFormID, wForm.FormObj, wForm.FormMetadata);
+                                wDisplayHtml += "<div class='paths_method_status_display' id='" + wFormDisplayID + "'></div>";
+                                wDisplayHtml += "</div>";
+                                wDisplayHtml += "</div>";
+                                wDisplayHtml += "</div>";
+
+                            }
+                        }
+                    }
+                    else {
+                        break;
+                    }
+                }
+                wDisplayHtml += "</div>";
+
+                return wDisplayHtml;
+            }
+            return "";
+
+        }
+
         function printObjHtmlStr_definitions(iJSONObjParentKey, iJSONObjKey, iJSONObj, iJSONObjRoot) {
 
             var wDisplayHtml = "";
             wDisplayHtml += "<div class='div_definition'>";
-            wDisplayHtml += "<div class='div_definition_object_name'>" + iJSONObjKey + "</div>";
 
             if (null != iJSONObj["required"]) {
 
                 var wReqPropHtml = "";
-                wReqPropHtml += "<div class='div_definition_row'>Required Properties</div>";
+                wReqPropHtml += "<div class='div_definition_PropertyType'>Required Properties</div>";
 
-                wReqPropHtml += "<div class='div_definition_table'>";
-                wReqPropHtml += "<div class='div_definition_row'>";
-                wReqPropHtml += "<div class='div_definition_Header'>Key</div>";
-                wReqPropHtml += "<div class='div_definition_Header'>Type</div>";
-                wReqPropHtml += "<div class='div_definition_Header'>Description</div>";
-                wReqPropHtml += "</div>";
+                wReqPropHtml += "<table class='div_definition_table'>";
+                wReqPropHtml += "<tr class='div_definition_row'>";
+                wReqPropHtml += "<th class='div_definition_Header'>Key</th>";
+                wReqPropHtml += "<th class='div_definition_Header'>Type</th>";
+                wReqPropHtml += "<th class='div_definition_Header'>Description</th>";
+                wReqPropHtml += "</tr>";
 
                 var wCount = 0;
                 for (var key in iJSONObj["required"]) {
@@ -278,21 +591,23 @@
                     var wNewKey = iJSONObj["required"][key];
                     var wObjRef = iJSONObj["properties"][wNewKey];
                     if (null == wObjRef["$ref"]) {
-                        wReqPropHtml += "<div class='div_definition_row'>";
-                        wReqPropHtml += "<div class='div_definition_cell'>" + wNewKey + "</div>";
-                        wReqPropHtml += "<div class='div_definition_cell'>" + wObjRef["type"] + "</div>";
-                        wReqPropHtml += "<div class='div_definition_cell'>" + wObjRef["description"] + "</div>";
-                        wReqPropHtml += "</div>";
+                        wReqPropHtml += "<tr class='div_definition_row'>";
+                        wReqPropHtml += "<td class='div_definition_cell'>" + wNewKey + "</td>";
+                        wReqPropHtml += "<td class='div_definition_cell'>" + wObjRef["type"] + "</td>";
+                        wReqPropHtml += "<td class='div_definition_cell'>" + wObjRef["description"] + "</td>";
+                        wReqPropHtml += "</tr>";
                     }
                     else {
 
-                        wReqPropHtml += "<div class='div_definition_row'>";
-                        wReqPropHtml += "<div class='div_definition_row'>" + wNewKey + "</div>";
+                        wReqPropHtml += "<tr class='div_definition_row'>";
+                        wReqPropHtml += "<td colspan='3' class='div_definition_cell'>";
+                        wReqPropHtml += "<div>" + wNewKey + "</div>";
                         wReqPropHtml += printObjHtmlStr("properties", key, wObjRef, iJSONObjRoot)
-                        wReqPropHtml += "</div>";
+                        wReqPropHtml += "</td>"
+                        wReqPropHtml += "</tr>";
                     }
                 }
-                wReqPropHtml += "</div>";
+                wReqPropHtml += "</table>";
 
                 if (0 != wCount) {
                     wDisplayHtml += wReqPropHtml;
@@ -302,13 +617,14 @@
             if (null != iJSONObj["properties"]) {
 
                 var wOpPropHtml = "";
-                wOpPropHtml += "<div class='div_definition_row'>Optional Properties</div>";
-                wOpPropHtml += "<div class='div_definition_table'>";
-                wOpPropHtml += "<div class='div_definition_row'>";
-                wOpPropHtml += "<div class='div_definition_Header'>Key</div>";
-                wOpPropHtml += "<div class='div_definition_Header'>Type</div>";
-                wOpPropHtml += "<div class='div_definition_Header'>Description</div>";
-                wOpPropHtml += "</div>";
+                wOpPropHtml += "<div class='div_definition_PropertyType'>Optional Properties</div>";
+
+                wOpPropHtml += "<table class='div_definition_table'>";
+                wOpPropHtml += "<tr class='div_definition_row'>";
+                wOpPropHtml += "<th class='div_definition_Header'>Key</th>";
+                wOpPropHtml += "<th class='div_definition_Header'>Type</th>";
+                wOpPropHtml += "<th class='div_definition_Header'>Description</th>";
+                wOpPropHtml += "</tr>";
 
                 var wCount = 0;
                 for (var key in iJSONObj["properties"]) {
@@ -329,22 +645,24 @@
                     wCount += 1;
                     var wObjRef = iJSONObj["properties"][key];
                     if (null == wObjRef["$ref"]) {
-                        wOpPropHtml += "<div class='div_definition_row'>";
-                        wOpPropHtml += "<div class='div_definition_cell'>" + key + "</div>";
-                        wOpPropHtml += "<div class='div_definition_cell'>" + wObjRef["type"] + "</div>";
-                        wOpPropHtml += "<div class='div_definition_cell'>" + wObjRef["description"] + "</div>";
-                        wOpPropHtml += "</div>";
+                        wOpPropHtml += "<tr class='div_definition_row'>";
+                        wOpPropHtml += "<td class='div_definition_cell'>" + wNewKey + "</td>";
+                        wOpPropHtml += "<td class='div_definition_cell'>" + wObjRef["type"] + "</td>";
+                        wOpPropHtml += "<td class='div_definition_cell'>" + wObjRef["description"] + "</td>";
+                        wOpPropHtml += "</tr>";
                     }
                     else {
 
-                        wOpPropHtml += "<div class='div_definition_row'>";
-                        wOpPropHtml += "<div class='div_definition_row'>" + key + "</div>";
-                        wOpPropHtml += printObjHtmlStr("properties", key, wObjRef, iJSONObjRoot)
-                        wOpPropHtml += "</div>";
+                        wOpPropHtml += "<tr class='div_definition_row'>";
+                        wOpPropHtml += "<td colspan='3' class='div_definition_cell'>";
+                        wOpPropHtml += "<div>" + wNewKey + "</div>";
+                        wOpPropHtml += printObjHtmlStr("properties", key, wObjRef, iJSONObjRoot);
+                        wOpPropHtml += "</td>"
+                        wOpPropHtml += "</tr>";
                     }
                 }
 
-                wOpPropHtml += "</div>";
+                wOpPropHtml += "</table>";
 
                 if (0 != wCount) {
                     wDisplayHtml += wOpPropHtml;
@@ -355,26 +673,6 @@
             wDisplayHtml += "</div>";
 
             return wDisplayHtml;
-        }
-
-        function update_display(iServiceContractJSON) {
-            if (null == iServiceContractJSON) {
-                alert("Error Reading File. Please enter a valid JSON file");
-            }
-
-            var wDisplay = document.getElementById('div_display');
-
-            if (null != wDisplay) {
-
-                gElementIDCounter = 0;
-                wDisplayHtml = printObjHtmlStr("", "", iServiceContractJSON, iServiceContractJSON);
-
-                wDisplay.innerHTML = wDisplayHtml;
-            }
-        }
-
-        function onload() {
-            document.getElementById('input_ServiceContractFile').addEventListener('change', processFile, false);
         }
 
         function toggle_visibility(iButtonId, iDOMId) {
@@ -395,6 +693,212 @@
             }
 
         }
+
+        function toggle_visibility_v2(iDOMId) {
+
+            var wDisplay = document.getElementById(iDOMId);
+
+            if (null != wDisplay) {
+                if (("" != wDisplay.style.display) && ("none" != wDisplay.style.display)) {
+                    wDisplay.style.display = "none";
+                }
+                else {
+                    wDisplay.style.display = "block";
+                }
+            }
+
+        }
+
+        function generateFormObject(iPath, iRequestMethod, iMethodJSONObj, iDisplayId, iJSONRoot) {
+
+            var wBasePath = "";
+
+            if (null != iJSONRoot["info"]) {
+                if (null != iJSONRoot["info"]["basePath"]) {
+                    wBasePath = iJSONRoot["info"]["basePath"];
+                }
+            }
+
+            var wMetaData = {
+                BasePath: wBasePath,
+                Path: iPath,
+                Method: iRequestMethod,
+                DisplayId: iDisplayId,
+                PathParameters: [],
+                BodyParameters: [],
+                QueryParameters: []
+            }
+
+            var wFormObj = {};
+
+            if (null != iMethodJSONObj.parameters) {
+                for (var i = 0; i < iMethodJSONObj.parameters.length; ++i) {
+                    var wCurrentParam = iMethodJSONObj.parameters[i];
+                    var wCurrentName = wCurrentParam.name;
+                    if ('path' == wCurrentParam.in) {
+                        wMetaData.PathParameters.push(wCurrentName);
+                    }
+                    else if ('body' == wCurrentParam.in) {
+                        wMetaData.BodyParameters.push(wCurrentName);
+
+                    }
+                    else if ('query' == wCurrentParam.in) {
+                        wMetaData.QueryParameters.push(wCurrentName);
+                    }
+
+                    if (null != wCurrentParam.type) {
+                        if ("string" == wCurrentParam.type) {
+                            wFormObj[wCurrentName] = "";
+                        }
+                        else if ("boolean" == wCurrentParam.type) {
+                            wFormObj[wCurrentName] = true;
+                        }
+                        else if ("integer" == wCurrentParam.type) {
+                            wFormObj[wCurrentName] = 0;
+                        }
+                        else if ("number" == wCurrentParam.type) {
+                            wFormObj[wCurrentName] = 0.0;
+                        }
+                    }
+                    else if (null != wCurrentParam.schema) {
+                        wFormObj[wCurrentName] = expandSchemaFormObj(wCurrentParam.schema, iJSONRoot);
+                    }
+                }
+            }
+            return {
+                FormMetadata: wMetaData,
+                FormObj: wFormObj
+            };
+        }
+
+        function expandSchemaFormObj(iSchemaObject, iJSONRoot) {
+
+            if (null != iSchemaObject.type) {
+                if ("string" == iSchemaObject.type) {
+                    return "";
+                }
+                else if ("boolean" == iSchemaObject.type) {
+                    return true;
+                }
+                else if ("integer" == iSchemaObject.type) {
+                    return 0;
+                }
+                else if ("number" == iSchemaObject.type) {
+                    return 0.0;
+                }
+            }
+
+            if (null != iSchemaObject["$ref"]) {
+                var wRefArray = iSchemaObject["$ref"].split("/");
+                return expandReferenceDefFormObj(iJSONRoot[wRefArray[1]][wRefArray[2]], iJSONRoot);
+            }
+
+            return "";
+        }
+
+        function expandReferenceDefFormObj(iDefObject, iJSONRoot) {
+
+            var wFormObj = {};
+            if (null != iDefObject.properties) {
+
+                for (PropName in iDefObject.properties) {
+
+                    var wCurrentProp = iDefObject.properties[PropName];
+                    var wCurrentName = PropName;
+                    var wCurrentType = wCurrentProp.type;
+
+
+                    if (null != wCurrentType) {
+                        if ("string" == wCurrentType) {
+                            wFormObj[wCurrentName] = "";
+                        }
+                        else if ("boolean" == wCurrentType) {
+                            wFormObj[wCurrentName] = true;
+                        }
+                        else if ("integer" == wCurrentType) {
+                            wFormObj[wCurrentName] = 0;
+                        }
+                        else if ("number" == wCurrentType) {
+                            wFormObj[wCurrentName] = 0.0;
+                        }
+                    }
+                    else if (null != wCurrentProp["$ref"]) {
+                        var wRefArray = wCurrentProp["$ref"].split("/");
+                        wFormObj[wCurrentName] = expandReferenceDefFormObj(iJSONRoot[wRefArray[1]][wRefArray[2]], iJSONRoot);
+
+                    }
+                }
+            }
+
+            return wFormObj;
+        }
+
+        function formSubmitCallBack(e) {
+
+            var wDisplay = document.getElementById(e.FormMetadata.DisplayId);
+            var wProviderAddr = document.getElementById("input_ServiceProvider");
+
+            if (null != wDisplay) {
+                wDisplay.innerText = JSON.stringify(e);
+            }
+
+            var wRequestType = e.FormMetadata.Method.toUpperCase();
+            
+            var wPath = e.FormMetadata.Path;
+            for (var i = 0; i < e.FormMetadata.PathParameters.length; ++i) {
+                var wCurParam = e.FormMetadata.PathParameters[i];
+                if (null != e.FormFilled[wCurParam]) {
+                    wPath = wPath.replace( "{" + wCurParam + "}", e.FormFilled[wCurParam]);
+                }
+            }
+            
+            var wQuery = [];
+            for (var i = 0; i < e.FormMetadata.QueryParameters.length; ++i) {
+                var wCurParam = e.FormMetadata.QueryParameters[i];
+                if (null != e.FormFilled[wCurParam]) {
+                    wQuery.push([ wCurParam , e.FormFilled[wCurParam]]);
+                }
+            }
+            
+            var wBody = {};
+            for (var i = 0; i < e.FormMetadata.BodyParameters.length; ++i) {
+                var wCurParam = e.FormMetadata.BodyParameters[i];
+                if (null != e.FormFilled[wCurParam]) {
+                    wBody[wCurParam] = e.FormFilled[wCurParam];
+                }
+            }
+            var wBodyStr = JSON.stringify(wBody);
+
+            var wUrl = wProviderAddr.value + e.FormMetadata.BasePath + wPath;            
+
+            var wDisplayStr = "<table>";
+            wDisplayStr += "<tr><td>Method Type</td><td>" + wRequestType + "</td></tr>";
+            wDisplayStr += "<tr><td>URL</td><td>" + wUrl + "</td></tr>";
+            wDisplayStr += "<tr><td>Queries</td><td>" + wQuery + "</td></tr>";
+            wDisplayStr += "<tr><td>Body</td><td>" + wBodyStr + "</td></tr>";
+            wDisplayStr += "</table>"
+
+            wDisplay.innerHTML = wDisplayStr;
+            sendRequest(wRequestType, wUrl, wQuery, wBodyStr, function (iHttp){
+
+                alert("hi");
+                
+                var wResponse = "<table>";
+                wResponse += "<tr><td>Send State</td><td>" + iHttp.readyState + "</td></tr>";
+                wResponse += "<tr><td>Response Status</td><td>" + iHttp.status + "</td></tr>";
+                wResponse += "<tr><td>Response Text</td><td>" + iHttp.responseText + "</td></tr>";
+                wResponse += "</table>"
+
+                wDisplay.innerHTML += wResponse;
+            });
+
+        }
+
+        function onload() {
+            document.getElementById('input_ServiceContractFile').addEventListener('change', processFile, false);
+            getFormManager().setCallBackFunction(formSubmitCallBack);
+        }
+
     </script>
 
 </head>
@@ -405,6 +909,10 @@
         <div id="div_FileEntry">
             Select a Service Contract file: <input type="file" id="input_ServiceContractFile" accept=".json">
         </div>
+        <div id="div_ServerAddressEntry">
+            Enter Address or Service Provider: <input type="text" id="input_ServiceProvider" value="http://localhost:12122/ios">
+        </div>
+
         <div id="div_display">
         </div>
     </div>

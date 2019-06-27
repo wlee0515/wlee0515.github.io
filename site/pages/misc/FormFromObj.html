@@ -62,39 +62,45 @@
         var wFormObject = this.mFormDatabase[iFormIdStr];
 
         if (null != wFormObject) {
-          if (null != wFormObject.formObj) {
-            var wJSONString = this.getObjFormJSONStr(iFormIdStr, wFormObject.formObj);
-            var wObj = JSON.parse(wJSONString);
+          var wJSONString = this.getObjFormJSONStr(iFormIdStr, wFormObject.FormObj);
+          var wObj = JSON.parse(wJSONString);
 
-            if (null != this.mCallBackFunction) {
-              var wEvent = {
-                formId: wFormObject.formID,
-                formFilled: wObj
-              };
+          if (null != this.mCallBackFunction) {
+            var wEvent = {
+              FormId: wFormObject.FormId,
+              FormMetadata: wFormObject.FormMetadata,
+              FormFilled: wObj
+            };
 
-              this.mCallBackFunction(wEvent);
-            }
+            this.mCallBackFunction(wEvent);
           }
-          else {
-            alert("Error : Form Object does not exist");
-          }
+        }
+
+        else {
+          alert("Error : Form Object does not exist");
         }
       }
 
-      this.createForm = function (iFormIdStr, iJSONObject) {
+      this.createForm = function (iFormIdStr, iJSONObject, iMetaData) {
+
+        if (("" == iFormIdStr)) {
+          return "";
+        }
 
         var wFormId = iIdPrefix == null ? iFormIdStr : iIdPrefix + "_" + iFormIdStr;
-        var wObject = JSON.parse(JSON.stringify(iJSONObject))
+        var wObject = null == iJSONObject ? null : JSON.parse(JSON.stringify(iJSONObject))
+        var wMetadata = null == iMetaData ? null : JSON.parse(JSON.stringify(iMetaData))
 
         this.mFormDatabase[wFormId] = {
-          formID: iFormIdStr,
-          formObj: wObject
+          FormId: iFormIdStr,
+          FormMetadata: wMetadata,
+          FormObj: wObject,
         };
 
         var wFormhtml = "";
-        wFormhtml += '<div id="' + wFormId + '_form" class="input_form" >';
+        wFormhtml += '<div id="' + wFormId + '_form" class="input_form">';
         wFormhtml += this.createObjFormHtmlStr(wFormId, wObject);
-        wFormhtml += '<button id="' + wFormId + '_submit" class="input_submit" onclick="form_submit_click(\'' + wFormId + '\')" >Submit</button>';
+        wFormhtml += '<button id="' + wFormId + '_submit" class="input_submit" onclick = "form_submit_click(\'' + wFormId + '\')" >Submit</button > ';
         wFormhtml += '</div>';
 
         return wFormhtml;
@@ -103,7 +109,7 @@
       this.createObjFormHtmlStr = function (iIdPrefix, iJSONObject) {
 
         var wForm = "";
-        wForm += '<div class="input_object" >';
+        wForm += '<div class="input_object">';
         for (key in iJSONObject) {
           var wIdName = iIdPrefix + "." + key;
           var wCurrentKey = key;
@@ -118,7 +124,7 @@
             wForm += '</div>';
           }
           else {
-            wForm += '<input type="checkbox" id="' + wIdName + '_checkbox" class="input_checkbox input_cell" title="Use Checkbox to include property">';
+            wForm += '<input type="checkbox" id="' + wIdName + '_checkbox" class="input_checkbox input_cell" title = "Use Checkbox to include property" > ';
             wForm += '<div id="' + wIdName + '_label" class="key_label input_cell">' + wCurrentKey + '</div>';
             if (typeof (iJSONObject[wCurrentKey]) === "string") {
               wForm += '<input type="text" id="' + wIdName + '_text" class="input_text input_cell">';
@@ -139,7 +145,6 @@
         wForm += '</div>';
         return wForm;
       }
-
 
       this.getObjFormJSONStr = function (iIdPrefix, iJSONObject) {
 
