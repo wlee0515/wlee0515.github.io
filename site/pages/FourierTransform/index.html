@@ -22,7 +22,7 @@
 
             resize();
 
-            setInterval(processTick, 10);
+            setInterval(processTick, 25);
         }
 
         function resize() {
@@ -71,9 +71,10 @@
         var gFourierTransformCoefficients = [];
         var gOrder = -1;
         var gTime = 2;
+        var gDrawSpeed = 5;
         function drawCanvas(iDOM, iArgument) {
 
-            var wSampleSize = 500;
+            var wSampleSize = 1000;
             var wT0 = 0;
             var wT1 = 1;
             var wTStep = (wT1 - wT0) / wSampleSize;
@@ -88,7 +89,7 @@
                     gFourierTransformCoefficients.push(calculateFourierTransformCoefficient(-gOrder, complexFunction1));
                 }
             }
-            gTime += wTStep;
+            gTime += gDrawSpeed*wTStep;
 
             
             var wCtx = iDOM.getContext("2d");
