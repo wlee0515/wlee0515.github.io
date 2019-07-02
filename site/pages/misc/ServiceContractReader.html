@@ -6,7 +6,6 @@
     <title>Service Contract Reader</title>
 
     <style type="text/css">
-
         /* Page Styling */
         body {
             margin: 0px;
@@ -98,8 +97,7 @@
 
         .definition_table table,
         .response_table table {
-            position: relative;
-            left: 25px;
+            border-collapse: collapse;
             border: 1px solid black;
             padding: 3px;
             background-color: white;
@@ -119,9 +117,9 @@
             border: 0.5px solid gray;
             padding: 3px;
             min-width: 150px;
-            max-width: 400px;
+            max-width: 500px;
+            overflow-wrap : break-word;
         }
-
     </style>
 
     <script>
@@ -260,7 +258,7 @@
                         // column 2, includes the name of the property
                         wForm += '<td id="' + wIdName + '_label" class="key_label">' + wCurrentKey + '</td>';
                         wForm += '<td>'
-                        
+
                         // column 3, contains the input for the variable. The input depends on the type of the variable
                         if (typeof (iJSONObject[wCurrentKey]) === "string") {
                             wForm += '<input type="text" id="' + wIdName + '_text" class="input_text">';
@@ -403,7 +401,7 @@
             // Create a new request
             var http = new XMLHttpRequest();
             http.open(iReqType, iURL, true);
-
+            
             //Send the proper header information along with the request
             if (null != iHeader) {
                 for (i = 0; i < iHeader.length; ++i) {
@@ -420,7 +418,17 @@
             }
 
 
-            http.send(iBody);
+            //Send the proper header information along with the request
+            if (null == iBody) {
+                http.send(null);
+            }
+            else {
+                http.setRequestHeader('Content-Type', 'application/json');
+                // http.setRequestHeader('Origin', 'http://localhost');
+                
+                // http.setRequestHeader("Origin", "Computer Generated Forces Test Application");
+                http.send(iBody);    
+            }
         }
 
     </script>
@@ -904,10 +912,8 @@
 
             var wBasePath = "";
 
-            if (null != iJSONRoot["info"]) {
-                if (null != iJSONRoot["info"]["basePath"]) {
-                    wBasePath = iJSONRoot["info"]["basePath"];
-                }
+            if (null != iJSONRoot["basePath"]) {
+                wBasePath = iJSONRoot["basePath"];
             }
 
             var wMetaData = {
@@ -1043,11 +1049,19 @@
                 }
             }
 
-            var wQuery = [];
+            var wQuery = "";
             for (var i = 0; i < e.FormMetadata.QueryParameters.length; ++i) {
                 var wCurParam = e.FormMetadata.QueryParameters[i];
                 if (null != e.FormFilled[wCurParam]) {
-                    wQuery.push([wCurParam, e.FormFilled[wCurParam]]);
+
+                    if ("" == wQuery) {
+                        wQuery += "?";
+                    }
+                    else {
+                        wQuery += "&";
+                    }
+
+                    wQuery += wCurParam + "=" + e.FormFilled[wCurParam];
                 }
             }
 
@@ -1055,12 +1069,23 @@
             for (var i = 0; i < e.FormMetadata.BodyParameters.length; ++i) {
                 var wCurParam = e.FormMetadata.BodyParameters[i];
                 if (null != e.FormFilled[wCurParam]) {
-                    wBody[wCurParam] = e.FormFilled[wCurParam];
+                   // wBody[wCurParam] = e.FormFilled[wCurParam];
+                   wBody = e.FormFilled[wCurParam];
                 }
             }
-            var wBodyStr = JSON.stringify(wBody);
+            var wBodyStr = "";
+            if (typeof (wBody) === "object") {
+                wBodyStr = JSON.stringify(wBody);
+            }
+            else {
+                wBodyStr = wBody;
+            }
 
-            var wUrl = wProviderAddr.value + e.FormMetadata.BasePath + wPath;
+            if (("GET" == wRequestType) || ("{}" == wBodyStr)) {
+                wBodyStr = null;
+            }
+
+            var wUrl = wProviderAddr.value + e.FormMetadata.BasePath + wPath + wQuery;
 
             var wDisplayStr = "<div class='response_table table_name'>Sent Request</div>";
             wDisplayStr += "<table class='response_table'>";
@@ -1071,16 +1096,19 @@
             wDisplayStr += "</table>"
 
             wDisplay.innerHTML = wDisplayStr;
-            sendRequest(wRequestType, wUrl, wQuery, wBodyStr, function (iHttp) {
+            sendRequest(wRequestType, wUrl, null, wBodyStr, function (iHttp) {
 
-                var wResponse = "<div class='response_table table_name'>Reply Status</div>";
-                wResponse += "<table class='response_table'>";
-                wResponse += "<tr><td>Send State</td><td>" + iHttp.readyState + "</td></tr>";
-                wResponse += "<tr><td>Response Status</td><td>" + iHttp.status + "</td></tr>";
-                wResponse += "<tr><td>Response Text</td><td>" + iHttp.responseText + "</td></tr>";
-                wResponse += "</table>"
+                if (4 == iHttp.readyState) {
+                    var wResponse = "<div class='response_table table_name'>Reply Status</div>";
+                    wResponse += "<table class='response_table'>";
+                    wResponse += "<tr><td>Send State</td><td>" + iHttp.readyState + "</td></tr>";
+                    wResponse += "<tr><td>Response Status</td><td>" + iHttp.status + "</td></tr>";
+                    wResponse += "<tr><td>Response Text</td><td>" + iHttp.responseText + "</td></tr>";
+                    wResponse += "</table>"
 
-                wDisplay.innerHTML += wResponse;
+                    wDisplay.innerHTML += wResponse;
+
+                }
             });
 
         }
@@ -1110,7 +1138,6 @@
             Enter Address or Service Provider:
             <input type="text" id="input_ServiceProvider" value="http://localhost:12122/ios">
         </div>
-
         <div id="div_display">
         </div>
     </div>
