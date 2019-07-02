@@ -20,7 +20,7 @@
 
 
         #div_FileEntry,
-        #div_ServerAddressEntry {
+        #div_RequestService {
             padding: 5px;
         }
 
@@ -1074,13 +1074,13 @@
                 }
             }
             var wBodyStr = "";
-            if (typeof (wBody) === "object") {
+//            if (typeof (wBody) === "object") {
                 wBodyStr = JSON.stringify(wBody);
-            }
+  /*          }
             else {
                 wBodyStr = wBody;
             }
-
+*/
             if (("GET" == wRequestType) || ("{}" == wBodyStr)) {
                 wBodyStr = null;
             }
@@ -1132,13 +1132,22 @@
     <div id="mainbody">
         <h1>Service Contract Reader</h1>
         <div id="div_FileEntry">
+            <h3>Service Contract file Selection</h3>
             Select a Service Contract file: <input type="file" id="input_ServiceContractFile" accept=".json">
         </div>
-        <div id="div_ServerAddressEntry">
-            Enter Address or Service Provider:
-            <input type="text" id="input_ServiceProvider" value="http://localhost:12122/ios">
+        <div id="div_RequestService">
+            <h3>REST Request Forms</h3>
+            <div id="div_ServerAddressEntry">
+                Enter Address or Service Provider:
+                <input type="text" id="input_ServiceProvider" value="http://localhost:12122/ios">
+            </div>
+            <p>To use the REST Request forms, please open page in "Internet Explorer".</p>
+            <p>Using "Chrome" to send a REST request form with body content will be block. (POST and PUT Reuqests)</p>
         </div>
-        <div id="div_display">
+        <div id="div_RequestService">
+            <h3>Service Contract</h3>
+            <div id="div_display">
+            </div>
         </div>
     </div>
 </body>
