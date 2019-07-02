@@ -1,0 +1,246 @@
+<html>
+
+<head>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Battlefield Simulation</title>
+    <style>
+        body {
+            margin: 0;
+            padding: 0;
+            background-color: white;
+        }
+
+        div {
+            width: 100%;
+            height: 100%;
+        }
+    </style>
+    <script type="text/javascript">
+
+
+        function init() {
+
+            resize();
+
+            setInterval(processTick, 10);
+        }
+
+        function resize() {
+            var wCanvas = document.getElementById("display");
+            if (null != wCanvas) {
+
+                wCanvas.width = wCanvas.parentNode.clientWidth - 2;
+                wCanvas.height = wCanvas.parentNode.clientHeight - 2;
+            }
+        }
+
+        function processTick() {
+
+            var wCanvas = document.getElementById("display");
+            if (null != wCanvas) {
+                centerCanvas(wCanvas, drawCanvas);
+            }
+        }
+        function centerCanvas(iDOM, iDrawFunction) {
+
+            var wXTranslate = iDOM.width / 2;
+            var wYTranslate = iDOM.height / 2;
+            var wScale = 3;
+
+            var wCtx = iDOM.getContext("2d");
+
+            wCtx.clearRect(0, 0, iDOM.width, iDOM.height);
+
+            wCtx.translate(wXTranslate, wYTranslate);
+            wCtx.scale(wScale, wScale);
+
+            wCtx.beginPath();
+            wCtx.arc(0, 0, 5, 0, 2 * Math.PI);
+
+            wCtx.strokeStyle = "black";
+            wCtx.stroke();
+
+
+            iDrawFunction(iDOM);
+
+            wCtx.scale(1 / wScale, 1 / wScale);
+            wCtx.translate(-wXTranslate, -wYTranslate);
+
+        }
+
+        var gFourierTransformCoefficients = [];
+        var gOrder = -1;
+        var gTime = 2;
+        function drawCanvas(iDOM, iArgument) {
+
+            var wSampleSize = 500;
+            var wT0 = 0;
+            var wT1 = 1;
+            var wTStep = (wT1 - wT0) / wSampleSize;
+
+            if (wT1 <= gTime) {
+                gTime = wT0;
+                gOrder++;
+
+                gFourierTransformCoefficients.push(calculateFourierTransformCoefficient(gOrder, complexFunction1));
+
+                if (gOrder != 0) {
+                    gFourierTransformCoefficients.push(calculateFourierTransformCoefficient(-gOrder, complexFunction1));
+                }
+            }
+            gTime += wTStep;
+
+            
+            var wCtx = iDOM.getContext("2d");
+
+            wCtx.beginPath();
+            wCtx.lineJoin = 'round';
+
+            for (var wi = wT0; wi < wT1; wi += wTStep) {
+
+                var wT = wi;
+
+                var wPt = complexFunction1(wT);
+                var wX = wPt.Real;
+                var wY = wPt.Imaginary;
+
+                if (wT0 == wi) {
+                    wCtx.moveTo(wX, wY);
+                }
+                else {
+                    wCtx.lineTo(wX, wY);
+                }
+            }
+
+            //wCtx.closePath();
+            wCtx.strokeStyle = "blue";
+            wCtx.lineWidth = 1;
+            wCtx.stroke();
+
+            wCtx.beginPath();
+            wCtx.lineJoin = 'round';
+
+            for (var wi = wT0; wi <= gTime; wi += wTStep) {
+                var wT = wi;
+
+                var wX = 0;
+                var wY = 0;
+                for (var wk = 0; wk < gFourierTransformCoefficients.length; wk++) {
+                    var wComponent = gFourierTransformCoefficients[wk];
+
+                    var wCos = Math.cos(wComponent.Order * 2 * Math.PI * wT);
+                    var wSin = Math.sin(wComponent.Order * 2 * Math.PI * wT);
+
+                    var wReal = wCos * wComponent.Real - wSin * wComponent.Imaginary;
+                    var wImaginary = wSin * wComponent.Real + wCos * wComponent.Imaginary;
+
+                    wX += wReal;
+                    wY += wImaginary;
+                }
+
+                if (wT0 == wi) {
+                    wCtx.moveTo(wX, wY);
+                }
+                else {
+                    wCtx.lineTo(wX, wY);
+                }
+            }
+
+            //wCtx.closePath();
+            wCtx.strokeStyle = "red";
+            wCtx.lineWidth = 1;
+            wCtx.stroke();
+        }
+
+        function calculateFourierTransformCoefficient(iOrder, iComplexFunction) {
+
+            var wSampleSize = 10000;
+            var wT0 = 0;
+            var wT1 = 1;
+            var wTStep = (wT1 - wT0) / wSampleSize;
+
+
+            var wWaveLength = -1 * iOrder * 2 * Math.PI;
+            var wSum = {
+                Order: iOrder,
+                Real: 0,
+                Imaginary: 0,
+            };
+
+            for (var wi = wT0; wi <= wT1; wi += wTStep) {
+                var wT = wi;
+                var wAngle = wWaveLength * wT
+                var wEvaluateFunction = iComplexFunction(wT);
+
+                var wCos = Math.cos(wAngle);
+                var wSin = Math.sin(wAngle);
+
+                var wReal = wCos * wEvaluateFunction.Real - wSin * wEvaluateFunction.Imaginary;
+                var wImaginary = wSin * wEvaluateFunction.Real + wCos * wEvaluateFunction.Imaginary;
+
+                wSum.Real += wTStep * wReal;
+                wSum.Imaginary += wTStep * wImaginary;
+            }
+
+            return wSum;
+        }
+
+        function complexFunction1(iDt) {
+
+            if (iDt > 0.98) {
+                return {
+                    Real: (iDt) * 100,
+                    Imaginary: 0.0,
+                };
+            }
+
+            if (iDt > 0.75) {
+                return {
+                    Real: (iDt) * 100,
+                    Imaginary: 5.0,
+                };
+            }
+            
+            if (iDt > 0.5) {            
+                return {
+                    Real: (iDt) * 100,
+                    Imaginary: -10.0,
+                };
+            }
+
+            
+            if (iDt > 0.25) {
+                return {
+                    Real: (iDt) * 100,
+                    Imaginary: 20.0,
+                };
+            }
+
+            if (iDt > 0.01) {
+                return {
+                    Real: (iDt) * 100,
+                    Imaginary: -30.0,
+                };
+            }
+            
+            return {
+                Real: (iDt) * 100,
+                Imaginary: 0.0,
+            };
+
+            
+            return {
+                Real: (iDt) *(iDt) * 10.5100,
+                Imaginary: (iDt) *-100.0,
+            };
+        }
+    </script>
+</head>
+
+<body onload="init()" onresize="resize()">
+    <div>
+        <canvas id="display" style="border:1px solid #999"></canvas>
+    </div>
+</body>
+
+</html>

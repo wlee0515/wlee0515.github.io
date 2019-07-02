@@ -1073,14 +1073,9 @@
                    wBody = e.FormFilled[wCurParam];
                 }
             }
-            var wBodyStr = "";
-//            if (typeof (wBody) === "object") {
-                wBodyStr = JSON.stringify(wBody);
-  /*          }
-            else {
-                wBodyStr = wBody;
-            }
-*/
+
+            var wBodyStr = JSON.stringify(wBody);
+
             if (("GET" == wRequestType) || ("{}" == wBodyStr)) {
                 wBodyStr = null;
             }
