@@ -1,0 +1,58 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta name="viewport" content="width=400" />
+  <title>Neural Network Display</title>
+  <style>
+  </style>
+  <script type="text/javascript">
+    //const wStockDBUrl = "https://api.iextrading.com/1.0/stock/"
+    //const wStockDBUrl = "https://finance.google.com/finance?"//q=NASDAQ:AAPL&output=json
+
+    const wStockDBUrl = "https://www.alphavantage.co/query?apikey=XM67YYEQDKOJRXZ5&function=SYMBOL_SEARCH&keywords=A
+
+    https://www.alphavantage.co/query?function=TIME_SERIES_MONTHLY_ADJUSTED&symbol=ry.trt&apikey=XM67YYEQDKOJRXZ5
+    https://www.alphavantage.co/query?function=TIME_SERIES_MONTHLY_ADJUSTED&symbol=TSX:ino-un&apikey=XM67YYEQDKOJRXZ5
+    https://www.alphavantage.co/query?function=TIME_SERIES_MONTHLY_ADJUSTED&symbol=TSX:btb-un&apikey=XM67YYEQDKOJRXZ5&datatype=csv
+    XM67YYEQDKOJRXZ5
+
+    https://www.alphavantage.co/query?function=SYMBOL_SEARCH&keywords=tsx:r&apikey=XM67YYEQDKOJRXZ5
+    
+    https://www.alphavantage.co/query?function=TIME_SERIES_MONTHLY_ADJUSTED&symbol=TSX:btb-un&apikey=XM67YYEQDKOJRXZ5&datatype=csv
+    https://www.alphavantage.co/query?function=GLOBAL_QUOTE&symbol=MSFT&symbol=IBM&apikey=XM67YYEQDKOJRXZ5&datatype=csv
+    
+    https://www.alphavantage.co/query?function=SMA&symbol=TSX:btb-un&interval=weekly&time_period=10&series_type=open&apikey=XM67YYEQDKOJRXZ5
+    
+    function queryStockData(iQuery, oCallback) {
+      wUri = wStockDBUrl + iQuery;
+      requestdata(wUri, oCallback)
+    }
+
+    function requestdata(iUrl, oCallback) {
+      const Http = new XMLHttpRequest();
+      if ("" != iUrl) {
+        Http.open("GET", iUrl);
+        Http.send();
+        Http.onreadystatechange = (e) => {
+          if ("" != Http.responseText) {
+            oCallback(Http.responseText);
+          }
+        }
+      }
+    }
+
+    function init() {
+      queryStockData("aapl", function (iQuote) {
+        var Dom = document.getElementById("queryConsole");
+        Dom.innerText = iQuote;
+      })
+    }
+  </script>
+</head>
+
+<body onload="init()" onresize="resize()">
+
+  <h1> Hello World!</h1>
+  <div id="queryConsole"></div>
+</body>
+</html>
