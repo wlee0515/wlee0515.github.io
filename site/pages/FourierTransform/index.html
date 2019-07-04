@@ -1,247 +1,425 @@
 <html>
 
 <head>
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Battlefield Simulation</title>
-    <style>
-        body {
-            margin: 0;
-            padding: 0;
-            background-color: white;
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Fourier Transform Demo</title>
+  <style>
+    body {
+      margin: 0;
+      padding: 0;
+      background-color: white;
+    }
+
+    #div_display {
+      width: 100%;
+      height: 100%;
+    }
+
+    #div_menu {
+      position: fixed;
+      top: 3px;
+      right: 3px;
+      margin: auto;
+      padding: 5px;
+      text-align: right;
+    }
+
+    .hidden {
+      display: none;
+    }
+
+    #div_control_grid {
+      display: inline-grid;
+      grid-template-columns: auto auto;
+    }
+
+    button {
+      width: 75px;
+      height: 75px;
+      margin: 5px;
+    }
+  </style>
+  <script type="text/javascript">
+
+    // Global Variables
+    var gFourierTransformCoefficients = [];
+    var gOrder = -1;
+    var gOrderLimit = 10000;
+    var gTime = 2;
+    var gDrawSpeed = 1;
+
+    var gEndPointX = 0;
+    var gEndPointY = 0;
+    var gZoom = 0.0;
+
+    function init() {
+      resize();
+
+      setInterval(processTick, 25);
+    }
+
+    function resize() {
+      var wCanvas = document.getElementById("display");
+      if (null != wCanvas) {
+        wCanvas.width = wCanvas.parentNode.clientWidth - 2;
+        wCanvas.height = wCanvas.parentNode.clientHeight - 2;
+      }
+    }
+
+    function processTick() {
+      var wCanvas = document.getElementById("display");
+      if (null != wCanvas) {
+        clearCanvas(wCanvas);
+        var zoom = Math.pow(2, gZoom);
+        drawCanvasCenteredAt(wCanvas, drawCanvas, wCanvas.width / 2 - zoom * gEndPointX, wCanvas.height / 2 - zoom * gEndPointY, 0, zoom);
+      }
+    }
+    function clearCanvas(iDOM) {
+      var wCtx = iDOM.getContext("2d");
+      wCtx.clearRect(0, 0, iDOM.width, iDOM.height);
+    }
+
+    function drawCanvasCenteredAt(iDOM, iDrawFunction, iTranslateX, iTranslateY, iRotation, iScale) {
+
+      var wXTranslate = iTranslateX;
+      var wYTranslate = iTranslateY;
+      var wRotate = iRotation;
+      var wScale = iScale;
+
+      var wCtx = iDOM.getContext("2d");
+
+      wCtx.translate(wXTranslate, wYTranslate);
+      wCtx.scale(wScale, wScale);
+      wCtx.rotate(wRotate);
+
+      iDrawFunction(iDOM);
+
+      wCtx.rotate(-wRotate);
+      wCtx.scale(1 / wScale, 1 / wScale);
+      wCtx.translate(-wXTranslate, -wYTranslate);
+    }
+
+    function drawCanvas(iDOM) {
+      var wSampleSize = 1000;
+      var wT0 = 0;
+      var wT1 = 1;
+      var wTStep = (wT1 - wT0) / wSampleSize;
+
+      if (wT1 <= gTime) {
+        gTime = wT0;
+
+        if (gOrder < gOrderLimit) {
+          gOrder++;
+
+          gFourierTransformCoefficients.push(
+            calculateFourierTransformCoefficient(gOrder, complexFunction1)
+          );
+
+          if (gOrder != 0) {
+            gFourierTransformCoefficients.push(
+              calculateFourierTransformCoefficient(-gOrder, complexFunction1)
+            );
+          }
+          else {
+            gTime = wT1;
+          }
+
+        }
+      }
+      gTime += gDrawSpeed * wTStep;
+
+      var wCtx = iDOM.getContext("2d");
+
+      // Draw Base Image
+      wCtx.beginPath();
+      wCtx.lineJoin = "round";
+
+      for (var wi = wT0; wi < wT1; wi += wTStep) {
+        var wT = wi;
+
+        var wPt = complexFunction1(wT);
+        var wX = wPt.Real;
+        var wY = wPt.Imaginary;
+
+        if (wT0 == wi) {
+          wCtx.moveTo(wX, wY);
+        } else {
+          wCtx.lineTo(wX, wY);
+        }
+      }
+
+      wCtx.strokeStyle = "blue";
+      wCtx.lineWidth = 1;
+      wCtx.stroke();
+
+      // Draw Fourier Transformed Vector
+
+      var wXBase = 0;
+      var wYBase = 0;
+      for (var wk = 0; wk < gFourierTransformCoefficients.length; wk++) {
+        var wComponent = gFourierTransformCoefficients[wk];
+
+        var wCos = Math.cos(wComponent.Order * 2 * Math.PI * gTime);
+        var wSin = Math.sin(wComponent.Order * 2 * Math.PI * gTime);
+
+        var wReal = wCos * wComponent.Real - wSin * wComponent.Imaginary;
+        var wImaginary = wSin * wComponent.Real + wCos * wComponent.Imaginary;
+
+        var wAngle = Math.atan2(wImaginary, wReal);
+        var wScale = Math.sqrt(wReal * wReal + wImaginary * wImaginary) / 100; // Vector is 100px in length
+
+        drawCanvasCenteredAt(iDOM, drawArrow, wXBase, wYBase, wAngle, wScale);
+
+        wXBase += wReal;
+        wYBase += wImaginary;
+      }
+
+      // Draw Fourier Transformed Image
+      wCtx.beginPath();
+      wCtx.lineJoin = "round";
+
+      for (var wi = wT0; wi <= gTime; wi += wTStep) {
+        var wT = wi;
+
+        var wX = 0;
+        var wY = 0;
+        for (var wk = 0; wk < gFourierTransformCoefficients.length; wk++) {
+          var wComponent = gFourierTransformCoefficients[wk];
+
+          var wCos = Math.cos(wComponent.Order * 2 * Math.PI * wT);
+          var wSin = Math.sin(wComponent.Order * 2 * Math.PI * wT);
+
+          var wReal = wCos * wComponent.Real - wSin * wComponent.Imaginary;
+          var wImaginary = wSin * wComponent.Real + wCos * wComponent.Imaginary;
+
+          wX += wReal;
+          wY += wImaginary;
         }
 
-        div {
-            width: 100%;
-            height: 100%;
+        if (wT0 == wi) {
+          wCtx.moveTo(wX, wY);
+        } else {
+          wCtx.lineTo(wX, wY);
         }
-    </style>
-    <script type="text/javascript">
+      }
+
+      //wCtx.closePath();
+      wCtx.strokeStyle = "red";
+      wCtx.lineWidth = 1;
+      wCtx.stroke();
+
+      var q = 0.1;
+      gEndPointX = (1 - q) * gEndPointX + q * wXBase;
+      gEndPointY = (1 - q) * gEndPointY + q * wYBase;
+    }
+
+    function calculateFourierTransformCoefficient(iOrder, iComplexFunction) {
+      var wSampleSize = 10000;
+      var wT0 = 0;
+      var wT1 = 1;
+      var wTStep = (wT1 - wT0) / wSampleSize;
+
+      var wWaveLength = -1 * iOrder * 2 * Math.PI;
+      var wSum = {
+        Order: iOrder,
+        Real: 0,
+        Imaginary: 0
+      };
+
+      for (var wi = wT0; wi <= wT1; wi += wTStep) {
+        var wT = wi;
+        var wAngle = wWaveLength * wT;
+        var wEvaluateFunction = iComplexFunction(wT);
+
+        var wCos = Math.cos(wAngle);
+        var wSin = Math.sin(wAngle);
+
+        var wReal =
+          wCos * wEvaluateFunction.Real - wSin * wEvaluateFunction.Imaginary;
+        var wImaginary =
+          wSin * wEvaluateFunction.Real + wCos * wEvaluateFunction.Imaginary;
+
+        wSum.Real += wTStep * wReal;
+        wSum.Imaginary += wTStep * wImaginary;
+      }
+
+      return wSum;
+    }
+
+    function drawArrow(iDOM) {
+      var wCtx = iDOM.getContext("2d");
+
+      wCtx.beginPath();
+      wCtx.arc(0, 0, 100, 0, 2 * Math.PI);
+
+      wCtx.strokeStyle = "gray";
+      wCtx.lineWidth = 2;
+      wCtx.stroke();
+
+      wCtx.beginPath();
+      wCtx.moveTo(0, 0);
+      wCtx.lineTo(0, 3);
+      wCtx.lineTo(90, 3);
+      wCtx.lineTo(90, 5);
+      wCtx.lineTo(100, 0);
+      wCtx.lineTo(90, -5);
+      wCtx.lineTo(90, -3);
+      wCtx.lineTo(0, -3);
+      wCtx.closePath();
+
+      wCtx.lineJoin = "round";
+
+      wCtx.fillStyle = "lime";
+      wCtx.lineWidth = 0.1;
+      wCtx.stroke();
+      wCtx.fill();
+    }
+
+    function complexFunction1(iDt) {
+      if (iDt > 0.98) {
+        return {
+          Real: iDt * 100,
+          Imaginary: 0.0
+        };
+      }
+
+      if (iDt > 0.75) {
+        return {
+          Real: iDt * 100,
+          Imaginary: 5.0
+        };
+      }
+
+      if (iDt > 0.5) {
+        return {
+          Real: iDt * 100,
+          Imaginary: -10.0
+        };
+      }
+
+      if (iDt > 0.25) {
+        return {
+          Real: iDt * 100,
+          Imaginary: 20.0
+        };
+      }
+
+      if (iDt > 0.01) {
+        return {
+          Real: iDt * 100,
+          Imaginary: -30.0
+        };
+      }
+
+      return {
+        Real: iDt * 100,
+        Imaginary: 0.0
+      };
+
+      return {
+        Real: iDt * iDt * 10.51,
+        Imaginary: iDt * -100.0
+      };
+    }
+  </script>
+
+  <script>
+
+    function ZoomIn() {
+      gZoom++;
+    }
+
+    function ZoomOut() {
+      gZoom--;
+    }
+
+    function SpeedUp() {
+      gDrawSpeed++;
+    }
+
+    function SlowDown() {
+      gDrawSpeed--;
+      if (gDrawSpeed <= 1) {
+        gDrawSpeed = 1;
+      }
+    }
 
 
-        function init() {
 
-            resize();
+  </script>
 
-            setInterval(processTick, 25);
-        }
+  <style>
+    .menu_icon_container {
+      display: inline-block;
+      cursor: pointer;
+    }
 
-        function resize() {
-            var wCanvas = document.getElementById("display");
-            if (null != wCanvas) {
+    .bar1,
+    .bar2,
+    .bar3 {
+      width: 35px;
+      height: 5px;
+      background-color: #333;
+      margin: 6px 0;
+      transition: 0.4s;
+    }
 
-                wCanvas.width = wCanvas.parentNode.clientWidth - 2;
-                wCanvas.height = wCanvas.parentNode.clientHeight - 2;
-            }
-        }
+    .change .bar1 {
+      -webkit-transform: rotate(-45deg) translate(-9px, 6px);
+      transform: rotate(-45deg) translate(-9px, 6px);
+    }
 
-        function processTick() {
+    .change .bar2 {
+      opacity: 0;
+    }
 
-            var wCanvas = document.getElementById("display");
-            if (null != wCanvas) {
-                centerCanvas(wCanvas, drawCanvas);
-            }
-        }
-        function centerCanvas(iDOM, iDrawFunction) {
+    .change .bar3 {
+      -webkit-transform: rotate(45deg) translate(-8px, -8px);
+      transform: rotate(45deg) translate(-8px, -8px);
+    }
+  </style>
+  <script>
 
-            var wXTranslate = iDOM.width / 2;
-            var wYTranslate = iDOM.height / 2;
-            var wScale = 3;
+    function myFunction(x) {
+      x.classList.toggle("change");
 
-            var wCtx = iDOM.getContext("2d");
+      var wControl = document.getElementById("div_control");
+      wControl.classList.toggle("show");
 
-            wCtx.clearRect(0, 0, iDOM.width, iDOM.height);
+      if ((wControl.style.display == "") || (wControl.style.display == "none")) {
+        wControl.style.display = "block";
+      }
+      else {
+        wControl.style.display = "none";
+      }
+    }
 
-            wCtx.translate(wXTranslate, wYTranslate);
-            wCtx.scale(wScale, wScale);
-
-            wCtx.beginPath();
-            wCtx.arc(0, 0, 5, 0, 2 * Math.PI);
-
-            wCtx.strokeStyle = "black";
-            wCtx.stroke();
-
-
-            iDrawFunction(iDOM);
-
-            wCtx.scale(1 / wScale, 1 / wScale);
-            wCtx.translate(-wXTranslate, -wYTranslate);
-
-        }
-
-        var gFourierTransformCoefficients = [];
-        var gOrder = -1;
-        var gTime = 2;
-        var gDrawSpeed = 5;
-        function drawCanvas(iDOM, iArgument) {
-
-            var wSampleSize = 1000;
-            var wT0 = 0;
-            var wT1 = 1;
-            var wTStep = (wT1 - wT0) / wSampleSize;
-
-            if (wT1 <= gTime) {
-                gTime = wT0;
-                gOrder++;
-
-                gFourierTransformCoefficients.push(calculateFourierTransformCoefficient(gOrder, complexFunction1));
-
-                if (gOrder != 0) {
-                    gFourierTransformCoefficients.push(calculateFourierTransformCoefficient(-gOrder, complexFunction1));
-                }
-            }
-            gTime += gDrawSpeed*wTStep;
-
-            
-            var wCtx = iDOM.getContext("2d");
-
-            wCtx.beginPath();
-            wCtx.lineJoin = 'round';
-
-            for (var wi = wT0; wi < wT1; wi += wTStep) {
-
-                var wT = wi;
-
-                var wPt = complexFunction1(wT);
-                var wX = wPt.Real;
-                var wY = wPt.Imaginary;
-
-                if (wT0 == wi) {
-                    wCtx.moveTo(wX, wY);
-                }
-                else {
-                    wCtx.lineTo(wX, wY);
-                }
-            }
-
-            //wCtx.closePath();
-            wCtx.strokeStyle = "blue";
-            wCtx.lineWidth = 1;
-            wCtx.stroke();
-
-            wCtx.beginPath();
-            wCtx.lineJoin = 'round';
-
-            for (var wi = wT0; wi <= gTime; wi += wTStep) {
-                var wT = wi;
-
-                var wX = 0;
-                var wY = 0;
-                for (var wk = 0; wk < gFourierTransformCoefficients.length; wk++) {
-                    var wComponent = gFourierTransformCoefficients[wk];
-
-                    var wCos = Math.cos(wComponent.Order * 2 * Math.PI * wT);
-                    var wSin = Math.sin(wComponent.Order * 2 * Math.PI * wT);
-
-                    var wReal = wCos * wComponent.Real - wSin * wComponent.Imaginary;
-                    var wImaginary = wSin * wComponent.Real + wCos * wComponent.Imaginary;
-
-                    wX += wReal;
-                    wY += wImaginary;
-                }
-
-                if (wT0 == wi) {
-                    wCtx.moveTo(wX, wY);
-                }
-                else {
-                    wCtx.lineTo(wX, wY);
-                }
-            }
-
-            //wCtx.closePath();
-            wCtx.strokeStyle = "red";
-            wCtx.lineWidth = 1;
-            wCtx.stroke();
-        }
-
-        function calculateFourierTransformCoefficient(iOrder, iComplexFunction) {
-
-            var wSampleSize = 10000;
-            var wT0 = 0;
-            var wT1 = 1;
-            var wTStep = (wT1 - wT0) / wSampleSize;
-
-
-            var wWaveLength = -1 * iOrder * 2 * Math.PI;
-            var wSum = {
-                Order: iOrder,
-                Real: 0,
-                Imaginary: 0,
-            };
-
-            for (var wi = wT0; wi <= wT1; wi += wTStep) {
-                var wT = wi;
-                var wAngle = wWaveLength * wT
-                var wEvaluateFunction = iComplexFunction(wT);
-
-                var wCos = Math.cos(wAngle);
-                var wSin = Math.sin(wAngle);
-
-                var wReal = wCos * wEvaluateFunction.Real - wSin * wEvaluateFunction.Imaginary;
-                var wImaginary = wSin * wEvaluateFunction.Real + wCos * wEvaluateFunction.Imaginary;
-
-                wSum.Real += wTStep * wReal;
-                wSum.Imaginary += wTStep * wImaginary;
-            }
-
-            return wSum;
-        }
-
-        function complexFunction1(iDt) {
-
-            if (iDt > 0.98) {
-                return {
-                    Real: (iDt) * 100,
-                    Imaginary: 0.0,
-                };
-            }
-
-            if (iDt > 0.75) {
-                return {
-                    Real: (iDt) * 100,
-                    Imaginary: 5.0,
-                };
-            }
-            
-            if (iDt > 0.5) {            
-                return {
-                    Real: (iDt) * 100,
-                    Imaginary: -10.0,
-                };
-            }
-
-            
-            if (iDt > 0.25) {
-                return {
-                    Real: (iDt) * 100,
-                    Imaginary: 20.0,
-                };
-            }
-
-            if (iDt > 0.01) {
-                return {
-                    Real: (iDt) * 100,
-                    Imaginary: -30.0,
-                };
-            }
-            
-            return {
-                Real: (iDt) * 100,
-                Imaginary: 0.0,
-            };
-
-            
-            return {
-                Real: (iDt) *(iDt) * 10.5100,
-                Imaginary: (iDt) *-100.0,
-            };
-        }
-    </script>
+  </script>
 </head>
 
 <body onload="init()" onresize="resize()">
-    <div>
-        <canvas id="display" style="border:1px solid #999"></canvas>
+  <div id="div_display">
+    <canvas id="display" style="border:1px solid #999"></canvas>
+  </div>
+  <div id="div_menu">
+    <div class="menu_icon_container" onclick="myFunction(this)">
+      <div class="bar1"></div>
+      <div class="bar2"></div>
+      <div class="bar3"></div>
     </div>
+    <div id="div_control" class="hidden">
+      <div id="div_control_grid">
+        <button onclick="ZoomIn()">Zoom In</button>
+        <button onclick="ZoomOut()">Zoom Out</button>
+        <button onclick="SpeedUp()">Speed Up</button>
+        <button onclick="SlowDown()">Slow Down</button>
+      </div>
+    </div>
+  </div>
+  <!--
+  <object style="display: block" data="../../images/fox1.svg" type="image/svg+xml" id="alphasvg" width="100%"
+    height="100%"></object>
+  -->
 </body>
 
 </html>
