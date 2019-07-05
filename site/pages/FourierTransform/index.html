@@ -213,7 +213,7 @@
       }
 
       wCtx.strokeStyle = "red";
-      wCtx.lineWidth = 2;
+      wCtx.lineWidth = 1;
       wCtx.stroke();
 
       // Draw Fourier Transformed Image Order
@@ -247,7 +247,7 @@
       }
 
       wCtx.strokeStyle = "red";
-      wCtx.lineWidth = 2;
+      wCtx.lineWidth = 1;
       wCtx.stroke();
 
       var q = 0.1;
@@ -295,7 +295,7 @@
       wCtx.arc(0, 0, 100, 0, 2 * Math.PI);
 
       wCtx.strokeStyle = "gray";
-      wCtx.lineWidth = 1;
+      wCtx.lineWidth = 0.5;
       wCtx.stroke();
 
       wCtx.beginPath();
@@ -322,7 +322,7 @@
     }
 
     function getPathArray(iDt) {
-      var wPointArray = getSVGPathArray("path_treblecleff");
+      var wPointArray = getPathArray("path_treblecleff");
       //var wPointArray = text();
       
       var wPt = iDt * wPointArray.length;
