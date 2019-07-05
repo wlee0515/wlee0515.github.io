@@ -118,7 +118,7 @@
             padding: 3px;
             min-width: 150px;
             max-width: 500px;
-            overflow-wrap : break-word;
+            overflow-wrap: break-word;
         }
     </style>
 
@@ -401,7 +401,7 @@
             // Create a new request
             var http = new XMLHttpRequest();
             http.open(iReqType, iURL, true);
-            
+
             //Send the proper header information along with the request
             if (null != iHeader) {
                 for (i = 0; i < iHeader.length; ++i) {
@@ -425,9 +425,9 @@
             else {
                 http.setRequestHeader('Content-Type', 'application/json');
                 // http.setRequestHeader('Origin', 'http://localhost');
-                
+
                 // http.setRequestHeader("Origin", "Computer Generated Forces Test Application");
-                http.send(iBody);    
+                http.send(iBody);
             }
         }
 
@@ -443,20 +443,26 @@
         //   - evt   :   file selection event
         function processFile(evt) {
 
-            reader = new FileReader();
+            if ("" != document.getElementById('input_ServiceContractFile').value) {
 
-            reader.onabort = function (e) {
-                alert('File read cancelled');
-            };
+                reader = new FileReader();
 
-            reader.onload = function (e) {
-                // When the File string is loaded parse the JSON file and update display
-                var wObj = parseJSON(e.target.result);
-                update_display(wObj);
+                reader.onabort = function (e) {
+                    alert('File read cancelled');
+                };
+
+                reader.onload = function (e) {
+                    // When the File string is loaded parse the JSON file and update display
+                    var wObj = parseJSON(e.target.result);
+                    update_display(wObj);
+                }
+
+                // Read in the image file as a binary string.
+                reader.readAsText(evt.target.files[0]);
+
+                document.getElementById("span_fileName").innerText = evt.target.files[0].name;
+                document.getElementById('input_ServiceContractFile').value = "";
             }
-
-            // Read in the image file as a binary string.
-            reader.readAsText(evt.target.files[0]);
         }
 
         // This function cleans the provided string and parses the string into a JSON object
@@ -1069,8 +1075,8 @@
             for (var i = 0; i < e.FormMetadata.BodyParameters.length; ++i) {
                 var wCurParam = e.FormMetadata.BodyParameters[i];
                 if (null != e.FormFilled[wCurParam]) {
-                   // wBody[wCurParam] = e.FormFilled[wCurParam];
-                   wBody = e.FormFilled[wCurParam];
+                    // wBody[wCurParam] = e.FormFilled[wCurParam];
+                    wBody = e.FormFilled[wCurParam];
                 }
             }
 
@@ -1140,7 +1146,7 @@
             <p>Using "Chrome" to send a REST request form with body content will be block. (POST and PUT Reuqests)</p>
         </div>
         <div id="div_RequestService">
-            <h3>Service Contract</h3>
+            <h3>Service Contract : <span id="span_fileName"></span></h3>
             <div id="div_display">
             </div>
         </div>
