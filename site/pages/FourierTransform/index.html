@@ -45,6 +45,8 @@
       margin: 5px;
     }
   </style>
+  <script type="text/javascript" src="../../javascript/commonCanvasFunction.js"></script>
+  <script type="text/javascript" src="./javascript/FourierTransform.js"></script>
   <script type="text/javascript">
 
     // Global Variables
@@ -62,16 +64,11 @@
 
     function init() {
       resize();
-
       setInterval(processTick, 25);
     }
 
     function resize() {
-      var wCanvas = document.getElementById("display");
-      if (null != wCanvas) {
-        wCanvas.width = wCanvas.parentNode.clientWidth - 2;
-        wCanvas.height = wCanvas.parentNode.clientHeight - 2;
-      }
+      resizeCanvas("display");
     }
 
     function processTick() {
@@ -81,30 +78,6 @@
         var zoom = Math.pow(2, gZoom);
         drawCanvasCenteredAt(wCanvas, drawCanvas, wCanvas.width / 2 - zoom * gEndPointX, wCanvas.height / 2 - zoom * gEndPointY, 0, zoom);
       }
-    }
-    function clearCanvas(iDOM) {
-      var wCtx = iDOM.getContext("2d");
-      wCtx.clearRect(0, 0, iDOM.width, iDOM.height);
-    }
-
-    function drawCanvasCenteredAt(iDOM, iDrawFunction, iTranslateX, iTranslateY, iRotation, iScale) {
-
-      var wXTranslate = iTranslateX;
-      var wYTranslate = iTranslateY;
-      var wRotate = iRotation;
-      var wScale = iScale;
-
-      var wCtx = iDOM.getContext("2d");
-
-      wCtx.translate(wXTranslate, wYTranslate);
-      wCtx.scale(wScale, wScale);
-      wCtx.rotate(wRotate);
-
-      iDrawFunction(iDOM);
-
-      wCtx.rotate(-wRotate);
-      wCtx.scale(1 / wScale, 1 / wScale);
-      wCtx.translate(-wXTranslate, -wYTranslate);
     }
 
     function drawCanvas(iDOM) {
@@ -120,12 +93,12 @@
           gOrder++;
 
           gFourierTransformCoefficients.push(
-            calculateFourierTransformCoefficient(gOrder, complexFunction1)
+            calculateFourierTransformCoefficient(gOrder, complexFunction)
           );
 
           if (gOrder != 0) {
             gFourierTransformCoefficients.push(
-              calculateFourierTransformCoefficient(-gOrder, complexFunction1)
+              calculateFourierTransformCoefficient(-gOrder, complexFunction)
             );
           }
           else {
@@ -146,7 +119,7 @@
       // Draw Base Image
 
       if (true == gShowBaseImg) {
-        drawComplexFunction(iDOM, wT0, wT1, wTStep, complexFunction1);
+        drawComplexFunction(iDOM, wT0, wT1, wTStep, complexFunction);
       }
 
       // Draw Fourier Transformed Vector
@@ -167,145 +140,12 @@
       });
 
       // Draw Fourier Transformed Image Order
-
-      wCtx.beginPath();
-      wCtx.lineJoin = "round";
       wCtx.strokeStyle = "red";
       wCtx.lineWidth = 1;
 
       drawComplexFunction(iDOM, wT0, gTime, wTStep, function (dt) {
         return evaluateFourierTransformCoefficientArray(dt, gOrder, gFourierTransformCoefficients);
       });
-      /*
-      for (var wi = wT0; wi <= gTime; wi += wTStep) {
-        var wT = wi;
-
-        var wX = 0;
-        var wY = 0;
-        for (var wk = 0; wk < gFourierTransformCoefficients.length; wk++) {
-          var wComponent = gFourierTransformCoefficients[wk];
-
-          var wCos = Math.cos(wComponent.Order * 2 * Math.PI * wT);
-          var wSin = Math.sin(wComponent.Order * 2 * Math.PI * wT);
-
-          var wReal = wCos * wComponent.Real - wSin * wComponent.Imaginary;
-          var wImaginary = wSin * wComponent.Real + wCos * wComponent.Imaginary;
-
-          wX += wReal;
-          wY += wImaginary;
-        }
-
-        if (wT0 == wi) {
-          wCtx.moveTo(wX, wY);
-        } else {
-          wCtx.lineTo(wX, wY);
-        }
-      }
-
-      wCtx.strokeStyle = "red";
-      wCtx.lineWidth = 1;
-      wCtx.stroke();*/
-    }
-
-    function calculateFourierTransformCoefficient(iOrder, iComplexFunction) {
-      var wSampleSize = 10000;
-      var wT0 = 0;
-      var wT1 = 1;
-      var wTStep = (wT1 - wT0) / wSampleSize;
-
-      var wWaveLength = -1 * iOrder * 2 * Math.PI;
-      var wSum = {
-        Order: iOrder,
-        Real: 0,
-        Imaginary: 0
-      };
-
-      for (var wi = wT0; wi <= wT1; wi += wTStep) {
-        var wT = wi;
-        var wAngle = wWaveLength * wT;
-        var wEvaluateFunction = iComplexFunction(wT);
-
-        var wCos = Math.cos(wAngle);
-        var wSin = Math.sin(wAngle);
-
-        var wReal =
-          wCos * wEvaluateFunction.Real - wSin * wEvaluateFunction.Imaginary;
-        var wImaginary =
-          wSin * wEvaluateFunction.Real + wCos * wEvaluateFunction.Imaginary;
-
-        wSum.Real += wTStep * wReal;
-        wSum.Imaginary += wTStep * wImaginary;
-      }
-
-      return wSum;
-    }
-
-    function evaluateFourierTransformCoefficientArray(iDt, iOrder, iFourierCoefficientArray) {
-
-      var wCoefficientEndSize = 2*iOrder + 1;
-
-      if ( wCoefficientEndSize >= iFourierCoefficientArray.length) {
-        wCoefficientEndSize = iFourierCoefficientArray.length;
-      }
-
-      if (0 >= wCoefficientEndSize) {
-        return;
-      }
-
-      var wX = 0;
-      var wY = 0;
-      for (var wk = 0; wk < wCoefficientEndSize; wk++) {
-        var wComponent = iFourierCoefficientArray[wk];
-
-        var wCos = Math.cos(wComponent.Order * 2 * Math.PI * iDt);
-        var wSin = Math.sin(wComponent.Order * 2 * Math.PI * iDt);
-
-        var wReal = wCos * wComponent.Real - wSin * wComponent.Imaginary;
-        var wImaginary = wSin * wComponent.Real + wCos * wComponent.Imaginary;
-
-        wX += wReal;
-        wY += wImaginary;
-      }
-
-      return {
-        Real: wX,
-        Imaginary: wY
-      }
-    }
-
-    function drawComplexFunction(iDOM, iStartTime, iEndTime, iTimeStep, iComplexFunction) {
-
-      if (iTimeStep > 0) {
-        if (iStartTime > iEndTime) {
-          return;
-        }
-      }
-      else if (iTimeStep < 0) {
-        if (iStartTime < iEndTime) {
-          return;
-        }
-      }
-      else {
-        return;
-      }
-
-      var wCtx = iDOM.getContext("2d");
-      wCtx.beginPath();
-
-      for (var wi = iStartTime; wi < iEndTime; wi += iTimeStep) {
-        var wT = wi;
-
-        var wPt = iComplexFunction(wT);
-        var wX = wPt.Real;
-        var wY = wPt.Imaginary;
-
-        if (iStartTime == wi) {
-          wCtx.moveTo(wX, wY);
-        } else {
-          wCtx.lineTo(wX, wY);
-        }
-      }
-      wCtx.stroke();
     }
 
     function drawArrowAnimation(iDOM, iTime, iFourierCoefficientArray, iCoefficientIndex, iVisible) {
@@ -337,7 +177,19 @@
 
         if (true == iVisible) {
           if (0 != wk) {
-            drawCanvasCenteredAt(iDOM, drawArrow, wXBase, wYBase, wAngle, wScale);
+            drawCanvasCenteredAt(iDOM, function(iDOM) {
+              var wCtx = iDOM.getContext("2d");
+              wCtx.beginPath();
+              wCtx.arc(0, 0, 100, 0, 2 * Math.PI);
+              wCtx.strokeStyle = "gray";
+              wCtx.lineWidth = 1;
+              wCtx.stroke();
+
+              wCtx.fillStyle = "lime";
+              wCtx.lineWidth = 1;
+              drawArrow(iDOM, 1, 90, 3, 10);
+
+            }, wXBase, wYBase, wAngle, wScale);
           }
         }
 
@@ -351,41 +203,12 @@
       }
     }
 
-    function drawArrow(iDOM) {
-      var wCtx = iDOM.getContext("2d");
-
-      wCtx.beginPath();
-      wCtx.arc(0, 0, 100, 0, 2 * Math.PI);
-
-      wCtx.strokeStyle = "gray";
-      wCtx.lineWidth = 0.5;
-      wCtx.stroke();
-
-      wCtx.beginPath();
-      wCtx.moveTo(0, 0);
-      wCtx.lineTo(0, 1);
-      wCtx.lineTo(90, 1);
-      wCtx.lineTo(90, 3);
-      wCtx.lineTo(100, 0);
-      wCtx.lineTo(90, -3);
-      wCtx.lineTo(90, -1);
-      wCtx.lineTo(0, -1);
-      wCtx.closePath();
-
-      wCtx.lineJoin = "round";
-
-      wCtx.fillStyle = "lime";
-      wCtx.lineWidth = 0.1;
-      wCtx.stroke();
-      wCtx.fill();
+    function complexFunction(iDt) {
+      return getSVGComplexFunction(iDt, "path_treblecleff");
     }
 
-    function complexFunction1(iDt) {
-      return getPathArray(iDt)
-    }
-
-    function getPathArray(iDt) {
-      var wPointArray = getSVGPathArray("path_treblecleff");
+    function getSVGComplexFunction(iDt, iSVGPathId) {
+      var wPointArray = getSVGPathArray(iSVGPathId);
       //var wPointArray = text();
 
       var wPt = iDt * wPointArray.length;
