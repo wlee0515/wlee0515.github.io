@@ -59,8 +59,6 @@
     var gEndPointY = 0;
     var gZoom = 0.0;
     var gDrawSpeed = 1;
-    var gShowArrow = true;
-    var gShowBaseImg = true;
 
     function init() {
       resize();
@@ -118,37 +116,57 @@
 
       // Draw Base Image
 
-      if (true == gShowBaseImg) {
+      if (-1 != document.getElementById("button_Image").innerText.indexOf("Show")) {
         drawComplexFunction(iDOM, wT0, wT1, wTStep, complexFunction);
       }
 
-      // Draw Fourier Transformed Vector
-
-      var wEndPoint = drawArrowAnimation(iDOM, gTime, gFourierTransformCoefficients, gFourierTransformCoefficients.length, gShowArrow);
-
       var q = 0.1;
-      gEndPointX = (1 - q) * gEndPointX + q * wEndPoint.Real;
-      gEndPointY = (1 - q) * gEndPointY + q * wEndPoint.Imaginary;
+      if (-1 != document.getElementById("button_Transition").innerText.indexOf("Show")) {
+        
+        var wEndPoint = evaluateFourierTransformCoefficientArray(gTime, gOrder, gFourierTransformCoefficients)
+        gEndPointX = (1 - q) * gEndPointX + q * wEndPoint.Real;
+        gEndPointY = (1 - q) * gEndPointY + q * wEndPoint.Imaginary;
 
-      // Draw Fourier Transformed Image Order=-1
+        // Draw Fourier Transformed Vector
+        if (-1 != document.getElementById("button_Arrow").innerText.indexOf("Show")) {
+          drawArrowAnimation(iDOM, gTime, gFourierTransformCoefficients, gFourierTransformCoefficients.length);
+        }
 
-      wCtx.strokeStyle = "red";
-      wCtx.lineWidth = 1;
+        // Draw Fourier Transformed Image Order=-1
 
-      drawComplexFunction(iDOM, gTime, wT1, wTStep, function (dt) {
-        return evaluateFourierTransformCoefficientArray(dt, gOrder - 1, gFourierTransformCoefficients);
-      });
+        wCtx.strokeStyle = "red";
+        wCtx.lineWidth = 1;
 
-      // Draw Fourier Transformed Image Order
-      wCtx.strokeStyle = "red";
-      wCtx.lineWidth = 1;
+        drawComplexFunction(iDOM, gTime, wT1, wTStep, function (dt) {
+          return evaluateFourierTransformCoefficientArray(dt, gOrder - 1, gFourierTransformCoefficients);
+        });
+        // Draw Fourier Transformed Image Order
+        wCtx.strokeStyle = "red";
+        wCtx.lineWidth = 1;
 
-      drawComplexFunction(iDOM, wT0, gTime, wTStep, function (dt) {
-        return evaluateFourierTransformCoefficientArray(dt, gOrder, gFourierTransformCoefficients);
-      });
+        drawComplexFunction(iDOM, wT0, gTime, wTStep, function (dt) {
+          return evaluateFourierTransformCoefficientArray(dt, gOrder, gFourierTransformCoefficients);
+        });
+      }
+      else {
+
+        var wEndPoint = gFourierTransformCoefficients[0];
+        gEndPointX = (1 - q) * gEndPointX + q * wEndPoint.Real;
+        gEndPointY = (1 - q) * gEndPointY + q * wEndPoint.Imaginary;
+
+        // Draw Fourier Transformed Image Order
+        wCtx.strokeStyle = "red";
+        wCtx.lineWidth = 1;
+
+        drawComplexFunction(iDOM, wT0, wT1, wTStep, function (dt) {
+          return evaluateFourierTransformCoefficientArray(dt, gOrder, gFourierTransformCoefficients);
+        });
+        gTime = wT1
+
+      }
     }
 
-    function drawArrowAnimation(iDOM, iTime, iFourierCoefficientArray, iCoefficientIndex, iVisible) {
+    function drawArrowAnimation(iDOM, iTime, iFourierCoefficientArray, iCoefficientIndex) {
 
       if (0 == iFourierCoefficientArray.length) {
         return;
@@ -175,22 +193,20 @@
         var wAngle = Math.atan2(wImaginary, wReal);
         var wScale = Math.sqrt(wReal * wReal + wImaginary * wImaginary) / 100; // Vector is 100px in length
 
-        if (true == iVisible) {
-          if (0 != wk) {
-            drawCanvasCenteredAt(iDOM, function(iDOM) {
-              var wCtx = iDOM.getContext("2d");
-              wCtx.beginPath();
-              wCtx.arc(0, 0, 100, 0, 2 * Math.PI);
-              wCtx.strokeStyle = "gray";
-              wCtx.lineWidth = 1;
-              wCtx.stroke();
+        if (0 != wk) {
+          drawCanvasCenteredAt(iDOM, function (iDOM) {
+            var wCtx = iDOM.getContext("2d");
+            wCtx.beginPath();
+            wCtx.arc(0, 0, 100, 0, 2 * Math.PI);
+            wCtx.strokeStyle = "gray";
+            wCtx.lineWidth = 1;
+            wCtx.stroke();
 
-              wCtx.fillStyle = "lime";
-              wCtx.lineWidth = 1;
-              drawArrow(iDOM, 1, 90, 3, 10);
+            wCtx.fillStyle = "lime";
+            wCtx.lineWidth = 1;
+            drawArrow(iDOM, 1, 90, 3, 10);
 
-            }, wXBase, wYBase, wAngle, wScale);
-          }
+          }, wXBase, wYBase, wAngle, wScale);
         }
 
         wXBase += wReal;
@@ -274,12 +290,16 @@
       }
     }
 
-    function ToggleArrows() {
-      gShowArrow = !gShowArrow;
-    }
-
-    function ToggleBaseImg() {
-      gShowBaseImg = !gShowBaseImg;
+    function ToggleShow(iDOMId) {
+      var wDOM = document.getElementById(iDOMId);
+      if (null != wDOM) {
+        if (-1 == wDOM.innerText.indexOf("Show")) {
+          wDOM.innerText = wDOM.innerText.replace("Hide", "Show");
+        }
+        else {
+          wDOM.innerText = wDOM.innerText.replace("Show", "Hide");
+        }
+      }
     }
 
   </script>
@@ -344,8 +364,9 @@
         <button onclick="ZoomOut()">Zoom Out</button>
         <button onclick="SpeedUp()">Speed Up</button>
         <button onclick="SlowDown()">Slow Down</button>
-        <button onclick="ToggleArrows()">Arrow</button>
-        <button onclick="ToggleBaseImg()">Image</button>
+        <button id="button_Arrow" onclick="ToggleShow('button_Arrow')">Show Arrow</button>
+        <button id="button_Image" onclick="ToggleShow('button_Image')">Show Image</button>
+        <button id="button_Transition" onclick="ToggleShow('button_Transition')">Show Transition</button>
       </div>
     </div>
   </div>
