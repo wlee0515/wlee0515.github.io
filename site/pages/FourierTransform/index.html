@@ -116,19 +116,19 @@
 
       // Draw Base Image
 
-      if (-1 != document.getElementById("button_Image").innerText.indexOf("Show")) {
+      if (-1 == document.getElementById("button_Image").innerText.indexOf("Show")) {
         drawComplexFunction(iDOM, wT0, wT1, wTStep, complexFunction);
       }
 
       var q = 0.1;
-      if (-1 != document.getElementById("button_Transition").innerText.indexOf("Show")) {
-        
+      if (-1 == document.getElementById("button_Transition").innerText.indexOf("Show")) {
+
         var wEndPoint = evaluateFourierTransformCoefficientArray(gTime, gOrder, gFourierTransformCoefficients)
         gEndPointX = (1 - q) * gEndPointX + q * wEndPoint.Real;
         gEndPointY = (1 - q) * gEndPointY + q * wEndPoint.Imaginary;
 
         // Draw Fourier Transformed Vector
-        if (-1 != document.getElementById("button_Arrow").innerText.indexOf("Show")) {
+        if (-1 == document.getElementById("button_Arrow").innerText.indexOf("Show")) {
           drawArrowAnimation(iDOM, gTime, gFourierTransformCoefficients, gFourierTransformCoefficients.length);
         }
 
@@ -161,7 +161,7 @@
         drawComplexFunction(iDOM, wT0, wT1, wTStep, function (dt) {
           return evaluateFourierTransformCoefficientArray(dt, gOrder, gFourierTransformCoefficients);
         });
-        gTime = wT1
+        gTime += 10 * gDrawSpeed * wTStep;
 
       }
     }
@@ -364,9 +364,13 @@
         <button onclick="ZoomOut()">Zoom Out</button>
         <button onclick="SpeedUp()">Speed Up</button>
         <button onclick="SlowDown()">Slow Down</button>
-        <button id="button_Arrow" onclick="ToggleShow('button_Arrow')">Show Arrow</button>
-        <button id="button_Image" onclick="ToggleShow('button_Image')">Show Image</button>
-        <button id="button_Transition" onclick="ToggleShow('button_Transition')">Show Transition</button>
+        <button id="button_Arrow" onclick="ToggleShow('button_Arrow')">Hide Arrow</button>
+        <button id="button_Image" onclick="ToggleShow('button_Image')">Hide Image</button>
+        <button id="button_Transition" onclick="ToggleShow('button_Transition')">Hide Transition</button>
+          <select>
+            <option value="path_Fox1">Fox</option>
+            <option value="svg_treblecleff">Treble Clef</option>
+          </select>
       </div>
     </div>
   </div>
