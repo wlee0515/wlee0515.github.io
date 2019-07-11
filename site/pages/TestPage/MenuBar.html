@@ -1,0 +1,91 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
+  <!--
+  <meta name="apple-mobile-web-app-capable" content="yes" />
+  -->
+  <title>Menu Bar Tester</title>
+  <!-- Add icon library -->
+  <script type="text/javascript">
+    var gMenuDefinition = [
+        {
+            Label : "File",
+            Click_DOM_Id : "clickbait",
+            Submenu : [
+        {
+            Label : "File",
+            Click_DOM_Id : "clickbait",
+            Submenu : [
+
+            ]
+        },
+        {
+            Label : "File",
+            Click_DOM_Id : "clickbait",
+            Submenu : [
+
+            ]
+        }
+            ]
+            
+        },
+        {
+            Label : "Edit",
+            Click_DOM_Id : "clickbait",
+            Submenu : [
+        {
+            Label : "File",
+            Click_DOM_Id : "clickbait",
+            Submenu : [
+
+            ]
+        },
+        {
+            Label : "File",
+            Click_DOM_Id : "clickbait",
+            Submenu : [
+
+            ]
+        }
+            ]
+            
+        },
+
+    ]
+
+    </script>
+
+    <script src="../../javascript/menuBar.js"></script>
+    
+    <style>
+        .class_sub_menu {
+            position: relative;;
+            left: 10px;
+        }
+    </style>
+    <script>
+
+    function page_load() {
+
+      var wMenuDom = document.getElementById("Div_MenuBar");
+      var wMenuGenerator = new MenuBarCreator();
+      wMenuDom.innerHTML = wMenuGenerator.generateHTMLString(gMenuDefinition);
+      
+    }
+
+    function Clickfunction(){
+        alert("Click");
+    }
+  </script>
+</head>
+
+<body onload="page_load()">
+  <div id="Div_MenuBar">
+
+  </div>
+  <div onclick="Clickfunction()" id="clickbait"></div>
+</body>
+
+</html>
