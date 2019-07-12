@@ -2,90 +2,159 @@
 <html>
 
 <head>
-  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
-  <!--
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
+    <!--
   <meta name="apple-mobile-web-app-capable" content="yes" />
   -->
-  <title>Menu Bar Tester</title>
-  <!-- Add icon library -->
-  <script type="text/javascript">
-    var gMenuDefinition = [
-        {
-            Label : "File",
-            Click_DOM_Id : "clickbait",
-            Submenu : [
-        {
-            Label : "File",
-            Click_DOM_Id : "clickbait",
-            Submenu : [
+    <title>Menu Bar Tester</title>
+    <!-- Add icon library -->
+    <script type="text/javascript">
+        var gMenuDefinition = [
+            {
+                Label: "File",
+                onclick: "Clickfunction()",
+                SubMenu: [
+                    {
+                        Label: "File",
+                        onclick: "Clickfunction()",
+                        for: "file",
+                        SubMenu: [
+                            {
+                                Label: "File",
+                                onclick: "Clickfunction()",
+                                for: "file",
+                                SubMenu: [
 
-            ]
-        },
-        {
-            Label : "File",
-            Click_DOM_Id : "clickbait",
-            Submenu : [
+                                ]
+                            },
+                            {
+                                Label: "File",
+                                Click_DOM_Id: "clickbait",
+                                SubMenu: [
 
-            ]
-        }
-            ]
-            
-        },
-        {
-            Label : "Edit",
-            Click_DOM_Id : "clickbait",
-            Submenu : [
-        {
-            Label : "File",
-            Click_DOM_Id : "clickbait",
-            Submenu : [
+                                ]
+                            }
 
-            ]
-        },
-        {
-            Label : "File",
-            Click_DOM_Id : "clickbait",
-            Submenu : [
+                        ]
+                    },
+                    {
+                        Label: "File2",
+                        Click_DOM_Id: "clickbait",
+                        SubMenu: [
 
-            ]
-        }
-            ]
-            
-        },
+                        {
+                Label: "File",
+                onclick: "Clickfunction()",
+                SubMenu: [
+                    {
+                        Label: "File",
+                        onclick: "Clickfunction()",
+                        for: "file",
+                        SubMenu: [
+                            {
+                                Label: "File",
+                                onclick: "Clickfunction()",
+                                for: "file",
+                                SubMenu: [
 
-    ]
+                                ]
+                            },
+                            {
+                                Label: "File",
+                                Click_DOM_Id: "clickbait",
+                                SubMenu: [
+
+                                ]
+                            }
+
+                        ]
+                    },
+                    {
+                        Label: "File2",
+                        Click_DOM_Id: "clickbait",
+                        SubMenu: [
+
+                        ]
+                    }
+                ]
+
+            },
+            {
+                Label: "Edit",
+                Click_DOM_Id: "clickbait",
+                SubMenu: [
+                    {
+                        Label: "File",
+                        Click_DOM_Id: "clickbait",
+                        SubMenu: [
+
+                        ]
+                    },
+                    {
+                        Label: "File",
+                        Click_DOM_Id: "clickbait",
+                        SubMenu: [
+
+                        ]
+                    }
+                ]
+
+            },
+                        ]
+                    }
+                ]
+
+            },
+            {
+                Label: "Edit",
+                Click_DOM_Id: "clickbait",
+                SubMenu: [
+                    {
+                        Label: "File",
+                        Click_DOM_Id: "clickbait",
+                        SubMenu: [
+
+                        ]
+                    },
+                    {
+                        Label: "File",
+                        Click_DOM_Id: "clickbait",
+                        SubMenu: [
+
+                        ]
+                    }
+                ]
+
+            },
+
+        ]
 
     </script>
 
     <script src="../../javascript/menuBar.js"></script>
-    
-    <style>
-        .class_sub_menu {
-            position: relative;;
-            left: 10px;
-        }
-    </style>
+
     <script>
 
-    function page_load() {
+        function page_load() {
 
-      var wMenuDom = document.getElementById("Div_MenuBar");
-      var wMenuGenerator = new MenuBarCreator();
-      wMenuDom.innerHTML = wMenuGenerator.generateHTMLString(gMenuDefinition);
-      
-    }
+            var wMenuDom = document.getElementById("Div_MenuBar");
+            var wMenuGenerator = new MenuBarCreator();
+            wMenuDom.innerHTML = wMenuGenerator.generateHTMLString(gMenuDefinition);
 
-    function Clickfunction(){
-        alert("Click");
-    }
-  </script>
+        }
+
+        function Clickfunction() {
+            alert("Click");
+        }
+    </script>
 </head>
 
 <body onload="page_load()">
-  <div id="Div_MenuBar">
+    <div id="Div_MenuBar">
+    </div>
+    <div onclick="Clickfunction()" id="clickbait"></div>
+    <input type="file" id="file" />
 
-  </div>
-  <div onclick="Clickfunction()" id="clickbait"></div>
 </body>
 
 </html>
