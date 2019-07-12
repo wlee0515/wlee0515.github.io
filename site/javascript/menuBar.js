@@ -7,6 +7,7 @@ function MenuBarCreator() {
 
   this.mTopMenuItemClassname = "class_top_menu_item";
   this.mSubMenuItemClassname = "class_sub_menu_item";
+  this.mMenuClassname = "class_menu";
   this.mSubMenuClassname = "class_sub_menu";
   this.mMenuLabelClassname = "class_menu_label";
 
@@ -21,23 +22,18 @@ function MenuBarCreator() {
   this.createCSSString = function (iMenuDefinitionObj, iMenuItemClassname) {
     var wCSSString = "<style>";
   
+    //-------------------
     // general setup
     wCSSString += "." + this.mMenuLabelClassname ;
-    wCSSString += "{ cursor: pointer; width:300px; }";
-      
-    wCSSString += "." + this.mTopMenuItemClassname + ", ";
-    wCSSString += "." + this.mSubMenuItemClassname + "";
-    wCSSString += "{    \
-      padding: 5px;      \
-      height: 20px;      \
-      padding: 0px;      \
-      }";
-
-      wCSSString += "." + this.mSubMenuItemClassname + "";
-      wCSSString += "{    \
-        height: 20px;      \
-        }";
+    wCSSString += "{ \
+      cursor: pointer; \
+      display: inline-block; \
+      width:100%; \
+      height:100%; \
+      white-space: nowrap; \
+    }";
         
+    //-------------------
     // Horizontal Menu
     wCSSString += "." + this.mTopMenuItemClassname;
     wCSSString += "{    \
@@ -47,16 +43,18 @@ function MenuBarCreator() {
     wCSSString += "." + this.mTopMenuItemClassname + ":hover ." + this.mMenuLabelClassname + ",";
     wCSSString += "{background-color:blue;}";
 
+    //-------------------
     // Hiding sub menus
     wCSSString += "." + this.mSubMenuClassname;
     wCSSString += "{display : none;}";
 
     wCSSString += "." + this.mTopMenuItemClassname + ":hover > ." + this.mSubMenuClassname;
-    wCSSString += "{ display : block; position: absolute}";
+    wCSSString += "{ display : block;  position: absolute;}";
 
     wCSSString += "." + this.mSubMenuItemClassname + ":hover > ." + this.mSubMenuClassname;
-    wCSSString += "{ display : inline-block; position: absolute}";
+    wCSSString += "{ display : inline-block; position: absolute;}";
 
+    //-------------------
     // Keep color 
     wCSSString += "." + this.mTopMenuItemClassname + ":hover > ." + this.mMenuLabelClassname;
     wCSSString += "{ background-color:lime;}";
@@ -64,47 +62,35 @@ function MenuBarCreator() {
     wCSSString += "." + this.mSubMenuItemClassname + ":hover > ." + this.mMenuLabelClassname;
     wCSSString += "{ background-color:lime;}";
   
+    //-------------------
+    
+    // Visual Decor
+    
+    wCSSString += "." + this.mTopMenuItemClassname + ", ";
+    wCSSString += "." + this.mSubMenuItemClassname + "";
+    wCSSString += "{    \
+      padding: 0px;      \
+      height: 20px;      \
+      }";
+
+      wCSSString += "." + this.mMenuLabelClassname + "";
+      wCSSString += "{    \
+        padding: 0px;      \
+        height: 20px;      \
+        }";
+
+    wCSSString += "." + this.mMenuClassname;
+    wCSSString += "{background-color:grey;}";
+
     return wCSSString + "</style>";
 
-    /*
-    #navbar,
-    #div_navbar_spacing {
-        width: 100%;
-        height: 30px;
-        background-color: darkcyan;
-        padding: 0px;
-        color: white;
-    }
-
-
-    .navbar_menu:hover .navbar_expand {
-        position: absolute;
-        display: block;
-        background-color: black;
-    }
-
-    .navbar_menu_item,
-    .navbar_expand_item {
-        padding: 5px;
-        height: 20px;
-        display: inline-block;
-        cursor: pointer;
-    }
-
-    .navbar_expand_item:hover {
-        background-color: lime;
-    }
-
-    .navbar_menu_item_container {
-        display: grid;
-        grid-column: auto;
-    }
-*/
   }
 
   this.createMenuItemString = function (iMenuDefinitionObj, iMenuItemClassname) {
 
     var wReturnStr = "";
+    
+    wReturnStr += "<div class='" + this.mMenuClassname + "'>";
 
     for (key in iMenuDefinitionObj) {
       var wObj = iMenuDefinitionObj[key];
@@ -132,6 +118,8 @@ function MenuBarCreator() {
         }
       }      
     }
+
+    wReturnStr += "</div>";
     
     return wReturnStr;
   }
