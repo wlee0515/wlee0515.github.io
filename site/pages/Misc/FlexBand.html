@@ -1,0 +1,415 @@
+﻿<html>
+<head>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
+    <title>Flex Band</title>
+    <style>
+        body
+        {
+            background-color : rgb(0,0,0);
+        }
+        div
+        {
+            height : 100%;
+            width : 100%;
+        }
+        canvas
+        {
+            border: 1px solid blue;
+        }
+
+    </style>
+    <script src="../../javascript/commonCanvasFunction.js"></script>
+    <script src="../../javascript/commonMath.js"></script>
+    <script type="text/javascript">
+
+        var gRoadDefinition = new Array();
+        var gRoadWidth = 10;
+        var gLaneCount = 5;
+
+        var gMouseHandler = {
+            mouseIsDown : false,
+            mouseDownLocation : new Vector2d(0,0),
+            mouseRelativeNodeLocation :  new Vector2d(0,0),
+            selectedNode: -1
+        }
+
+        function init() {
+
+            gRoadDefinition.push(new Vector2d(100, 100));
+            gRoadDefinition.push(new Vector2d(200, 100));
+            gRoadDefinition.push(new Vector2d(300, 400));
+/*            gRoadDefinition.push(new Vector2d(400, 400));
+            gRoadDefinition.push(new Vector2d(400, 200));
+            gRoadDefinition.push(new Vector2d(600, 200));
+            gRoadDefinition.push(new Vector2d(600, 400));
+            gRoadDefinition.push(new Vector2d(400, 600));
+            gRoadDefinition.push(new Vector2d(600, 200));*/
+            
+            var wCanvas = document.getElementById("OuputCanvas");
+            wCanvas.addEventListener("mousedown", canvasMouseClick, false);
+            wCanvas.addEventListener("mousemove", canvasMouseMove, false);
+
+            resize();
+
+            
+            setInterval(processTick, 100);
+        }
+
+
+        function resize() {
+            var wCanvas = document.getElementById("OuputCanvas");
+            resizeCanvas(wCanvas);
+        }
+
+        function canvasMouseClick(iEvent) {
+            
+            if (null != iEvent) {
+
+                var wCanvas = document.getElementById("OuputCanvas");
+
+                x = iEvent.x - wCanvas.offsetLeft - document.body.scrollLeft;
+                y = iEvent.y - wCanvas.offsetTop - document.body.scrollTop;
+
+
+                if (false == gMouseHandler.mouseIsDown) {
+                    gMouseHandler.mouseIsDown = true;
+                    gMouseHandler.mouseDownLocation.x = x;
+                    gMouseHandler.mouseDownLocation.y = y;
+
+                    var wClosestPoint = Vector2dOp.getClosest(gMouseHandler.mouseDownLocation, gRoadDefinition);
+
+                    gMouseHandler.selectedNode = wClosestPoint.index;
+                    gMouseHandler.mouseRelativeNodeLocation.x = wClosestPoint.Vector2d.x - gMouseHandler.mouseDownLocation.x;
+                    gMouseHandler.mouseRelativeNodeLocation.y = wClosestPoint.Vector2d.y - gMouseHandler.mouseDownLocation.y;
+
+                }
+                else {
+                    gMouseHandler.mouseIsDown = false;
+                }
+            }
+        }
+        
+        function canvasMouseMove(iEvent) {
+
+
+            var wCanvas = document.getElementById("OuputCanvas");
+
+            x = iEvent.x - wCanvas.offsetLeft - document.body.scrollLeft;
+            y = iEvent.y - wCanvas.offsetTop - document.body.scrollTop;
+            
+            if (true == gMouseHandler.mouseIsDown) {
+                gRoadDefinition[gMouseHandler.selectedNode].x = x + gMouseHandler.mouseRelativeNodeLocation.x;
+                gRoadDefinition[gMouseHandler.selectedNode].y = y + gMouseHandler.mouseRelativeNodeLocation.y;
+            }
+
+        }
+
+        function processTick() {
+
+            var wCanvas = document.getElementById("OuputCanvas");
+            clearCanvas(wCanvas);
+           // drawCanvas(wCanvas);
+            drawCanvas2(wCanvas);
+        }
+
+        function drawCanvas(iCanvas) {
+
+            var wCtx = iCanvas.getContext("2d");
+
+            if (gRoadDefinition.length > 1) {
+
+                wCtx.fillStyle = "cyan";
+                wCtx.strokeStyle = "cyan";
+
+                //------------
+                // First Node
+
+                drawRoadStart(wCtx, gRoadDefinition[0], gRoadDefinition[1]);
+                //drawRoadIntermediate(wCtx, gRoadDefinition[gRoadDefinition.length - 1], gRoadDefinition[0], gRoadDefinition[1]);
+
+                //------------
+                // Intermediate Nodes
+
+                for (var i = 1; i < gRoadDefinition.length - 1; ++i) {
+
+                    drawRoadIntermediate(wCtx, gRoadDefinition[i-1], gRoadDefinition[i], gRoadDefinition[i + 1]);
+                }
+
+                //------------
+                // Last Node
+
+                drawRoadEnd(wCtx, gRoadDefinition[gRoadDefinition.length - 2], gRoadDefinition[gRoadDefinition.length - 1]);
+                //drawRoadIntermediate(wCtx, gRoadDefinition[gRoadDefinition.length - 2], gRoadDefinition[gRoadDefinition.length - 1], gRoadDefinition[0]);
+
+            }
+
+            
+        }
+
+
+
+        function drawRoadStart(iCtx, iLocation, iTo) {
+
+
+            var wDeltaX = (iTo.x - iLocation.x);
+            var wDeltaY = (iTo.y - iLocation.y);
+
+            var wTo = {
+                x: iLocation.x + wDeltaX / 2.0,
+                y: iLocation.y + wDeltaY / 2.0
+            }
+
+            drawLineWithOffset(iCtx, iLocation, wTo, gRoadWidth, gLaneCount + 1);
+        }
+
+
+        function drawRoadIntermediate(iCtx, iFrom, iLocation, iTo) {
+
+            var wDeltaX1 = (iLocation.x - iFrom.x);
+            var wDeltaY1 = (iLocation.y - iFrom.y);
+
+            var wRoad1Angle = Math.atan2(wDeltaY1, wDeltaX1);
+            var wStartAngle = wRoad1Angle + Math.PI / 2.0;
+
+
+            var wDeltaX2 = (iTo.x - iLocation.x);
+            var wDeltaY2 = (iTo.y - iLocation.y);
+
+            var wRoad2Angle = Math.atan2(wDeltaY2, wDeltaX2);
+            var wEndAngle = wRoad2Angle + Math.PI / 2.0;
+
+            var wDeltaAngle = normalizeAngle(wEndAngle - wStartAngle);
+
+            var wFrom = {
+                x: iLocation.x - wDeltaX1 / 2.0,
+                y: iLocation.y - wDeltaY1 / 2.0
+            }
+
+            var wTo = {
+                x: iLocation.x + wDeltaX2 / 2.0,
+                y: iLocation.y + wDeltaY2 / 2.0
+            }
+
+            if ((gRoadWidth * wDeltaAngle < 0)) {
+
+                drawLineWithOffset(iCtx, wFrom, iLocation, gRoadWidth, gLaneCount + 1);
+                drawLineWithOffset(iCtx, iLocation, wTo, gRoadWidth, gLaneCount + 1);
+
+                drawArcWithOffset(iCtx, iLocation, 0, wEndAngle, wStartAngle, gRoadWidth, gLaneCount + 1);
+            }
+            else {
+
+                if (wDeltaAngle < Math.PI / 2.0) {
+
+                    var wHalfAng = wDeltaAngle / 2;
+                    var wLength = ((gLaneCount) * gRoadWidth) / Math.cos(wHalfAng);
+                    var wLineReduction = wLength * Math.sin(wHalfAng);
+
+                    var wBysector = wStartAngle + wHalfAng;
+
+                    var wCenter = {
+                        x: iLocation.x + wLength * Math.cos(wBysector),
+                        y: iLocation.y + wLength * Math.sin(wBysector)
+                    }
+
+
+                    var wNewFrom = {
+                        x: wFrom.x + wLength * Math.cos(wBysector) + wLineReduction * Math.cos(wRoad1Angle),
+                        y: wFrom.y + wLength * Math.sin(wBysector) + wLineReduction * Math.sin(wRoad1Angle)
+                    }
+
+                    var wNewTo = {
+                        x: wTo.x + wLength * Math.cos(wBysector) - wLineReduction * Math.cos(wRoad2Angle),
+                        y: wTo.y + wLength * Math.sin(wBysector) - wLineReduction * Math.sin(wRoad2Angle)
+                    }
+
+                    drawLineWithOffset(iCtx, wNewFrom, wCenter, -gRoadWidth, gLaneCount + 1);
+                    drawLineWithOffset(iCtx, wCenter, wNewTo, -gRoadWidth, gLaneCount + 1);
+
+
+                    drawArcWithOffset(iCtx, wCenter, 0, wEndAngle, wStartAngle, -gRoadWidth, gLaneCount + 1);
+
+                }
+                else {
+
+
+                    var wHalfAng = wDeltaAngle / 2;
+                    var wLength = ((gLaneCount) * gRoadWidth) / Math.cos(wHalfAng);
+                    var wLineReduction = wLength * Math.sin(wHalfAng);
+
+                    var wBysector = wStartAngle + wHalfAng;
+
+                    var wCenter = {
+                        x: iLocation.x + wLength * Math.cos(wBysector),
+                        y: iLocation.y + wLength * Math.sin(wBysector)
+                    }
+
+
+                    var wNewFrom = {
+                        x: wFrom.x + wLength * Math.cos(wBysector),// + wLineReduction * Math.cos(wRoad1Angle),
+                        y: wFrom.y + wLength * Math.sin(wBysector)// + wLineReduction * Math.sin(wRoad1Angle)
+                    }
+
+                    var wNewTo = {
+                        x: wTo.x + wLength * Math.cos(wBysector),//- wLineReduction * Math.cos(wRoad2Angle),
+                        y: wTo.y + wLength * Math.sin(wBysector)// - wLineReduction * Math.sin(wRoad2Angle)
+                    }
+
+                    drawLineWithOffset(iCtx, wNewFrom, wCenter, -gRoadWidth, gLaneCount + 1);
+                    drawLineWithOffset(iCtx, wCenter, wNewTo, -gRoadWidth, gLaneCount + 1);
+
+
+                    drawArcWithOffset(iCtx, wCenter, 0, wEndAngle, wStartAngle, -gRoadWidth, gLaneCount + 1);
+                }
+            }
+
+        }
+
+        function drawRoadEnd(iCtx, iFrom, iLocation) {
+
+            var wDeltaX = (iLocation.x - iFrom.x);
+            var wDeltaY = (iLocation.y - iFrom.y);
+
+            var wFrom = {
+                x: iLocation.x - wDeltaX / 2.0,
+                y: iLocation.y - wDeltaY / 2.0
+            }
+
+            drawLineWithOffset(iCtx, wFrom, iLocation, gRoadWidth, gLaneCount + 1);
+        }
+
+        function drawLineWithOffset(iCtx, iFrom, iTo, iOffset, iCount) {
+
+            var wDeltaX = (iTo.x - iFrom.x);
+            var wDeltaY = (iTo.y - iFrom.y);
+            var wDeltaLength = Math.sqrt( wDeltaX*wDeltaX + wDeltaY*wDeltaY);
+
+            var XInc = -iOffset*wDeltaY / wDeltaLength;
+            var YInc = iOffset*wDeltaX / wDeltaLength;
+
+            for (var i = 0; i < iCount; ++i) {
+                iCtx.beginPath();
+                iCtx.moveTo(iFrom.x + i * XInc, iFrom.y + i * YInc);
+                iCtx.lineTo(iTo.x + i * XInc, iTo.y + i * YInc);
+                iCtx.stroke();
+            }
+        }
+
+        function drawArcWithOffset(iCtx, iCenter, iRadius, iStartAngle, iEndAngle, iOffset, iCount) {
+
+            for (var i = 0; i < iCount; ++i) {
+                iCtx.beginPath();
+                if (iOffset > 0) {
+                    iCtx.arc(iCenter.x, iCenter.y, iRadius + i * iOffset, iStartAngle, iEndAngle);
+                }
+                else {
+                    iCtx.arc(iCenter.x, iCenter.y, iRadius + i * Math.abs(iOffset), iStartAngle + Math.PI, iEndAngle + Math.PI, true);
+                }
+
+                iCtx.stroke();
+            }
+        }
+
+        function drawCanvas2(iCanvas) {
+            var wCtx = iCanvas.getContext("2d");
+            wCtx.strokeStyle = "red";
+            drawPolyLineXY(iCanvas, calculateOffsetLine(gRoadDefinition));
+            wCtx.strokeStyle = "yellow";
+            drawPolyLineXY(iCanvas, calculateOffsetLine(gRoadDefinition, 10 , 2));
+            drawPolyLineXY(iCanvas, calculateOffsetLine(gRoadDefinition, 20 , 1));
+            drawPolyLineXY(iCanvas, calculateOffsetLine(gRoadDefinition, 30 , 2));
+            wCtx.strokeStyle = "green";
+            drawPolyLineXY(iCanvas, calculateOffsetLine(gRoadDefinition, -10 , 2));
+            drawPolyLineXY(iCanvas, calculateOffsetLine(gRoadDefinition, -20 , 1));
+            drawPolyLineXY(iCanvas, calculateOffsetLine(gRoadDefinition, -30 , 2));
+
+            wCtx.strokeStyle = "cyan";
+            drawPolyLineXY(iCanvas, calculateOffsetLine(gRoadDefinition, -40 , 1));
+            drawPolyLineXY(iCanvas, calculateOffsetLine(gRoadDefinition, -40 , 2));
+
+
+        }
+
+        function calculateOffsetLine(iPtArray, iOffset = 0, iOption = 0) {
+            if ((0 == iOffset)||(2 > iPtArray.length)) {
+                return iPtArray;
+            }
+
+            var wOffsetVector = {x:0,y:iOffset};
+            var wTangentVector = {x:iOffset,y:0};
+            
+            var wPtArray = [];
+
+            // First Point
+            var wStartDir = Vector2dOp.subtract(iPtArray[1], iPtArray[0]);
+            var wStartAngle = Vector2dOp.getAngle(wStartDir);
+            var wStartOffset = Vector2dOp.getRotate(wOffsetVector, wStartAngle);
+
+            wPtArray.push ( Vector2dOp.add(iPtArray[0], wStartOffset));
+
+            var wLastAngle = wStartAngle;
+            // Intermediate Points
+            for (var wi = 1; wi < iPtArray.length-1; ++wi) {
+                var wIntDir = Vector2dOp.subtract(iPtArray[wi+1], iPtArray[wi]);
+                var wIntAngle = Vector2dOp.getAngle(wIntDir);
+                var wHalfJointDelta = normalizeAngle(wIntAngle-wLastAngle)/2;
+                var wJointAngle = normalizeAngle((wLastAngle+wHalfJointDelta));
+                var wQuarterJointDelta = normalizeAngle(wIntAngle-wLastAngle)/4;
+                var wOffsetScale = Math.abs(1/ Math.cos(wHalfJointDelta));
+
+                if (0 == iOption) {
+                    var wIntOffset = Vector2dOp.getRotate(wOffsetVector, wJointAngle);
+                    wIntOffset = Vector2dOp.scale(wOffsetScale, wIntOffset)
+                    wPtArray.push ( Vector2dOp.add(iPtArray[wi], wIntOffset));
+                }
+                else if (1 == iOption){
+                    var wIntOffset = Vector2dOp.getRotate(wOffsetVector, wJointAngle);
+                    var wCenter = Vector2dOp.add(iPtArray[wi], wIntOffset)
+
+                    var wIntTangentVector = Vector2dOp.getRotate(wTangentVector, wJointAngle);
+                    var wTangentScale = Math.tan(wQuarterJointDelta);
+                    
+                    wIntTangentVector = Vector2dOp.scale(wTangentScale, wIntTangentVector);
+
+                    wPtArray.push ( Vector2dOp.add(wCenter, wIntTangentVector));
+                    wPtArray.push ( Vector2dOp.subtract(wCenter, wIntTangentVector));
+                }
+                else if (2 == iOption){
+                    var wIntOffset = Vector2dOp.getRotate(wOffsetVector, wJointAngle);
+
+                    var wTangentScale = Math.tan(wQuarterJointDelta);
+                    if (0.0 < wTangentScale*iOffset) { // when Self intersecting
+                        wIntOffset = Vector2dOp.scale(wOffsetScale, wIntOffset)
+                        wPtArray.push ( Vector2dOp.add(iPtArray[wi], wIntOffset));
+                    }
+                    else {
+                        var wCenter = Vector2dOp.add(iPtArray[wi], wIntOffset)
+                        var wIntTangentVector = Vector2dOp.getRotate(wTangentVector, wJointAngle);
+                    
+                        wIntTangentVector = Vector2dOp.scale(wTangentScale, wIntTangentVector);
+
+                        wPtArray.push ( Vector2dOp.add(wCenter, wIntTangentVector));
+                        wPtArray.push ( Vector2dOp.subtract(wCenter, wIntTangentVector));
+                    }
+                }
+
+                wLastAngle = wIntAngle
+            }
+
+            // last Point
+
+            var wEndOffset = Vector2dOp.getRotate(wOffsetVector, wLastAngle);
+
+            wPtArray.push ( Vector2dOp.add(iPtArray[iPtArray.length-1], wEndOffset));
+
+            return wPtArray;
+        }
+
+    </script>
+</head>
+<body onload="init()" onresize ="resize()">
+    <div>
+        <canvas id="OuputCanvas""></canvas>
+    </div>
+</body>
+</html>

@@ -1,11 +1,8 @@
 <!--
 
-function resizeCanvas(iDOMId) {
-  var wCanvas = document.getElementById("display");
-  if (null != wCanvas) {
-    wCanvas.width = wCanvas.parentNode.clientWidth - 2;
-    wCanvas.height = wCanvas.parentNode.clientHeight - 2;
-  }
+function resizeCanvas(iCanvas) {
+  iCanvas.width = iCanvas.parentNode.clientWidth - 2;
+  iCanvas.height = iCanvas.parentNode.clientHeight - 2;
 }
 
 function clearCanvas(iDOM) {
@@ -87,6 +84,52 @@ function drawComplexFunction(iDOM, iStartTime, iEndTime, iTimeStep, iComplexFunc
       wCtx.lineTo(wX, wY);
     }
   }
+  wCtx.stroke();
+}
+
+function drawPolyLine(iDOM, iPointArray, iXScale = 1.0, iYScale = 1.0, iXOffset = 0, iYOffset = 0) {
+
+  if (iPointArray.length == 0){
+    return;
+  }
+
+  var wCtx = iDOM.getContext("2d");
+  wCtx.beginPath();
+  
+  var wX = iXScale*iPointArray[0][0] + iXOffset;
+  var wY = iYScale*iPointArray[0][1] + iYOffset;
+  wCtx.moveTo(wX, wY);
+
+  for (var wi = 0; wi < iPointArray.length; ++wi) {
+    wX = iXScale*iPointArray[wi][0] + iXOffset;
+    wY = iYScale*iPointArray[wi][1] + iYOffset;
+    wCtx.lineTo(wX, wY);
+  }
+
+  wCtx.lineJoin = "round";
+  wCtx.stroke();
+}
+
+function drawPolyLineXY(iDOM, iPointArray, iXScale = 1.0, iYScale = 1.0, iXOffset = 0, iYOffset = 0) {
+
+  if (iPointArray.length == 0){
+    return;
+  }
+
+  var wCtx = iDOM.getContext("2d");
+  wCtx.beginPath();
+  
+  var wX = iXScale*iPointArray[0].x + iXOffset;
+  var wY = iYScale*iPointArray[0].y + iYOffset;
+  wCtx.moveTo(wX, wY);
+
+  for (var wi = 0; wi < iPointArray.length; ++wi) {
+    wX = iXScale*iPointArray[wi].x + iXOffset;
+    wY = iYScale*iPointArray[wi].y + iYOffset;
+    wCtx.lineTo(wX, wY);
+  }
+
+  wCtx.lineJoin = "round";
   wCtx.stroke();
 }
 -->
