@@ -38,12 +38,12 @@
             gRoadDefinition.push(new Vector2d(100, 100));
             gRoadDefinition.push(new Vector2d(200, 100));
             gRoadDefinition.push(new Vector2d(300, 400));
-/*            gRoadDefinition.push(new Vector2d(400, 400));
+            gRoadDefinition.push(new Vector2d(400, 400));
             gRoadDefinition.push(new Vector2d(400, 200));
             gRoadDefinition.push(new Vector2d(600, 200));
             gRoadDefinition.push(new Vector2d(600, 400));
             gRoadDefinition.push(new Vector2d(400, 600));
-            gRoadDefinition.push(new Vector2d(600, 200));*/
+            gRoadDefinition.push(new Vector2d(600, 200));
             
             var wCanvas = document.getElementById("OuputCanvas");
             wCanvas.addEventListener("mousedown", canvasMouseClick, false);
@@ -316,15 +316,15 @@
             drawPolyLineXY(iCanvas, calculateOffsetLine(gRoadDefinition));
             wCtx.strokeStyle = "yellow";
             drawPolyLineXY(iCanvas, calculateOffsetLine(gRoadDefinition, 10 , 2));
-            drawPolyLineXY(iCanvas, calculateOffsetLine(gRoadDefinition, 20 , 1));
+            drawPolyLineXY(iCanvas, calculateOffsetLine(gRoadDefinition, 20 , 2));
             drawPolyLineXY(iCanvas, calculateOffsetLine(gRoadDefinition, 30 , 2));
             wCtx.strokeStyle = "green";
             drawPolyLineXY(iCanvas, calculateOffsetLine(gRoadDefinition, -10 , 2));
-            drawPolyLineXY(iCanvas, calculateOffsetLine(gRoadDefinition, -20 , 1));
+            drawPolyLineXY(iCanvas, calculateOffsetLine(gRoadDefinition, -20 , 2));
             drawPolyLineXY(iCanvas, calculateOffsetLine(gRoadDefinition, -30 , 2));
 
             wCtx.strokeStyle = "cyan";
-            drawPolyLineXY(iCanvas, calculateOffsetLine(gRoadDefinition, -40 , 1));
+            drawPolyLineXY(iCanvas, calculateOffsetLine(gRoadDefinition, 40 , 2));
             drawPolyLineXY(iCanvas, calculateOffsetLine(gRoadDefinition, -40 , 2));
 
 
@@ -352,9 +352,10 @@
             for (var wi = 1; wi < iPtArray.length-1; ++wi) {
                 var wIntDir = Vector2dOp.subtract(iPtArray[wi+1], iPtArray[wi]);
                 var wIntAngle = Vector2dOp.getAngle(wIntDir);
-                var wHalfJointDelta = normalizeAngle(wIntAngle-wLastAngle)/2;
+                var wJointDelta = normalizeAngle(wIntAngle-wLastAngle);
+                var wHalfJointDelta = wJointDelta/2;
+                var wQuarterJointDelta = wJointDelta/4;
                 var wJointAngle = normalizeAngle((wLastAngle+wHalfJointDelta));
-                var wQuarterJointDelta = normalizeAngle(wIntAngle-wLastAngle)/4;
                 var wOffsetScale = Math.abs(1/ Math.cos(wHalfJointDelta));
 
                 if (0 == iOption) {
@@ -378,7 +379,7 @@
                     var wIntOffset = Vector2dOp.getRotate(wOffsetVector, wJointAngle);
 
                     var wTangentScale = Math.tan(wQuarterJointDelta);
-                    if (0.0 < wTangentScale*iOffset) { // when Self intersecting
+                    if ((0.0 < wTangentScale*iOffset) && (7*Math.PI/8 > Math.abs(wJointDelta))) { // when Self intersecting
                         wIntOffset = Vector2dOp.scale(wOffsetScale, wIntOffset)
                         wPtArray.push ( Vector2dOp.add(iPtArray[wi], wIntOffset));
                     }
