@@ -358,13 +358,13 @@
                 var wJointAngle = normalizeAngle((wLastAngle+wHalfJointDelta));
                 var wOffsetScale = Math.abs(1/ Math.cos(wHalfJointDelta));
 
+                var wIntOffset = Vector2dOp.getRotate(wOffsetVector, wJointAngle);
+
                 if (0 == iOption) {
-                    var wIntOffset = Vector2dOp.getRotate(wOffsetVector, wJointAngle);
-                    wIntOffset = Vector2dOp.scale(wOffsetScale, wIntOffset)
-                    wPtArray.push ( Vector2dOp.add(iPtArray[wi], wIntOffset));
+                    var wIntScaledOffset = Vector2dOp.scale(wOffsetScale, wIntOffset)
+                    wPtArray.push ( Vector2dOp.add(iPtArray[wi], wIntScaledOffset));
                 }
                 else if (1 == iOption){
-                    var wIntOffset = Vector2dOp.getRotate(wOffsetVector, wJointAngle);
                     var wCenter = Vector2dOp.add(iPtArray[wi], wIntOffset)
 
                     var wIntTangentVector = Vector2dOp.getRotate(wTangentVector, wJointAngle);
@@ -376,12 +376,11 @@
                     wPtArray.push ( Vector2dOp.subtract(wCenter, wIntTangentVector));
                 }
                 else if (2 == iOption){
-                    var wIntOffset = Vector2dOp.getRotate(wOffsetVector, wJointAngle);
 
                     var wTangentScale = Math.tan(wQuarterJointDelta);
                     if ((0.0 < wTangentScale*iOffset) && (7*Math.PI/8 > Math.abs(wJointDelta))) { // when Self intersecting
-                        wIntOffset = Vector2dOp.scale(wOffsetScale, wIntOffset)
-                        wPtArray.push ( Vector2dOp.add(iPtArray[wi], wIntOffset));
+                        wIntScaledOffset = Vector2dOp.scale(wOffsetScale, wIntOffset)
+                        wPtArray.push ( Vector2dOp.add(iPtArray[wi], wIntScaledOffset));
                     }
                     else {
                         var wCenter = Vector2dOp.add(iPtArray[wi], wIntOffset)
