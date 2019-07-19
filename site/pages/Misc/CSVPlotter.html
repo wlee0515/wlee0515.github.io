@@ -36,11 +36,31 @@
       }
     }
 
+    function knobAction(iAxis, iAction , iInputDOM) {
+      if (("x1" == iAxis)||("x2" == iAxis)){
+        if ("scale" == iAction) {
+          gGraph.setHorizontalAxisScale(iAxis, iInputDOM.value);
+        }
+        else if ("offset" == iAction) {
+          gGraph.setHorizontalAxisOffset(iAxis, iInputDOM.value)
+        }
+      }
+      else {
+        if ("scale" == iAction) {
+          gGraph.setVertticalAxisScale(iAxis, iInputDOM.value);
+        }
+        else if ("offset" == iAction) {
+          gGraph.setVertticalAxisOffset(iAxis, iInputDOM.value)
+        }
+      }
+
+      updateDisplay();
+    }
   </script>
 
   <style>
     body {
-      background-color: rgb(0, 0, 0);
+      background-color: rgb(255, 255, 255);
       padding: 0px;
       margin:0px;
       overflow: hidden;
@@ -78,20 +98,20 @@
   </div>
   <div id="id_control_knob_div">
     <div id="id_control_knob_div_axis_x1">
-        <span>X1-Offset</span><input type="number" class="class_input_knob" onchange="knobAction('x1','offset')"  value="0.0"/>
-        <span>X1-Scale</span><input type="number" class="class_input_knob" onchange="knobAction('x1','scale')" value="1.0"/>
+        <span>X1-Offset</span><input type="number" class="class_input_knob" onchange="knobAction('x1','offset',this)"  value="0.0"/>
+        <span>X1-Scale</span><input type="number" class="class_input_knob" onchange="knobAction('x1','scale',this)" value="1.0"/>
     </div>
     <div id="id_control_knob_div_axis_x2">
-        <span>X2-Offset</span><input type="number" class="class_input_knob" onchange="knobAction('x2','offset')"  value="0.0"/>
-        <span>X2-Scale</span><input type="number" class="class_input_knob" onchange="knobAction('x2','scale')" value="1.0"/>
+        <span>X2-Offset</span><input type="number" class="class_input_knob" onchange="knobAction('x2','offset',this)"  value="0.0"/>
+        <span>X2-Scale</span><input type="number" class="class_input_knob" onchange="knobAction('x2','scale',this)" value="1.0"/>
     </div>
     <div id="id_control_knob_div_axis_y1">
-        <span>Y1-Offset</span><input type="number" class="class_input_knob" onchange="knobAction('y1','offset')" value="0.0"/>
-        <span>Y1-Scale</span><input type="number" class="class_input_knob" onchange="knobAction('y1','scale')" value="1.0"/>
+        <span>Y1-Offset</span><input type="number" class="class_input_knob" onchange="knobAction('y1','offset',this)" value="0.0"/>
+        <span>Y1-Scale</span><input type="number" class="class_input_knob" onchange="knobAction('y1','scale',this)" value="1.0"/>
     </div>
     <div id="id_control_knob_div_axis_y2">
-        <span>Y2-Offset</span><input type="number" class="class_input_knob" onchange="knobAction('y2','offset')" value="0.0"/>
-        <span>Y2-Scale</span><input type="number" class="class_input_knob" onchange="knobAction('y2','scale')" value="1.0"/>
+        <span>Y2-Offset</span><input type="number" class="class_input_knob" onchange="knobAction('y2','offset',this)" value="0.0"/>
+        <span>Y2-Scale</span><input type="number" class="class_input_knob" onchange="knobAction('y2','scale',this)" value="1.0"/>
     </div>
   </div>
 </body>
