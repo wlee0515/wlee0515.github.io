@@ -75,7 +75,7 @@
       if (null != wCanvas) {
         clearCanvas(wCanvas);
         var zoom = Math.pow(2, gZoom);
-        drawCanvasCenteredAt(wCanvas, drawCanvas, wCanvas.width / 2 - zoom * gEndPointX, wCanvas.height / 2 - zoom * gEndPointY, 0, zoom);
+        drawCanvasCenteredAt(wCanvas, drawCanvas, wCanvas.width / 2 - zoom * gEndPointX, wCanvas.height / 2 - zoom * gEndPointY, zoom, zoom, 0);
       }
     }
 
@@ -207,7 +207,7 @@
             wCtx.lineWidth = 1;
             drawArrow(iDOM, 1, 90, 3, 10);
 
-          }, wXBase, wYBase, wAngle, wScale);
+          }, wXBase, wYBase, wScale, wScale, wAngle);
         }
 
         wXBase += wReal;

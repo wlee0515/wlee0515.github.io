@@ -1,0 +1,99 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
+  <title>CSV Plotter</title>
+  <script type="text/javascript" src="../../javascript/commonCanvasFunction.js"></script>
+  <script type="text/javascript" src="../../javascript/Graph.js"></script>
+  <script>
+
+    var gCanvasDOMId = "OuputCanvas";
+    var gGraph = new Graph();
+
+    function formCallBack(e) {
+      alert(JSON.stringify(e));
+    }
+
+    function init() {
+      resize();
+    }
+
+    function resize() {
+      var wCanvas = document.getElementById(gCanvasDOMId);
+      resizeCanvas(wCanvas);
+      updateDisplay();
+    }
+
+    
+    function updateDisplay() {
+      var wCanvas = document.getElementById(gCanvasDOMId);
+      if (null != wCanvas) {
+        clearCanvas(wCanvas);
+        drawCanvasCenteredAt(wCanvas, function(iDOM) {
+          gGraph.renderCanvas(iDOM);
+        }, wCanvas.width / 2, wCanvas.height / 2, 1, -1);
+      }
+    }
+
+  </script>
+
+  <style>
+    body {
+      background-color: rgb(0, 0, 0);
+      padding: 0px;
+      margin:0px;
+      overflow: hidden;
+    }
+
+    #id_display_div {
+      height: 100vh;
+      width: 100vw;
+    }
+
+    canvas {
+      border: 1px solid blue;
+    }
+
+    #id_control_knob_div {
+      position: fixed;
+      top:  0px;
+      right: 0px;
+      padding: 3px;
+      background-color: rgba(255,255,255,0.75);
+    }
+
+    .class_input_knob {
+      height: 20px;
+      width: 40px;
+      scroll-behavior: smooth;
+    }
+
+  </style>
+</head>
+
+<body onload="init()" onresize="resize()">
+  <div id="id_display_div">
+    <canvas id="OuputCanvas""></canvas>
+  </div>
+  <div id="id_control_knob_div">
+    <div id="id_control_knob_div_axis_x1">
+        <span>X1-Offset</span><input type="number" class="class_input_knob" onchange="knobAction('x1','offset')"  value="0.0"/>
+        <span>X1-Scale</span><input type="number" class="class_input_knob" onchange="knobAction('x1','scale')" value="1.0"/>
+    </div>
+    <div id="id_control_knob_div_axis_x2">
+        <span>X2-Offset</span><input type="number" class="class_input_knob" onchange="knobAction('x2','offset')"  value="0.0"/>
+        <span>X2-Scale</span><input type="number" class="class_input_knob" onchange="knobAction('x2','scale')" value="1.0"/>
+    </div>
+    <div id="id_control_knob_div_axis_y1">
+        <span>Y1-Offset</span><input type="number" class="class_input_knob" onchange="knobAction('y1','offset')" value="0.0"/>
+        <span>Y1-Scale</span><input type="number" class="class_input_knob" onchange="knobAction('y1','scale')" value="1.0"/>
+    </div>
+    <div id="id_control_knob_div_axis_y2">
+        <span>Y2-Offset</span><input type="number" class="class_input_knob" onchange="knobAction('y2','offset')" value="0.0"/>
+        <span>Y2-Scale</span><input type="number" class="class_input_knob" onchange="knobAction('y2','scale')" value="1.0"/>
+    </div>
+  </div>
+</body>
+
+</html>

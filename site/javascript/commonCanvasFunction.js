@@ -10,23 +10,24 @@ function clearCanvas(iDOM) {
   wCtx.clearRect(0, 0, iDOM.width, iDOM.height);
 }
 
-function drawCanvasCenteredAt(iDOM, iDrawFunction, iTranslateX, iTranslateY, iRotation, iScale) {
+function drawCanvasCenteredAt(iDOM, iDrawFunction, iTranslateX = 0, iTranslateY = 0, iScaleX = 1.0, iScaleY = 1.0, iRotation = 0) {
 
   var wXTranslate = iTranslateX;
   var wYTranslate = iTranslateY;
+  var wScaleX = iScaleX;
+  var wScaleY = iScaleY;
   var wRotate = iRotation;
-  var wScale = iScale;
 
   var wCtx = iDOM.getContext("2d");
 
   wCtx.translate(wXTranslate, wYTranslate);
-  wCtx.scale(wScale, wScale);
+  wCtx.scale(wScaleX, wScaleY);
   wCtx.rotate(wRotate);
 
   iDrawFunction(iDOM);
 
   wCtx.rotate(-wRotate);
-  wCtx.scale(1 / wScale, 1 / wScale);
+  wCtx.scale(1 / wScaleX, 1 / wScaleY);
   wCtx.translate(-wXTranslate, -wYTranslate);
 }
 
