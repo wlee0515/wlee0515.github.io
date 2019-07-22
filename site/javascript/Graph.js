@@ -61,7 +61,7 @@ function GraphAxis() {
 function GraphLine() {
   this.mData = [];
   this.mColor = "#000000";
-  this.mXAxisDataIndex = "";
+  this.mXAxisDataIndex = "Data_Index";
   this.mXAxisIndex = "";
   this.mYAxisIndex = "";
   
@@ -116,6 +116,7 @@ function Graph() {
   this.mVerticalAxis = [];
   this.mHorizontalAxis = [];
   this.mGraphLine = [];
+  this.mGraphLine["Data_Index"] = new GraphLine();
 
   this.mCanvasList = [];
 
@@ -294,12 +295,18 @@ function Graph() {
           if (null != this.mHorizontalAxis[wLine.mXAxisIndex]) {
             wXAxisRef = this.mHorizontalAxis[wLine.mXAxisIndex];
           }
+          else {
+            wLine.mXAxisIndex = wDefaultAxisX;
+          }
         }
 
         if ("" != wLine.mYAxisIndex) {
           if (null != this.mVerticalAxis[wLine.mXAxisIndex]) {
             wYAxisRef = this.mVerticalAxis[wLine.mXAxisIndex];
           }  
+          else {
+            wLine.mXAxisIndex = wDefaultAxisY;
+          }
         }
 
         if ((null == wXAxisRef) || (null == wYAxisRef)) {
@@ -307,10 +314,13 @@ function Graph() {
         }
         
         var wUseIndex = true;
-        
-        var wXData = this.mGraphLine[wLine.mXAxisDataIndex];
-        if (null != wXData) {
-          wUseIndex = false;
+        var wXData = null;
+
+        if ("Data_Index" != wLine.mXAxisDataIndex) {
+          var wXData = this.mGraphLine[wLine.mXAxisDataIndex];
+          if (null != wXData) {
+            wUseIndex = false;
+          }  
         }
 
         var wXScale = wBaseScale * wXAxisRef.mScale;

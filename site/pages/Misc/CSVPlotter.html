@@ -74,6 +74,10 @@
 
     function init() {
 
+      gGraph.setAxisAttribute(true, "X1");
+      gGraph.setAxisAttribute(false, "Y2");
+      gGraph.setLineAttribute("Line2","data",YTest );
+
       gGraph.setLineAttribute("Line1","data",XTest );
       gGraph.setLineAttribute("Line2","data",YTest );
 
@@ -134,6 +138,30 @@
       }
     }
 
+    function lineKnobAction(iLine, iInputDOM) {
+      gGraph.setLineAttribute( iLine, iInputDOM.name, iInputDOM.value);
+      updateDisplay();
+    }
+
+    function selectorLineKnobAction(iLineSelectorId, iInputDOM) {
+      var wSelector = document.getElementById(iLineSelectorId);
+      if (null != wSelector) {
+        lineKnobAction(wSelector.value, iInputDOM);
+      }
+    }
+
+    function selectorLineUpdate(iSelectorDOM) {
+      var wParent = iSelectorDOM.parentElement;
+      var wKnobDOMList = wParent.getElementsByClassName("class_input_knob");
+
+      for (wKey in wKnobDOMList) {
+        var wKnob = wKnobDOMList[wKey];
+        var wValue = gGraph.getAxisAttribute(wIsHorizontal, iSelectorDOM.value, wKnob.name);
+        if (null != wValue) {
+          wKnob.value = wValue;
+        }
+      }  
+    }
   </script>
 
   <style>
@@ -174,7 +202,7 @@
     <canvas id="OuputCanvas""></canvas>
   </div>
   <div id="id_control_knob_div">
-      <div>
+      <div id="id_control_knob_axis_div">
         <select id="id_control_knob_div_axis_selector" onchange="selectorKnobUpdate(this)">
           <option value="x1">X1</option>
           <option value="x2">X2</option>
@@ -194,6 +222,31 @@
         <input type="color" name="color" class="class_input_knob"
           onchange="selectorKnobAction('id_control_knob_div_axis_selector',this)" />
       </div>
+      <div id="id_control_knob_line_div">
+        <select id="id_control_knob_div_line_selector" onchange="selectorLineUpdate(this)">
+          <option value="x1">X1</option>
+          <option value="x2">X2</option>
+          <option value="y1">Y1</option>
+          <option value="y2">Y2</option>
+        </select>
+        
+        <span>X-Axis</span>
+        <select name="XAxisIndex" class="class_input_knob" 
+        onchange="selectorLineKnobAction('id_control_knob_div_line_selector', this)"></select>
+
+        <span>Y-Axis</span>
+        <select name="YAxisIndex" class="class_input_knob" 
+        onchange="selectorLineKnobAction('id_control_knob_div_line_selector', this)"></select>
+
+        <span>X-Data</span>
+        <select name="XAxisDataIndex" class="class_input_knob" 
+        onchange="selectorLineKnobAction('id_control_knob_div_line_selector', this)"></select>
+
+        <span>Color</span>
+        <input type="color" name="color" class="class_input_knob"
+          onchange="lineAction('id_control_knob_div_axis_selector',this)" />
+      </div>
+
   </div>
 </body>
 
