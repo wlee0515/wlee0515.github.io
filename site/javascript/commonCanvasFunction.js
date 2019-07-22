@@ -133,4 +133,116 @@ function drawPolyLineXY(iDOM, iPointArray, iXScale = 1.0, iYScale = 1.0, iXOffse
   wCtx.lineJoin = "round";
   wCtx.stroke();
 }
+
+
+function drawNumberLine(iDOM, iStartX, iStartY, iEndX, iEndY, iRefX, iRefY, iRefValue=0, iUnitScale=1, iMajorIncrement=5, iMinorIncrement=1,iMajorLength=2, iMinorLength =1,iMajorLineWidth=2, iMinorLineWidth =1) {
+
+  var wDirection = {
+    x : iEndX - iStartX,
+    y : iEndY - iStartY
+  }
+
+  var wTotalMag = Math.sqrt(wDirection.x*wDirection.x + wDirection.y*wDirection.y);
+
+  wDirection.x /= wTotalMag;
+  wDirection.y /= wTotalMag;
+
+  var wRefDirection = {
+    x : iRefX - iStartX,
+    y : iRefY - iStartY
+  }
+
+  var wDot = wRefDirection.x*wDirection.x + wRefDirection.y*wDirection.y;
+  var wClosestPointOnLine = {
+    x : wDot*wDirection.x,
+    y : wDot*wDirection.y
+  }
+
+  var wRefMag = Math.sqrt(wClosestPointOnLine.x*wClosestPointOnLine.x + wClosestPointOnLine.y*wClosestPointOnLine.y);
+  var wInvertRefMag = wTotalMag - wRefMag;
+  if (wDot <= 0) {
+    wInvertRefMag = wTotalMag + wRefMag;
+  }
+
+  var wPerpendicular = {
+    x : wRefDirection.x - wClosestPointOnLine.x,
+    y : wRefDirection.y - wClosestPointOnLine.y
+  }
+
+  var wPerpendicularMag = Math.sqrt(wPerpendicular.x*wPerpendicular.x + wPerpendicular.y*wPerpendicular.y);
+  wPerpendicular.x /= wPerpendicularMag;
+  wPerpendicular.y /= wPerpendicularMag;
+
+  var wCtx = iDOM.getContext("2d");
+
+  if (0 != iMinorIncrement)
+  {
+    var wPixelJump = Math.abs(iUnitScale)*iMinorIncrement;
+    var wPixelJumpVector = {
+      x : wPixelJump*wDirection.x,
+      y : wPixelJump*wDirection.y
+    }
+
+    var wForwardCount = parseInt(Math.ceil(wInvertRefMag/wPixelJump));
+    var wBackwardCount = parseInt(Math.ceil(wRefMag/wPixelJump));
+
+    var wMinorStartX = wClosestPointOnLine.x + iStartX;
+    var wMinorStartY = wClosestPointOnLine.y + iStartY;
+    var wMinorEndX = wClosestPointOnLine.x + iStartX + iMinorLength*wPerpendicular.x;
+    var wMinorEndY = wClosestPointOnLine.y + iStartY + iMinorLength*wPerpendicular.y;
+
+    wCtx.lineWidth = iMinorLineWidth;
+    for ( var wi = -wBackwardCount;  wi <= wForwardCount; ++wi ){
+      var wNewStartX = wMinorStartX + wi*wPixelJumpVector.x;
+      var wNewStartY = wMinorStartY + wi*wPixelJumpVector.y;
+      var wNewEndX = wMinorEndX + wi*wPixelJumpVector.x;
+      var wNewEndY = wMinorEndY + wi*wPixelJumpVector.y;
+      
+      wCtx.beginPath();
+      wCtx.moveTo(wNewStartX, wNewStartY);
+      wCtx.lineTo(wNewEndX, wNewEndY);
+      wCtx.stroke();
+    }
+  }
+
+  if (0 != iMajorIncrement)
+  {
+    var wPixelJump = Math.abs(iUnitScale)*iMajorIncrement;
+    var wPixelJumpVector = {
+      x : wPixelJump*wDirection.x,
+      y : wPixelJump*wDirection.y
+    }
+
+    var wForwardCount = parseInt(Math.ceil(wInvertRefMag/wPixelJump));
+    var wBackwardCount = parseInt(Math.ceil(wRefMag/wPixelJump));
+
+    var wMajorStartX = wClosestPointOnLine.x + iStartX;
+    var wMajorStartY = wClosestPointOnLine.y + iStartY;
+    var wMajorEndX = wClosestPointOnLine.x + iStartX + iMajorLength*wPerpendicular.x;
+    var wMajorEndY = wClosestPointOnLine.y + iStartY + iMajorLength*wPerpendicular.y;
+
+    wCtx.lineWidth = iMajorLineWidth;
+    for ( var wi = -wBackwardCount;  wi <= wForwardCount; ++wi ){
+      var wNewStartX = wMajorStartX + wi*wPixelJumpVector.x;
+      var wNewStartY = wMajorStartY + wi*wPixelJumpVector.y;
+      var wNewEndX = wMajorEndX + wi*wPixelJumpVector.x;
+      var wNewEndY = wMajorEndY + wi*wPixelJumpVector.y;
+      
+      wCtx.beginPath();
+      wCtx.moveTo(wNewStartX, wNewStartY);
+      wCtx.lineTo(wNewEndX, wNewEndY);
+      wCtx.stroke();
+      
+      wCtx.textAlign='center';
+      wCtx.textBaseline = 'middle';;
+      wCtx.fillText("" + (parseInt(iRefValue) + wi*iMajorIncrement),iRefX + wi*wPixelJumpVector.x,iRefY + wi*wPixelJumpVector.y);
+    }
+  }
+
+  wCtx.lineWidth = iMajorLineWidth;
+  wCtx.beginPath();
+  wCtx.moveTo(iStartX, iStartY);
+  wCtx.lineTo(iEndX, iEndY);
+  wCtx.stroke();
+}
 -->

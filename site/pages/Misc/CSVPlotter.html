@@ -11,11 +11,74 @@
     var gCanvasDOMId = "OuputCanvas";
     var gGraph = new Graph();
 
+    var XTest = [
+      1
+      , 0.9921147013
+      , 0.9685831611
+      , 0.9297764859
+      , 0.87630668
+      , 0.8090169944
+      , 0.7289686274
+      , 0.6374239897
+      , 0.535826795
+      , 0.4257792916
+      , 0.3090169944
+      , 0.1873813146
+      , 0.06279051953
+      , -0.06279051953
+      , -0.1873813146
+      , -0.3090169944
+      , -0.4257792916
+      , -0.535826795
+      , -0.6374239897
+      , -0.7289686274
+      , -0.8090169944
+      , -0.87630668
+      , -0.9297764859
+      , -0.9685831611
+      , -0.9921147013
+      , -1
+    ];
+
+    var YTest = [
+    0
+, 0.1
+, 0.4
+, 0.9
+, 1.6
+, 2.5
+, 3.6
+, 4.9
+, 6.4
+, 8.1
+, 10
+, 12.1
+, 14.4
+, 16.9
+, 19.6
+, 22.5
+, 25.6
+, 28.9
+, 32.4
+, 36.1
+, 40
+, 44.1
+, 48.4
+, 52.9
+, 57.6
+, 62.5
+    ];
     function formCallBack(e) {
       alert(JSON.stringify(e));
     }
 
     function init() {
+
+      gGraph.setLineAttribute("Line1","data",XTest );
+      gGraph.setLineAttribute("Line2","data",YTest );
+
+      gGraph.setLineAttribute("Line3","data",XTest );
+      gGraph.setLineAttribute("Line3","XAxisDataIndex","Line2" );
       resize();
     }
 
@@ -25,44 +88,59 @@
       updateDisplay();
     }
 
-    
+
     function updateDisplay() {
       var wCanvas = document.getElementById(gCanvasDOMId);
       if (null != wCanvas) {
         clearCanvas(wCanvas);
-        drawCanvasCenteredAt(wCanvas, function(iDOM) {
+        drawCanvasCenteredAt(wCanvas, function (iDOM) {
           gGraph.renderCanvas(iDOM);
-        }, wCanvas.width / 2, wCanvas.height / 2, 1, -1);
+        }, wCanvas.width / 2, wCanvas.height / 2, 1, 1);
       }
     }
 
-    function knobAction(iAxis, iAction , iInputDOM) {
-      if (("x1" == iAxis)||("x2" == iAxis)){
-        if ("scale" == iAction) {
-          gGraph.setHorizontalAxisScale(iAxis, iInputDOM.value);
-        }
-        else if ("offset" == iAction) {
-          gGraph.setHorizontalAxisOffset(iAxis, iInputDOM.value)
-        }
+    function knobAction(iAxis, iInputDOM) {
+      var wIsHorizontal = false;
+      if ("x" == iAxis[0]) {
+        wIsHorizontal = true;
       }
-      else {
-        if ("scale" == iAction) {
-          gGraph.setVertticalAxisScale(iAxis, iInputDOM.value);
-        }
-        else if ("offset" == iAction) {
-          gGraph.setVertticalAxisOffset(iAxis, iInputDOM.value)
-        }
-      }
+      gGraph.setAxisAttribute(wIsHorizontal, iAxis, iInputDOM.name, iInputDOM.value);
 
       updateDisplay();
     }
+
+    function selectorKnobAction(iAxisSelectorId, iInputDOM) {
+      var wSelector = document.getElementById(iAxisSelectorId);
+      if (null != wSelector) {
+        knobAction(wSelector.value, iInputDOM);
+      }
+    }
+
+    function selectorKnobUpdate(iSelectorDOM) {
+      var wIsHorizontal = false;
+      if ("x" == iSelectorDOM.value[0]) {
+        wIsHorizontal = true;
+      }
+
+      var wParent = iSelectorDOM.parentElement;
+      var wKnobDOMList = wParent.getElementsByClassName("class_input_knob");
+
+      for (wKey in wKnobDOMList) {
+        var wKnob = wKnobDOMList[wKey];
+        var wValue = gGraph.getAxisAttribute(wIsHorizontal, iSelectorDOM.value, wKnob.name);
+        if (null != wValue) {
+          wKnob.value = wValue;
+        }
+      }
+    }
+
   </script>
 
   <style>
     body {
       background-color: rgb(255, 255, 255);
       padding: 0px;
-      margin:0px;
+      margin: 0px;
       overflow: hidden;
     }
 
@@ -77,10 +155,10 @@
 
     #id_control_knob_div {
       position: fixed;
-      top:  0px;
+      top: 0px;
       right: 0px;
       padding: 3px;
-      background-color: rgba(255,255,255,0.75);
+      background-color: rgba(255, 255, 255, 0.75);
     }
 
     .class_input_knob {
@@ -88,7 +166,6 @@
       width: 40px;
       scroll-behavior: smooth;
     }
-
   </style>
 </head>
 
@@ -97,22 +174,26 @@
     <canvas id="OuputCanvas""></canvas>
   </div>
   <div id="id_control_knob_div">
-    <div id="id_control_knob_div_axis_x1">
-        <span>X1-Offset</span><input type="number" class="class_input_knob" onchange="knobAction('x1','offset',this)"  value="0.0"/>
-        <span>X1-Scale</span><input type="number" class="class_input_knob" onchange="knobAction('x1','scale',this)" value="1.0"/>
-    </div>
-    <div id="id_control_knob_div_axis_x2">
-        <span>X2-Offset</span><input type="number" class="class_input_knob" onchange="knobAction('x2','offset',this)"  value="0.0"/>
-        <span>X2-Scale</span><input type="number" class="class_input_knob" onchange="knobAction('x2','scale',this)" value="1.0"/>
-    </div>
-    <div id="id_control_knob_div_axis_y1">
-        <span>Y1-Offset</span><input type="number" class="class_input_knob" onchange="knobAction('y1','offset',this)" value="0.0"/>
-        <span>Y1-Scale</span><input type="number" class="class_input_knob" onchange="knobAction('y1','scale',this)" value="1.0"/>
-    </div>
-    <div id="id_control_knob_div_axis_y2">
-        <span>Y2-Offset</span><input type="number" class="class_input_knob" onchange="knobAction('y2','offset',this)" value="0.0"/>
-        <span>Y2-Scale</span><input type="number" class="class_input_knob" onchange="knobAction('y2','scale',this)" value="1.0"/>
-    </div>
+      <div>
+        <select id="id_control_knob_div_axis_selector" onchange="selectorKnobUpdate(this)">
+          <option value="x1">X1</option>
+          <option value="x2">X2</option>
+          <option value="y1">Y1</option>
+          <option value="y2">Y2</option>
+        </select>
+        <span>Offset</span>
+        <input type="number" name="offset" class="class_input_knob"
+          onchange="selectorKnobAction('id_control_knob_div_axis_selector',this)" value="0.0" />
+        <span>Scale</span>
+        <input type="number" name="scale" class="class_input_knob"
+          onchange="selectorKnobAction('id_control_knob_div_axis_selector',this)" value="1.0" />
+        <span>Position</span>
+        <input type="number" name="position" class="class_input_knob"
+          onchange="selectorKnobAction('id_control_knob_div_axis_selector',this)" value="1.0" />
+        <span>Color</span>
+        <input type="color" name="color" class="class_input_knob"
+          onchange="selectorKnobAction('id_control_knob_div_axis_selector',this)" />
+      </div>
   </div>
 </body>
 
