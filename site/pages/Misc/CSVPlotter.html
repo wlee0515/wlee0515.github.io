@@ -8,7 +8,7 @@
   <script type="text/javascript" src="../../javascript/Graph.js"></script>
   <script>
 
-    var gCanvasDOMId = "OuputCanvas";
+    var gCanvasDOMId = "OutputCanvas";
     var gGraph = new Graph();
 
     var XTest = [
@@ -199,9 +199,13 @@
 
 <body onload="init()" onresize="resize()">
   <div id="id_display_div">
-    <canvas id="OuputCanvas""></canvas>
+    <canvas id="OutputCanvas""></canvas>
   </div>
   <div id="id_control_knob_div">
+      <div>
+        <input type="file" id="fileUpload" />
+        <input type="button" id="upload" value="Upload" onclick="Upload()" />
+      </div>
       <div id="id_control_knob_axis_div">
         <select id="id_control_knob_div_axis_selector" onchange="selectorKnobUpdate(this)">
           <option value="x1">X1</option>
