@@ -84,7 +84,7 @@
           wHtmlStr += '<option value="' + wIndex + '">' + wIndex + '</option>'
         }
         var wYList = iGraph.getVerticalAxisList();
-        for (var wi = 0; wi < wXList.length; ++wi) {
+        for (var wi = 0; wi < wYList.length; ++wi) {
           var wIndex = wYList[wi];
           wHtmlStr += '<option value="' + wIndex + '">' + wIndex + '</option>'
         }
@@ -281,16 +281,21 @@
     #id_control_div {
       position: fixed;
       top: 0px;
-      right: 0px;
+      left: 0px;
       padding: 3px;
       background-color: rgba(255, 255, 255, 0.75);
     }
 
-    .class_input_knob {
+    .class_color {
       height: 20px;
-      width: 40px;
-      scroll-behavior: smooth;
+      width: 20px;
     }
+    
+    .class_number {
+      height: 20px;
+      width: 30px;
+    }
+
   </style>
 </head>
 
@@ -304,22 +309,23 @@
         <input type="button" id="upload" value="Upload" onclick="Upload()" />
       </div>
       <div id="id_control_add_axis_div">
-        <input type="button" id="upload" value="Upload" onclick="Upload()" />
+        <input type="button" value="Add X-Axis" onclick="gGraph.addHorizontalAxis()" />
+        <input type="button" value="Add Y-Axis" onclick="gGraph.addVerticalAxis()" />
       </div>
       <div id="id_control_knob_axis_div">
         <select id="id_control_knob_div_axis_selector" onchange="selectorKnobUpdate(this)">
         </select>
         <span>Offset</span>
-        <input type="number" name="offset" class="class_input_knob"
+        <input type="number" name="offset" class="class_input_knob class_number"
           onchange="selectorKnobAction('id_control_knob_div_axis_selector',this)" value="0.0" />
         <span>Scale</span>
-        <input type="number" name="scale" class="class_input_knob"
+        <input type="number" name="scale" class="class_input_knob class_number"
           onchange="selectorKnobAction('id_control_knob_div_axis_selector',this)" value="1.0" />
         <span>Position</span>
-        <input type="number" name="position" class="class_input_knob"
+        <input type="number" name="position" class="class_input_knob class_number"
           onchange="selectorKnobAction('id_control_knob_div_axis_selector',this)" value="1.0" />
         <span>Color</span>
-        <input type="color" name="color" class="class_input_knob"
+        <input type="color" name="color" class="class_input_knob class_color"
           onchange="selectorKnobAction('id_control_knob_div_axis_selector',this)" />
       </div>
       <div id="id_control_knob_line_div">
@@ -327,19 +333,19 @@
         </select>
 
         <span>X-Axis</span>
-        <select name="XAxisIndex" class="class_input_knob"
+        <select name="XAxisIndex" class="class_input_knob class_selector"
           onchange="selectorLineKnobAction('id_control_knob_div_line_selector', this)"></select>
 
         <span>Y-Axis</span>
-        <select name="YAxisIndex" class="class_input_knob"
+        <select name="YAxisIndex" class="class_input_knob class_selector"
           onchange="selectorLineKnobAction('id_control_knob_div_line_selector', this)"></select>
 
         <span>X-Data</span>
-        <select name="XAxisDataIndex" class="class_input_knob"
+        <select name="XAxisDataIndex" class="class_input_knob class_selector"
           onchange="selectorLineKnobAction('id_control_knob_div_line_selector', this)"></select>
 
         <span>Color</span>
-        <input type="color" name="color" class="class_input_knob"
+        <input type="color" name="color" class="class_input_knob class_color"
           onchange="selectorLineKnobAction('id_control_knob_div_line_selector',this)" />
       </div>
 

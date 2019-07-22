@@ -1,37 +1,35 @@
-<!--
+function calculateFourierTransformCoefficient(iOrder, iComplexFunction) {
+  var wSampleSize = 10000;
+  var wT0 = 0;
+  var wT1 = 1;
+  var wTStep = (wT1 - wT0) / wSampleSize;
 
-  function calculateFourierTransformCoefficient(iOrder, iComplexFunction) {
-    var wSampleSize = 10000;
-    var wT0 = 0;
-    var wT1 = 1;
-    var wTStep = (wT1 - wT0) / wSampleSize;
+  var wWaveLength = -1 * iOrder * 2 * Math.PI;
+  var wSum = {
+    Order: iOrder,
+    Real: 0,
+    Imaginary: 0
+  };
 
-    var wWaveLength = -1 * iOrder * 2 * Math.PI;
-    var wSum = {
-      Order: iOrder,
-      Real: 0,
-      Imaginary: 0
-    };
+  for (var wi = wT0; wi <= wT1; wi += wTStep) {
+    var wT = wi;
+    var wAngle = wWaveLength * wT;
+    var wEvaluateFunction = iComplexFunction(wT);
 
-    for (var wi = wT0; wi <= wT1; wi += wTStep) {
-      var wT = wi;
-      var wAngle = wWaveLength * wT;
-      var wEvaluateFunction = iComplexFunction(wT);
+    var wCos = Math.cos(wAngle);
+    var wSin = Math.sin(wAngle);
 
-      var wCos = Math.cos(wAngle);
-      var wSin = Math.sin(wAngle);
+    var wReal =
+      wCos * wEvaluateFunction.Real - wSin * wEvaluateFunction.Imaginary;
+    var wImaginary =
+      wSin * wEvaluateFunction.Real + wCos * wEvaluateFunction.Imaginary;
 
-      var wReal =
-        wCos * wEvaluateFunction.Real - wSin * wEvaluateFunction.Imaginary;
-      var wImaginary =
-        wSin * wEvaluateFunction.Real + wCos * wEvaluateFunction.Imaginary;
-
-      wSum.Real += wTStep * wReal;
-      wSum.Imaginary += wTStep * wImaginary;
-    }
-
-    return wSum;
+    wSum.Real += wTStep * wReal;
+    wSum.Imaginary += wTStep * wImaginary;
   }
+
+  return wSum;
+}
 
 function evaluateFourierTransformCoefficientArray(iDt, iOrder, iFourierCoefficientArray) {
 
@@ -65,6 +63,3 @@ function evaluateFourierTransformCoefficientArray(iDt, iOrder, iFourierCoefficie
     Imaginary: wY
   }
 }
-
-
--->

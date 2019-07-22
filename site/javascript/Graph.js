@@ -1,17 +1,17 @@
 var eAxisAttributeName = {
-  Scale : "scale",
-  Offset : "offset",
-  Position : "position",
-  Color : "color",
+  Scale: "scale",
+  Offset: "offset",
+  Position: "position",
+  Color: "color",
 }
 
-var eLineAttributeName = {  
-  DataIndexLineName : "Data_Index",
-  Data : "data",
-  Color : "color",
-  XAxisDataIndex : "XAxisDataIndex",
-  XAxisIndex : "XAxisIndex",
-  YAxisIndex : "YAxisIndex",
+var eLineAttributeName = {
+  DataIndexLineName: "Data_Index",
+  Data: "data",
+  Color: "color",
+  XAxisDataIndex: "XAxisDataIndex",
+  XAxisIndex: "XAxisIndex",
+  YAxisIndex: "YAxisIndex",
 }
 
 function GraphAxis() {
@@ -19,8 +19,8 @@ function GraphAxis() {
   this.mOffset = 0.0;
   this.mPosition = 0.0;
   this.mColor = "#000000";
-  
-  this.setAxisAttribute = function(iAttribute, iValue) {
+
+  this.setAxisAttribute = function (iAttribute, iValue) {
 
     if (eAxisAttributeName.Scale == iAttribute) {
       this.mScale = parseFloat(iValue);
@@ -41,7 +41,7 @@ function GraphAxis() {
     return false;
   }
 
-  this.getAxisAttribute = function(iAttribute) {
+  this.getAxisAttribute = function (iAttribute) {
 
     if (eAxisAttributeName.Scale == iAttribute) {
       return this.mScale;
@@ -65,8 +65,8 @@ function GraphLine() {
   this.mXAxisDataIndex = eLineAttributeName.DataIndexLineName;
   this.mXAxisIndex = "";
   this.mYAxisIndex = "";
-  
-  this.setLineAttribute = function(iAttribute, iValue) {
+
+  this.setLineAttribute = function (iAttribute, iValue) {
 
     if (eLineAttributeName.Data == iAttribute) {
       this.mData = iValue;
@@ -81,17 +81,17 @@ function GraphLine() {
       return true;
     }
     else if (eLineAttributeName.XAxisIndex == iAttribute) {
-      this.XAxisIndex = iValue;
+      this.mXAxisIndex = iValue;
       return true;
     }
     else if (eLineAttributeName.YAxisIndex == iAttribute) {
-      this.YAxisIndex = iValue;
+      this.mYAxisIndex = iValue;
       return true;
     }
     return false;
   }
 
-  this.getLineAttribute = function(iAttribute) {
+  this.getLineAttribute = function (iAttribute) {
 
     if (eLineAttributeName.Data == iAttribute) {
       return this.mData;
@@ -110,14 +110,14 @@ function GraphLine() {
     }
     return null;
   }
-} 
-  
+}
+
 function Graph() {
 
   this.mVerticalAxis = [];
   this.mHorizontalAxis = [];
   this.mGraphLine = [];
-  this.mGraphLine["Data_Index"] = new GraphLine();
+  this.mGraphLine[eLineAttributeName.DataIndexLineName] = new GraphLine();
 
   this.mNewVerticalAxisCallback = null;
   this.mRemoveVerticalAxisCallback = null;
@@ -126,27 +126,27 @@ function Graph() {
   this.mNewLineCallback = null;
   this.mRemoveLineCallback = null;
 
-  this.setNewVerticalAxisCallback = function(iCallback) {
+  this.setNewVerticalAxisCallback = function (iCallback) {
     this.mNewVerticalAxisCallback = iCallback;
   }
 
-  this.setRemoveVerticalAxisCallback = function(iCallback) {
+  this.setRemoveVerticalAxisCallback = function (iCallback) {
     this.mRemoveVerticalAxisCallback = iCallback;
   }
 
-  this.setNewHorizontalAxisCallback = function(iCallback) {
+  this.setNewHorizontalAxisCallback = function (iCallback) {
     this.mNewHorizontalAxisCallback = iCallback;
   }
 
-  this.setRemoveHorizontalAxisCallback = function(iCallback) {
+  this.setRemoveHorizontalAxisCallback = function (iCallback) {
     this.mRemoveHorizontalAxisCallback = iCallback;
   }
 
-  this.setNewLineCallback = function(iCallback) {
+  this.setNewLineCallback = function (iCallback) {
     this.mNewLineCallback = iCallback;
   }
 
-  this.setRemoveLineCallback = function(iCallback) {
+  this.setRemoveLineCallback = function (iCallback) {
     this.mRemoveLineCallback = iCallback;
   }
 
@@ -157,7 +157,7 @@ function Graph() {
     }
     return wList;
   }
-  
+
   this.getHorizontalAxisList = function () {
     var wList = [];
     for (key in this.mHorizontalAxis) {
@@ -165,8 +165,8 @@ function Graph() {
     }
     return wList;
   }
-  
-  this.getGraphLineList = function (iIncludeIndex=false) {
+
+  this.getGraphLineList = function (iIncludeIndex = false) {
     var wList = [];
     for (key in this.mGraphLine) {
       if (false == iIncludeIndex) {
@@ -180,15 +180,23 @@ function Graph() {
   }
 
   this.addVerticalAxis = function (iAxisIndex = null) {
-    if (null == iAxisIndex ) {
-      iAxisIndex = "Y" + this.mVerticalAxis.length;
+    if (null == iAxisIndex) {
+      var wCounter = 0;
+      for (key in this.mVerticalAxis) {
+        wCounter++;
+      }
+      iAxisIndex = "Y" + wCounter;
     }
     return this.getVerticalAxis(iAxisIndex);
   }
 
-  this.addHorizontalAxis = function (iAxisIndex) {
-    if (null == iAxisIndex ) {
-      iAxisIndex = "Y" + this.mVerticalAxis.length;
+  this.addHorizontalAxis = function (iAxisIndex = null) {
+    if (null == iAxisIndex) {
+      var wCounter = 0;
+      for (key in this.mHorizontalAxis) {
+        wCounter++;
+      }
+      iAxisIndex = "X" + wCounter;
     }
     return this.getHorizontalAxis(iAxisIndex);
   }
@@ -244,7 +252,7 @@ function Graph() {
     }
   }
 
-  this.setAxisAttribute = function(iIsHorizontalAxis, iAxisIndex, iAttribute, iValue) {
+  this.setAxisAttribute = function (iIsHorizontalAxis, iAxisIndex, iAttribute, iValue) {
     var wAxisRef = null;
     if (true == iIsHorizontalAxis) {
       wAxisRef = this.getHorizontalAxis(iAxisIndex);
@@ -254,13 +262,13 @@ function Graph() {
     }
 
     if (null != wAxisRef) {
-      return  wAxisRef.setAxisAttribute(iAttribute, iValue);
+      return wAxisRef.setAxisAttribute(iAttribute, iValue);
     }
 
     return false;
   }
-  
-  this.getAxisAttribute = function(iIsHorizontalAxis, iAxisIndex, iAttribute) {
+
+  this.getAxisAttribute = function (iIsHorizontalAxis, iAxisIndex, iAttribute) {
     var wAxisRef = null;
     if (true == iIsHorizontalAxis) {
       wAxisRef = this.mHorizontalAxis[iAxisIndex];
@@ -270,29 +278,29 @@ function Graph() {
     }
 
     if (null != wAxisRef) {
-      return  wAxisRef.getAxisAttribute(iAttribute);
+      return wAxisRef.getAxisAttribute(iAttribute);
     }
-    
+
     return null;
   }
 
-  this.setLineAttribute = function(iLineIndex, iAttribute, iValue) {
+  this.setLineAttribute = function (iLineIndex, iAttribute, iValue) {
     var wLineRef = this.getGraphLine(iLineIndex);
 
     if (null != wLineRef) {
-      return  wLineRef.setLineAttribute(iAttribute, iValue);
+      return wLineRef.setLineAttribute(iAttribute, iValue);
     }
 
     return false;
   }
-  
-  this.getLineAttribute = function(iLineIndex, iAttribute) {
+
+  this.getLineAttribute = function (iLineIndex, iAttribute) {
     var wLineRef = this.mGraphLine[iLineIndex];
 
     if (null != wLineRef) {
-      return  wLineRef.getLineAttribute(iAttribute);
+      return wLineRef.getLineAttribute(iAttribute);
     }
-    
+
     return null;
   }
 
@@ -330,11 +338,11 @@ function Graph() {
     var wMinorLineWidth = 0.5;
 
     var wDefaultAxisX = "";
-    
+
     for (key in this.mHorizontalAxis) {
       var wAxis = this.mHorizontalAxis[key];
       if (null != wAxis) {
-        
+
         if ("" == wDefaultAxisX) {
           wDefaultAxisX = key;
         }
@@ -375,11 +383,11 @@ function Graph() {
       if (key == eLineAttributeName.DataIndexLineName) {
         continue;
       }
-      
+
       var wLine = this.mGraphLine[key];
       if (null != wLine) {
 
-        if ((null == wLine.mData) || ( 0 == wLine.mData.length)) {
+        if ((null == wLine.mData) || (0 == wLine.mData.length)) {
           continue;
         }
         var wXAxisRef = this.mHorizontalAxis[wDefaultAxisX];
@@ -395,18 +403,18 @@ function Graph() {
         }
 
         if ("" != wLine.mYAxisIndex) {
-          if (null != this.mVerticalAxis[wLine.mXAxisIndex]) {
-            wYAxisRef = this.mVerticalAxis[wLine.mXAxisIndex];
-          }  
+          if (null != this.mVerticalAxis[wLine.mYAxisIndex]) {
+            wYAxisRef = this.mVerticalAxis[wLine.mYAxisIndex];
+          }
           else {
-            wLine.mXAxisIndex = wDefaultAxisY;
+            wLine.mYAxisIndex = wDefaultAxisY;
           }
         }
 
         if ((null == wXAxisRef) || (null == wYAxisRef)) {
           continue;
         }
-        
+
         var wXData = this.mGraphLine[wLine.mXAxisDataIndex];
         if (null == wXData) {
           var wXData = this.mGraphLine[eLineAttributeName.DataIndexLineName];
@@ -422,11 +430,11 @@ function Graph() {
         var wXOffset = wXAxisRef.mOffset;
         var wYScale = wBaseScale * wYAxisRef.mScale;
         var wYOffset = wYAxisRef.mOffset;
-      
+
         wCtx.strokeStyle = wLine.mColor;
         drawPolyLineXYArray(iCanvasDOM, wXData.mData, wLine.mData,
           wXScale, -wYScale,
-          wXScale*wXOffset, wYScale*wYOffset);
+          wXScale * wXOffset, wYScale * wYOffset);
       }
     }
   }
