@@ -41,48 +41,105 @@
     ];
 
     var YTest = [
-    0
-, 0.1
-, 0.4
-, 0.9
-, 1.6
-, 2.5
-, 3.6
-, 4.9
-, 6.4
-, 8.1
-, 10
-, 12.1
-, 14.4
-, 16.9
-, 19.6
-, 22.5
-, 25.6
-, 28.9
-, 32.4
-, 36.1
-, 40
-, 44.1
-, 48.4
-, 52.9
-, 57.6
-, 62.5
+      0
+      , 0.1
+      , 0.4
+      , 0.9
+      , 1.6
+      , 2.5
+      , 3.6
+      , 4.9
+      , 6.4
+      , 8.1
+      , 10
+      , 12.1
+      , 14.4
+      , 16.9
+      , 19.6
+      , 22.5
+      , 25.6
+      , 28.9
+      , 32.4
+      , 36.1
+      , 40
+      , 44.1
+      , 48.4
+      , 52.9
+      , 57.6
+      , 62.5
     ];
     function formCallBack(e) {
       alert(JSON.stringify(e));
     }
 
+    function updateControls(iGraph, iIndex) {
+      var wAxisSelector = document.getElementById('id_control_knob_div_axis_selector');
+      var wLineSelector = document.getElementById('id_control_knob_div_line_selector');
+
+      if (null != wAxisSelector) {
+        var wHtmlStr = "";
+        var wXList = iGraph.getHorizontalAxisList();
+        for (var wi = 0; wi < wXList.length; ++wi) {
+          var wIndex = wXList[wi];
+          wHtmlStr += '<option value="' + wIndex + '">' + wIndex + '</option>'
+        }
+        var wYList = iGraph.getVerticalAxisList();
+        for (var wi = 0; wi < wXList.length; ++wi) {
+          var wIndex = wYList[wi];
+          wHtmlStr += '<option value="' + wIndex + '">' + wIndex + '</option>'
+        }
+
+        wAxisSelector.innerHTML = wHtmlStr;
+        selectorKnobUpdate(wAxisSelector);
+      }
+
+      if (null != wLineSelector) {
+        var wHtmlStr = "";
+        var wGraphLineList = iGraph.getGraphLineList();
+        for (var wi = 0; wi < wGraphLineList.length; ++wi) {
+          var wIndex = wGraphLineList[wi];
+          wHtmlStr += '<option value="' + wIndex + '">' + wIndex + '</option>'
+        }
+
+        wLineSelector.innerHTML = wHtmlStr;
+        selectorLineUpdate(wLineSelector);
+      }
+
+      /*
+      var wParent = iSelectorDOM.parentElement;
+            var wKnobDOMList = wParent.getElementsByClassName("class_input_knob");
+      
+            for (wKey in wKnobDOMList) {
+              var wKnob = wKnobDOMList[wKey];
+              var wValue = gGraph.getAxisAttribute(wIsHorizontal, iSelectorDOM.value, wKnob.name);
+              if (null != wValue) {
+                wKnob.value = wValue;
+              }
+            }  
+      */
+
+    }
+
     function init() {
 
-      gGraph.setAxisAttribute(true, "X1");
-      gGraph.setAxisAttribute(false, "Y2");
-      gGraph.setLineAttribute("Line2","data",YTest );
+      gGraph.setNewVerticalAxisCallback(updateControls);
+      gGraph.setRemoveVerticalAxisCallback(updateControls);
+      gGraph.setNewHorizontalAxisCallback(updateControls);
+      gGraph.setRemoveHorizontalAxisCallback(updateControls);
+      gGraph.setNewLineCallback(updateControls);
+      gGraph.setRemoveLineCallback(updateControls);
 
-      gGraph.setLineAttribute("Line1","data",XTest );
-      gGraph.setLineAttribute("Line2","data",YTest );
 
-      gGraph.setLineAttribute("Line3","data",XTest );
-      gGraph.setLineAttribute("Line3","XAxisDataIndex","Line2" );
+      gGraph.addHorizontalAxis("X-Axis");
+      gGraph.addVerticalAxis("Y-Axis");
+
+      gGraph.setLineAttribute("Line2", "data", YTest);
+
+      gGraph.setLineAttribute("Line1", "data", XTest);
+      gGraph.setLineAttribute("Line2", "data", YTest);
+
+      gGraph.setLineAttribute("Line3", "data", XTest);
+      gGraph.setLineAttribute("Line3", "XAxisDataIndex", "Line2");
       resize();
     }
 
@@ -105,7 +162,7 @@
 
     function knobAction(iAxis, iInputDOM) {
       var wIsHorizontal = false;
-      if ("x" == iAxis[0]) {
+      if (("X" == iAxis[0]) || ("x" == iAxis[0])) {
         wIsHorizontal = true;
       }
       gGraph.setAxisAttribute(wIsHorizontal, iAxis, iInputDOM.name, iInputDOM.value);
@@ -122,7 +179,8 @@
 
     function selectorKnobUpdate(iSelectorDOM) {
       var wIsHorizontal = false;
-      if ("x" == iSelectorDOM.value[0]) {
+
+      if (("X" == iSelectorDOM.value[0]) || ("x" == iSelectorDOM.value[0])) {
         wIsHorizontal = true;
       }
 
@@ -139,7 +197,7 @@
     }
 
     function lineKnobAction(iLine, iInputDOM) {
-      gGraph.setLineAttribute( iLine, iInputDOM.name, iInputDOM.value);
+      gGraph.setLineAttribute(iLine, iInputDOM.name, iInputDOM.value);
       updateDisplay();
     }
 
@@ -156,11 +214,50 @@
 
       for (wKey in wKnobDOMList) {
         var wKnob = wKnobDOMList[wKey];
-        var wValue = gGraph.getAxisAttribute(wIsHorizontal, iSelectorDOM.value, wKnob.name);
+
+        if ("XAxisDataIndex" == wKnob.name) {
+          var wHtmlStr = "";
+          var wGraphLineList = gGraph.getGraphLineList(true);
+          for (var wi = 0; wi < wGraphLineList.length; ++wi) {
+            var wIndex = wGraphLineList[wi];
+            if (wIndex == iSelectorDOM.value) {
+              continue;
+            }
+            wHtmlStr += '<option value="' + wIndex + '">' + wIndex + '</option>'
+          }
+
+          wKnob.innerHTML = wHtmlStr;
+        }
+
+        else if ("XAxisIndex" == wKnob.name) {
+          var wHtmlStr = "";
+          var wAxisList = gGraph.getHorizontalAxisList();
+          for (var wi = 0; wi < wAxisList.length; ++wi) {
+            var wIndex = wAxisList[wi];
+            wHtmlStr += '<option value="' + wIndex + '">' + wIndex + '</option>'
+          }
+
+          wKnob.innerHTML = wHtmlStr;
+
+        }
+        else if ("YAxisIndex" == wKnob.name) {
+          var wHtmlStr = "";
+          var wAxisList = gGraph.getVerticalAxisList();
+          for (var wi = 0; wi < wAxisList.length; ++wi) {
+            var wIndex = wAxisList[wi];
+            wHtmlStr += '<option value="' + wIndex + '">' + wIndex + '</option>'
+          }
+
+          wKnob.innerHTML = wHtmlStr;
+
+
+        }
+
+        var wValue = gGraph.getLineAttribute(iSelectorDOM.value, wKnob.name);
         if (null != wValue) {
           wKnob.value = wValue;
         }
-      }  
+      }
     }
   </script>
 
@@ -181,7 +278,7 @@
       border: 1px solid blue;
     }
 
-    #id_control_knob_div {
+    #id_control_div {
       position: fixed;
       top: 0px;
       right: 0px;
@@ -201,17 +298,16 @@
   <div id="id_display_div">
     <canvas id="OutputCanvas""></canvas>
   </div>
-  <div id="id_control_knob_div">
+  <div id="id_control_div">
       <div>
         <input type="file" id="fileUpload" />
         <input type="button" id="upload" value="Upload" onclick="Upload()" />
       </div>
+      <div id="id_control_add_axis_div">
+        <input type="button" id="upload" value="Upload" onclick="Upload()" />
+      </div>
       <div id="id_control_knob_axis_div">
         <select id="id_control_knob_div_axis_selector" onchange="selectorKnobUpdate(this)">
-          <option value="x1">X1</option>
-          <option value="x2">X2</option>
-          <option value="y1">Y1</option>
-          <option value="y2">Y2</option>
         </select>
         <span>Offset</span>
         <input type="number" name="offset" class="class_input_knob"
@@ -228,27 +324,23 @@
       </div>
       <div id="id_control_knob_line_div">
         <select id="id_control_knob_div_line_selector" onchange="selectorLineUpdate(this)">
-          <option value="x1">X1</option>
-          <option value="x2">X2</option>
-          <option value="y1">Y1</option>
-          <option value="y2">Y2</option>
         </select>
-        
+
         <span>X-Axis</span>
-        <select name="XAxisIndex" class="class_input_knob" 
-        onchange="selectorLineKnobAction('id_control_knob_div_line_selector', this)"></select>
+        <select name="XAxisIndex" class="class_input_knob"
+          onchange="selectorLineKnobAction('id_control_knob_div_line_selector', this)"></select>
 
         <span>Y-Axis</span>
-        <select name="YAxisIndex" class="class_input_knob" 
-        onchange="selectorLineKnobAction('id_control_knob_div_line_selector', this)"></select>
+        <select name="YAxisIndex" class="class_input_knob"
+          onchange="selectorLineKnobAction('id_control_knob_div_line_selector', this)"></select>
 
         <span>X-Data</span>
-        <select name="XAxisDataIndex" class="class_input_knob" 
-        onchange="selectorLineKnobAction('id_control_knob_div_line_selector', this)"></select>
+        <select name="XAxisDataIndex" class="class_input_knob"
+          onchange="selectorLineKnobAction('id_control_knob_div_line_selector', this)"></select>
 
         <span>Color</span>
         <input type="color" name="color" class="class_input_knob"
-          onchange="lineAction('id_control_knob_div_axis_selector',this)" />
+          onchange="selectorLineKnobAction('id_control_knob_div_line_selector',this)" />
       </div>
 
   </div>

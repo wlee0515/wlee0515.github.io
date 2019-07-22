@@ -132,6 +132,31 @@ function drawPolyLineXY(iDOM, iPointArray, iXScale = 1.0, iYScale = 1.0, iXOffse
   wCtx.stroke();
 }
 
+function drawPolyLineXYArray(iDOM, iXArray, iYArray, iXScale = 1.0, iYScale = 1.0, iXOffset = 0, iYOffset = 0) {
+
+  if (iXArray.length == 0) {
+    return;
+  }
+  if (iYArray.length == 0) {
+    return;
+  }
+
+  var wCtx = iDOM.getContext("2d");
+  wCtx.beginPath();
+
+  var wX = iXScale * iXArray[0] + iXOffset;
+  var wY = iYScale * iYArray[0].y + iYOffset;
+  wCtx.moveTo(wX, wY);
+
+  for (var wi = 0;(wi < iXArray.length)&&(wi < iYArray.length); ++wi) {
+    wX = iXScale * iXArray[wi] + iXOffset;
+    wY = iYScale * iYArray[wi] + iYOffset;
+    wCtx.lineTo(wX, wY);
+  }
+
+  wCtx.lineJoin = "round";
+  wCtx.stroke();
+}
 
 function drawNumberLine(iDOM, iStartX, iStartY, iEndX, iEndY, iRefX, iRefY, iRefValue = 0, iUnitScale = 1, iMajorIncrement = 5, iMinorIncrement = 1, iMajorLength = 2, iMinorLength = 1, iMajorLineWidth = 2, iMinorLineWidth = 1) {
 
