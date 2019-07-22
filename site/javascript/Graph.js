@@ -1,5 +1,5 @@
 var eAxisAttributeName = {
-  Scale: "scale",
+  Zoom: "zoom",
   Offset: "offset",
   Position: "position",
   Color: "color",
@@ -14,16 +14,40 @@ var eLineAttributeName = {
   YAxisIndex: "YAxisIndex",
 }
 
+function getRandomColor() {
+  
+  var letters = '0123456789ABCDEF'.split('');
+  var color = '#';
+  for (var i = 0; i < 6; i++) {
+      color += letters[Math.floor(Math.random() * 16)];
+  }
+  /*
+  var color = '#000000';
+  while ((color == "#000000") || (color == "#0000FF"))
+  {
+      var color = '#';
+      for (var i = 0; i < 3; i++) {
+          if (Math.random() > 0.5) {
+              color += "FF";
+          }
+          else {
+              color += "00";
+          }
+      }
+  }*/
+  return color;
+}
+
 function GraphAxis() {
-  this.mScale = 1.0;
+  this.mZoom = 0.0;
   this.mOffset = 0.0;
   this.mPosition = 0.0;
   this.mColor = "#000000";
 
   this.setAxisAttribute = function (iAttribute, iValue) {
 
-    if (eAxisAttributeName.Scale == iAttribute) {
-      this.mScale = parseFloat(iValue);
+    if (eAxisAttributeName.Zoom == iAttribute) {
+      this.mZoom = parseFloat(iValue);
       return true;
     }
     else if (eAxisAttributeName.Offset == iAttribute) {
@@ -43,8 +67,8 @@ function GraphAxis() {
 
   this.getAxisAttribute = function (iAttribute) {
 
-    if (eAxisAttributeName.Scale == iAttribute) {
-      return this.mScale;
+    if (eAxisAttributeName.Zoom == iAttribute) {
+      return this.mZoom;
     }
     else if (eAxisAttributeName.Offset == iAttribute) {
       return this.mOffset;
@@ -61,7 +85,7 @@ function GraphAxis() {
 
 function GraphLine() {
   this.mData = [];
-  this.mColor = "#000000";
+  this.mColor = getRandomColor();
   this.mXAxisDataIndex = eLineAttributeName.DataIndexLineName;
   this.mXAxisIndex = "";
   this.mYAxisIndex = "";
@@ -304,8 +328,8 @@ function Graph() {
     return null;
   }
 
-  this.setAxisScale = function (iIsHorizontalAxis = false, iAxisIndex = null, iScale = 1) {
-    this.setAxisAttribute(iIsHorizontalAxis, iAxisIndex, eAxisAttributeName.Scale, iScale);
+  this.setAxisZoom = function (iIsHorizontalAxis = false, iAxisIndex = null, iZoom = 0) {
+    this.setAxisAttribute(iIsHorizontalAxis, iAxisIndex, eAxisAttributeName.Zoom, iZoom);
   }
 
   this.setAxisOffset = function (iIsHorizontalAxis = false, iAxisIndex = null, iOffset = 0) {
@@ -329,9 +353,9 @@ function Graph() {
 
     var wDomWidth = iCanvasDOM.width;
     var wDomHeight = iCanvasDOM.height;
-    var wBaseScale = 10;
-    var wMajorIncrement = 10;
-    var wMinorIncrement = 5;
+    var wBaseScale = 1;
+    var wMajorIncrement = 100;
+    var wMinorIncrement = 20;
     var wMajorLength = 20;
     var wMinorLength = 20;
     var wMajorLineWidth = 1;
@@ -348,11 +372,11 @@ function Graph() {
         }
 
         wCtx.strokeStyle = wAxis.mColor;
-        var wScale = wBaseScale * wAxis.mScale;
+        var wScale = wBaseScale * Math.pow(2, wAxis.mZoom);
         drawNumberLine(iCanvasDOM, -wDomWidth, wAxis.mPosition, wDomWidth, wAxis.mPosition,
           wScale * wAxis.mOffset, wAxis.mPosition + 50, 0,
           wScale,
-          wMajorIncrement, wMinorIncrement,
+          wMajorIncrement /wScale, wMinorIncrement/wScale,
           wMajorLength, wMinorLength,
           wMajorLineWidth, wMinorLineWidth);
       }
@@ -369,11 +393,11 @@ function Graph() {
         }
 
         wCtx.strokeStyle = wAxis.mColor;
-        var wScale = wBaseScale * wAxis.mScale;
+        var wScale = wBaseScale * Math.pow(2, wAxis.mZoom);
         drawNumberLine(iCanvasDOM, wAxis.mPosition, wDomHeight, wAxis.mPosition, -wDomHeight,
           wAxis.mPosition + 50, wScale * wAxis.mOffset, 0,
           wScale,
-          wMajorIncrement, wMinorIncrement,
+          wMajorIncrement /wScale, wMinorIncrement/wScale,
           wMajorLength, wMinorLength,
           wMajorLineWidth, wMinorLineWidth);
       }
@@ -426,9 +450,9 @@ function Graph() {
           }
         }
 
-        var wXScale = wBaseScale * wXAxisRef.mScale;
+        var wXScale = wBaseScale * Math.pow(2, wXAxisRef.mZoom);
         var wXOffset = wXAxisRef.mOffset;
-        var wYScale = wBaseScale * wYAxisRef.mScale;
+        var wYScale = wBaseScale * Math.pow(2, wYAxisRef.mZoom);
         var wYOffset = wYAxisRef.mOffset;
 
         wCtx.strokeStyle = wLine.mColor;

@@ -4,6 +4,7 @@
 <head>
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
   <title>CSV Plotter</title>
+  <script type="text/javascript" src="../../javascript/parseCSVFile.js"></script>
   <script type="text/javascript" src="../../javascript/commonCanvasFunction.js"></script>
   <script type="text/javascript" src="../../javascript/Graph.js"></script>
   <script>
@@ -68,8 +69,58 @@
       , 57.6
       , 62.5
     ];
-    function formCallBack(e) {
-      alert(JSON.stringify(e));
+
+
+    function init() {
+
+      gGraph.setNewVerticalAxisCallback(updateControls);
+      gGraph.setRemoveVerticalAxisCallback(updateControls);
+      gGraph.setNewHorizontalAxisCallback(updateControls);
+      gGraph.setRemoveHorizontalAxisCallback(updateControls);
+      gGraph.setNewLineCallback(updateControls);
+      gGraph.setRemoveLineCallback(updateControls);
+
+
+      gGraph.addHorizontalAxis();
+      gGraph.addVerticalAxis();
+      resize();
+    }
+
+    function resize() {
+      var wCanvas = document.getElementById(gCanvasDOMId);
+      resizeCanvas(wCanvas);
+      updateDisplay();
+    }
+
+
+    function updateDisplay() {
+      var wCanvas = document.getElementById(gCanvasDOMId);
+      if (null != wCanvas) {
+        clearCanvas(wCanvas);
+        drawCanvasCenteredAt(wCanvas, function (iDOM) {
+          gGraph.renderCanvas(iDOM);
+        }, wCanvas.width / 2, wCanvas.height / 2, 1, 1);
+      }
+    }
+
+    function csvFileUpload() {
+      var wFileUpload = document.getElementById("id_FileUpload");
+
+      var wReader = new FileReader();
+      wReader.onload = function (e) {
+        var wDataSet = parseCSVtoDataset(e.target.result);
+
+        for(var wi = 0; wi < wDataSet.length; ++wi) {
+          if ("number" == wDataSet[wi].mDataType) {
+            gGraph.setLineAttribute(wDataSet[wi].mName, "data", wDataSet[wi].mData);
+          }
+        }
+
+        updateDisplay();
+      }
+
+      wReader.readAsText(wFileUpload.files[0]);
+      
     }
 
     function updateControls(iGraph, iIndex) {
@@ -103,60 +154,6 @@
 
         wLineSelector.innerHTML = wHtmlStr;
         selectorLineUpdate(wLineSelector);
-      }
-
-      /*
-      var wParent = iSelectorDOM.parentElement;
-            var wKnobDOMList = wParent.getElementsByClassName("class_input_knob");
-      
-            for (wKey in wKnobDOMList) {
-              var wKnob = wKnobDOMList[wKey];
-              var wValue = gGraph.getAxisAttribute(wIsHorizontal, iSelectorDOM.value, wKnob.name);
-              if (null != wValue) {
-                wKnob.value = wValue;
-              }
-            }  
-      */
-
-    }
-
-    function init() {
-
-      gGraph.setNewVerticalAxisCallback(updateControls);
-      gGraph.setRemoveVerticalAxisCallback(updateControls);
-      gGraph.setNewHorizontalAxisCallback(updateControls);
-      gGraph.setRemoveHorizontalAxisCallback(updateControls);
-      gGraph.setNewLineCallback(updateControls);
-      gGraph.setRemoveLineCallback(updateControls);
-
-
-      gGraph.addHorizontalAxis("X-Axis");
-      gGraph.addVerticalAxis("Y-Axis");
-
-      gGraph.setLineAttribute("Line2", "data", YTest);
-
-      gGraph.setLineAttribute("Line1", "data", XTest);
-      gGraph.setLineAttribute("Line2", "data", YTest);
-
-      gGraph.setLineAttribute("Line3", "data", XTest);
-      gGraph.setLineAttribute("Line3", "XAxisDataIndex", "Line2");
-      resize();
-    }
-
-    function resize() {
-      var wCanvas = document.getElementById(gCanvasDOMId);
-      resizeCanvas(wCanvas);
-      updateDisplay();
-    }
-
-
-    function updateDisplay() {
-      var wCanvas = document.getElementById(gCanvasDOMId);
-      if (null != wCanvas) {
-        clearCanvas(wCanvas);
-        drawCanvasCenteredAt(wCanvas, function (iDOM) {
-          gGraph.renderCanvas(iDOM);
-        }, wCanvas.width / 2, wCanvas.height / 2, 1, 1);
       }
     }
 
@@ -290,12 +287,11 @@
       height: 20px;
       width: 20px;
     }
-    
+
     .class_number {
       height: 20px;
       width: 30px;
     }
-
   </style>
 </head>
 
@@ -305,8 +301,8 @@
   </div>
   <div id="id_control_div">
       <div>
-        <input type="file" id="fileUpload" />
-        <input type="button" id="upload" value="Upload" onclick="Upload()" />
+        <input type="file" id="id_FileUpload" accept=".csv"/>
+        <input type="button" id="upload" value="Upload" onclick="csvFileUpload()" />
       </div>
       <div id="id_control_add_axis_div">
         <input type="button" value="Add X-Axis" onclick="gGraph.addHorizontalAxis()" />
@@ -318,8 +314,8 @@
         <span>Offset</span>
         <input type="number" name="offset" class="class_input_knob class_number"
           onchange="selectorKnobAction('id_control_knob_div_axis_selector',this)" value="0.0" />
-        <span>Scale</span>
-        <input type="number" name="scale" class="class_input_knob class_number"
+        <span>Zoom</span>
+        <input type="number" name="zoom" class="class_input_knob class_number"
           onchange="selectorKnobAction('id_control_knob_div_axis_selector',this)" value="1.0" />
         <span>Position</span>
         <input type="number" name="position" class="class_input_knob class_number"
