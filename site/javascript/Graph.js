@@ -3,6 +3,7 @@ var eAxisAttributeName = {
   Offset: "offset",
   Position: "position",
   Color: "color",
+  Visible: "visible",
 }
 
 var eLineAttributeName = {
@@ -12,30 +13,7 @@ var eLineAttributeName = {
   XAxisDataIndex: "XAxisDataIndex",
   XAxisIndex: "XAxisIndex",
   YAxisIndex: "YAxisIndex",
-}
-
-function getRandomColor() {
-
-  var letters = '0123456789ABCDEF'.split('');
-  var color = '#';
-  for (var i = 0; i < 6; i++) {
-    color += letters[Math.floor(Math.random() * 16)];
-  }
-  /*
-  var color = '#000000';
-  while ((color == "#000000") || (color == "#0000FF"))
-  {
-      var color = '#';
-      for (var i = 0; i < 3; i++) {
-          if (Math.random() > 0.5) {
-              color += "FF";
-          }
-          else {
-              color += "00";
-          }
-      }
-  }*/
-  return color;
+  Visible: "visible",
 }
 
 function GraphAxis() {
@@ -43,6 +21,7 @@ function GraphAxis() {
   this.mOffset = 0.0;
   this.mPosition = 0.0;
   this.mColor = "#000000";
+  this.mVisible = true;
 
   this.setAxisAttribute = function (iAttribute, iValue) {
 
@@ -62,6 +41,10 @@ function GraphAxis() {
       this.mColor = iValue;
       return true;
     }
+    else if (eAxisAttributeName.Visible == iAttribute) {
+      this.mVisible = Boolean(iValue);
+      return true;
+    }
     return false;
   }
 
@@ -79,6 +62,9 @@ function GraphAxis() {
     else if (eAxisAttributeName.Color == iAttribute) {
       return this.mColor;
     }
+    else if (eAxisAttributeName.Visible == iAttribute) {
+      return this.mVisible;
+    }
     return null;
   }
 }
@@ -89,6 +75,7 @@ function GraphLine() {
   this.mXAxisDataIndex = eLineAttributeName.DataIndexLineName;
   this.mXAxisIndex = "";
   this.mYAxisIndex = "";
+  this.mVisible = true;
 
   this.setLineAttribute = function (iAttribute, iValue) {
 
@@ -112,6 +99,10 @@ function GraphLine() {
       this.mYAxisIndex = iValue;
       return true;
     }
+    else if (eLineAttributeName.Visible == iAttribute) {
+      this.mVisible = Boolean(iValue);
+      return true;
+    }
     return false;
   }
 
@@ -131,6 +122,9 @@ function GraphLine() {
     }
     else if (eLineAttributeName.YAxisIndex == iAttribute) {
       return this.YAxisIndex;
+    }
+    else if (eLineAttributeName.Visible == iAttribute) {
+      return this.mVisible;
     }
     return null;
   }
@@ -177,7 +171,9 @@ function Graph() {
   this.getVerticalAxisList = function () {
     var wList = [];
     for (key in this.mVerticalAxis) {
-      wList.push(key);
+      if(null != this.mVerticalAxis[key]){
+        wList.push(key);
+      }
     }
     return wList;
   }
@@ -185,7 +181,9 @@ function Graph() {
   this.getHorizontalAxisList = function () {
     var wList = [];
     for (key in this.mHorizontalAxis) {
-      wList.push(key);
+      if(null != this.mHorizontalAxis[key]){
+        wList.push(key);
+      }
     }
     return wList;
   }
@@ -198,7 +196,10 @@ function Graph() {
           continue;
         }
       }
-      wList.push(key);
+      
+      if(null != this.mGraphLine[key]){
+        wList.push(key);
+      }
     }
     return wList;
   }
@@ -270,10 +271,18 @@ function Graph() {
   }
 
   this.removeGraphLine = function (iLineIndex) {
-    this.mGraphLine[iLineIndex] = null;
-    if (null != this.mRemoveLineCallback) {
-      this.mRemoveLineCallback(this, iLineIndex);
+    if (iLineIndex != eLineAttributeName.DataIndexLineName) {
+      this.mGraphLine[iLineIndex] = null;
+      if (null != this.mRemoveLineCallback) {
+        this.mRemoveLineCallback(this, iLineIndex);
+      }  
     }
+  }
+
+  this.removeAllGraphLine = function () {
+    var wDefault = this.mGraphLine[eLineAttributeName.DataIndexLineName];
+    this.mGraphLine = [];
+    this.mGraphLine[eLineAttributeName.DataIndexLineName] = wDefault;
   }
 
   this.setAxisAttribute = function (iIsHorizontalAxis, iAxisIndex, iAttribute, iValue) {
@@ -366,6 +375,7 @@ function Graph() {
 
       if (null != wAxisRef) {
 
+        var wNotSet = true;
         var wMax = 0;
         var wMin = 0;
 
@@ -373,6 +383,10 @@ function Graph() {
           var wLineDataRef = this.mGraphLine[key];
 
           if (null != wLineDataRef) {
+            if (false == wLineDataRef.mVisible){
+              continue;
+            }
+
             var wAxisName = "";
             if (true == iIsHorizontalAxis) {
               wAxisName = wLineDataRef.mXAxisIndex;
@@ -386,28 +400,34 @@ function Graph() {
               for (var wi = 0; wi < wLineDataRef.mData.length; ++wi) {
                 if (wMax < wLineDataRef.mData[wi]) {
                   wMax = wLineDataRef.mData[wi];
+                  wNotSet = false;
                 }
 
                 if (wMin > wLineDataRef.mData[wi]) {
                   wMin = wLineDataRef.mData[wi];
+                  wNotSet = false;
                 }
               }
             }
           }
         }
 
+        if (true  == wNotSet) {
+          return;
+        }
+
         var wRange = wMax - wMin;
         if (1 > Math.abs(wRange)) wRange = 1;
-        var wOffset = -Math.floor((wMax - wMin) / 2);
+        var wOffset = Math.floor((wMax + wMin) / 2);
 
         var wSpan = 0.95;
         if (true == iIsHorizontalAxis) {
           wAxisRef.mZoom = Math.floor(Math.log2((wSpan * iCanvasDOM.width) / wRange));
-          wAxisRef.mOffset = wOffset;
+          wAxisRef.mOffset = -wOffset;
         }
         else {
           wAxisRef.mZoom = Math.floor(Math.log2((wSpan * iCanvasDOM.height) / wRange));
-          wAxisRef.mOffset = -wOffset;
+          wAxisRef.mOffset = wOffset;
         }
 
       }
@@ -442,7 +462,7 @@ function Graph() {
           wDefaultAxisX = key;
         }
 
-        if (false == iUpdateOnly) {
+        if ((false == iUpdateOnly) || (true == wAxis.mVisible)) {
           wCtx.strokeStyle = wAxis.mColor;
           var wScale = wBaseScale * Math.pow(2, wAxis.mZoom);
           drawNumberLine(iCanvasDOM, -wDomWidth, wAxis.mPosition, wDomWidth, wAxis.mPosition,
@@ -465,7 +485,7 @@ function Graph() {
           wDefaultAxisY = key;
         }
 
-        if (false == iUpdateOnly) {
+        if ((false == iUpdateOnly) || (true == wAxis.mVisible)) {
           wCtx.strokeStyle = wAxis.mColor;
           var wScale = wBaseScale * Math.pow(2, wAxis.mZoom);
           drawNumberLine(iCanvasDOM, wAxis.mPosition, wDomHeight, wAxis.mPosition, -wDomHeight,
@@ -517,12 +537,18 @@ function Graph() {
           }
         }
 
+        if ((false == wXAxisRef.mVisible) || (false == wYAxisRef.mVisible)
+         || (false == wXData.mVisible)  || (false == wLine.mVisible)) {
+          continue;
+        }
+
         var wXScale = wBaseScale * Math.pow(2, wXAxisRef.mZoom);
         var wXOffset = wXAxisRef.mOffset;
         var wYScale = wBaseScale * Math.pow(2, wYAxisRef.mZoom);
         var wYOffset = wYAxisRef.mOffset;
 
         if (false == iUpdateOnly) {
+          
           wCtx.strokeStyle = wLine.mColor;
           drawPolyLineXYArray(iCanvasDOM, wXData.mData, wLine.mData,
             wXScale, -wYScale,

@@ -9,6 +9,13 @@
   <script type="text/javascript" src="../../javascript/Graph.js"></script>
   <script>
 
+    /* Task List
+      - Line Group categorization for diferent File inputs
+      - Click on axis to move and scale
+      - Clear Lines feature
+      - Set file reference X
+      
+    */
     var gCanvasDOMId = "OutputCanvas";
     var gGraph = new Graph();
 
@@ -55,7 +62,7 @@
       wReader.onload = function (e) {
         var wDataSet = parseCSVtoDataset(e.target.result);
         wFileIdCount++;
-        
+
         for(var wi = 0; wi < wDataSet.length; ++wi) {
           if ("number" == wDataSet[wi].mDataType) {
             gGraph.setLineAttribute(wDataSet[wi].mName + "_F" + wFileIdCount, "data", wDataSet[wi].mData);
@@ -139,7 +146,13 @@
     }
 
     function lineKnobAction(iLine, iInputDOM) {
-      gGraph.setLineAttribute(iLine, iInputDOM.name, iInputDOM.value);
+
+      if ("visible" == iInputDOM.name) {
+        gGraph.setLineAttribute(iLine, iInputDOM.name, iInputDOM.checked);
+      }
+      else {
+        gGraph.setLineAttribute(iLine, iInputDOM.name, iInputDOM.value);
+      }
       updateDisplay();
     }
 
@@ -150,6 +163,14 @@
       }
     }
 
+    function deleteLine(iLineSelectorId) {
+      var wSelector = document.getElementById(iLineSelectorId);
+      if (null != wSelector) {
+        gGraph.removeGraphLine(wSelector.value);
+      }
+      updateDisplay();
+    }
+    
     function selectorLineUpdate(iSelectorDOM) {
       var wParent = iSelectorDOM.parentElement;
       var wKnobDOMList = wParent.getElementsByClassName("class_input_knob");
@@ -194,10 +215,17 @@
 
 
         }
-
-        var wValue = gGraph.getLineAttribute(iSelectorDOM.value, wKnob.name);
-        if (null != wValue) {
-          wKnob.value = wValue;
+        else if ("visible" == wKnob.name) {
+          var wValue = gGraph.getLineAttribute(iSelectorDOM.value, wKnob.name);
+          if (null != wValue) {
+            wKnob.checked = wValue;
+          }         
+        }
+        else {
+          var wValue = gGraph.getLineAttribute(iSelectorDOM.value, wKnob.name);
+          if (null != wValue) {
+            wKnob.value = wValue;
+          }
         }
       }
     }
@@ -211,6 +239,19 @@
       gGraph.addVerticalAxis();
       updateDisplay();
     }
+    
+    function clearLines() { 
+      gGraph.removeAllGraphLine();
+      updateDisplay();
+    }
+    
+    function autoScale() { 
+      
+      var wCanvas = document.getElementById(gCanvasDOMId);
+      gGraph.autoScale(wCanvas);
+      updateDisplay();
+    }
+
   </script>
 
   <style>
@@ -258,6 +299,8 @@
       <div id="id_control_add_axis_div">
         <input type="button" value="Add X-Axis" onclick="addXAxis()" />
         <input type="button" value="Add Y-Axis" onclick="addYAxis()" />
+        <input type="button" value="Auto Scale" onclick="autoScale()" />
+        <input type="button" value="Clear Lines" onclick="clearLines()" />
       </div>
       <div id="id_control_knob_axis_div">
         <select id="id_control_knob_div_axis_selector" onchange="selectorKnobUpdate(this)">
@@ -294,6 +337,11 @@
         <span>Color</span>
         <input type="color" name="color" class="class_input_knob class_color"
           onchange="selectorLineKnobAction('id_control_knob_div_line_selector',this)" />
+
+        <span>Visible</span>
+        <input type="checkbox" name="visible" class="class_input_knob class_visible" onchange="selectorLineKnobAction('id_control_knob_div_line_selector',this)" />
+        
+        <input type="button" value="Delete" onclick="deleteLine('id_control_knob_div_line_selector')" />
       </div>
 
   </div>
