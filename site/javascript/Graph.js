@@ -247,14 +247,28 @@ function Graph() {
   }
 
   this.removeVerticalAxis = function (iAxisIndex) {
-    this.mVerticalAxis[iAxisIndex] = null;
+    var wNewList = [];
+    for (key in this.mVerticalAxis) {
+      if (key != iAxisIndex) {
+        wNewList[key] = this.mVerticalAxis[key];
+      }
+    }
+    this.mVerticalAxis = wNewList;
+
     if (null != this.mRemoveVerticalAxisCallback) {
       this.mRemoveVerticalAxisCallback(this, iAxisIndex);
     }
   }
 
   this.removeHorizontalAxis = function (iAxisIndex) {
-    this.mHorizontalAxis[iAxisIndex] = null;
+    var wNewList = [];
+    for (key in this.mHorizontalAxis) {
+      if (key != iAxisIndex) {
+        wNewList[key] = this.mHorizontalAxis[key];
+      }
+    }
+    this.mHorizontalAxis = wNewList;
+
     if (null != this.mRemoveHorizontalAxisCallback) {
       this.mRemoveHorizontalAxisCallback(this, iAxisIndex);
     }
@@ -271,11 +285,14 @@ function Graph() {
   }
 
   this.removeGraphLine = function (iLineIndex) {
-    if (iLineIndex != eLineAttributeName.DataIndexLineName) {
-      this.mGraphLine[iLineIndex] = null;
-      if (null != this.mRemoveLineCallback) {
-        this.mRemoveLineCallback(this, iLineIndex);
-      }  
+    if (iLineIndex != eLineAttributeName.DataIndexLineName) {      
+      var wNewList = [];
+      for (key in this.mGraphLine) {
+        if (key != iLineIndex) {
+          wNewList[key] = this.mGraphLine[key];
+        }
+      }
+      this.mGraphLine = wNewList;
     }
   }
 

@@ -10,10 +10,8 @@
   <script>
 
     /* Task List
-      - Line Group categorization for diferent File inputs
       - Click on axis to move and scale
-      - Clear Lines feature
-      - Set file reference X
+      - Overlays
       
     */
     var gCanvasDOMId = "OutputCanvas";
@@ -39,7 +37,6 @@
       resizeCanvas(wCanvas);
       updateDisplay();
     }
-
 
     function updateDisplay(iAutoScale = false) {
       var wCanvas = document.getElementById(gCanvasDOMId);
