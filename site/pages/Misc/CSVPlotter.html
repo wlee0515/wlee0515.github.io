@@ -93,9 +93,13 @@
     }
 
 
-    function updateDisplay() {
+    function updateDisplay(iAutoScale = false) {
       var wCanvas = document.getElementById(gCanvasDOMId);
-      if (null != wCanvas) {
+      if (null != wCanvas) { 
+        if (true == iAutoScale) {
+          gGraph.autoScale(wCanvas);
+          updateControls(gGraph);
+        }
         clearCanvas(wCanvas);
         drawCanvasCenteredAt(wCanvas, function (iDOM) {
           gGraph.renderCanvas(iDOM);
@@ -115,8 +119,7 @@
             gGraph.setLineAttribute(wDataSet[wi].mName, "data", wDataSet[wi].mData);
           }
         }
-
-        updateDisplay();
+        updateDisplay(true);
       }
 
       wReader.readAsText(wFileUpload.files[0]);
@@ -256,6 +259,16 @@
         }
       }
     }
+    
+    function addXAxis() { 
+      gGraph.addHorizontalAxis();
+      updateDisplay();
+    }
+
+    function addYAxis() { 
+      gGraph.addVerticalAxis();
+      updateDisplay();
+    }
   </script>
 
   <style>
@@ -269,10 +282,6 @@
     #id_display_div {
       height: 100vh;
       width: 100vw;
-    }
-
-    canvas {
-      border: 1px solid blue;
     }
 
     #id_control_div {
@@ -290,7 +299,7 @@
 
     .class_number {
       height: 20px;
-      width: 30px;
+      width: 50px;
     }
   </style>
 </head>
@@ -305,8 +314,8 @@
         <input type="button" id="upload" value="Upload" onclick="csvFileUpload()" />
       </div>
       <div id="id_control_add_axis_div">
-        <input type="button" value="Add X-Axis" onclick="gGraph.addHorizontalAxis()" />
-        <input type="button" value="Add Y-Axis" onclick="gGraph.addVerticalAxis()" />
+        <input type="button" value="Add X-Axis" onclick="addXAxis()" />
+        <input type="button" value="Add Y-Axis" onclick="addYAxis()" />
       </div>
       <div id="id_control_knob_axis_div">
         <select id="id_control_knob_div_axis_selector" onchange="selectorKnobUpdate(this)">
