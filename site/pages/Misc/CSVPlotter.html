@@ -4,17 +4,23 @@
 <head>
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
   <title>CSV Plotter</title>
+  <script type="text/javascript" src="../../javascript//utility.js"></script>
   <script type="text/javascript" src="../../javascript/parseCSVFile.js"></script>
   <script type="text/javascript" src="../../javascript/commonCanvasFunction.js"></script>
+  <script type="text/javascript" src="../../javascript/HitCanvas.js"></script>
   <script type="text/javascript" src="../../javascript/Graph.js"></script>
   <script>
 
     /* Task List
+      - Line Group categorization for diferent File inputs
       - Click on axis to move and scale
-      - Overlays
+      - Clear Lines feature
+      - Set file reference X
+      - Overlay
       
     */
     var gCanvasDOMId = "OutputCanvas";
+    var gHitCanvas = null;
     var gGraph = new Graph();
 
     function init() {
@@ -29,16 +35,21 @@
 
       gGraph.addHorizontalAxis();
       gGraph.addVerticalAxis();
+
+
+      var wCanvas = document.getElementById(gCanvasDOMId);
+
       resize();
+      gHitCanvas = new HitCanvas(wCanvas, true);
     }
 
     function resize() {
       var wCanvas = document.getElementById(gCanvasDOMId);
       resizeCanvas(wCanvas);
-      updateDisplay();
+      updateDisplay(false);
     }
 
-    function updateDisplay(iAutoScale = false) {
+    function updateDisplay(iAutoScale) {
       var wCanvas = document.getElementById(gCanvasDOMId);
       if (null != wCanvas) { 
         if (true == iAutoScale) {
@@ -256,7 +267,7 @@
       background-color: rgb(255, 255, 255);
       padding: 0px;
       margin: 0px;
-      overflow: hidden;
+     /* overflow: hidden;*/
     }
 
     #id_display_div {

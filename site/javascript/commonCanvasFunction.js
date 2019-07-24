@@ -8,16 +8,6 @@ function clearCanvas(iDOM) {
   wCtx.clearRect(0, 0, iDOM.width, iDOM.height);
 }
 
-function getRandomColor() {
-
-  var letters = '0123456789ABCDEF'.split('');
-  var color = '#';
-  for (var i = 0; i < 6; i++) {
-    color += letters[Math.floor(Math.random() * 16)];
-  }
-  return color;
-}
-
 function drawCanvasCenteredAt(iDOM, iDrawFunction, iTranslateX = 0, iTranslateY = 0, iScaleX = 1.0, iScaleY = 1.0, iRotation = 0) {
 
   var wXTranslate = iTranslateX;
