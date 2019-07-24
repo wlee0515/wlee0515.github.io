@@ -71,7 +71,7 @@
 
         for(var wi = 0; wi < wDataSet.length; ++wi) {
           if ("number" == wDataSet[wi].mDataType) {
-            gGraph.setLineAttribute(wDataSet[wi].mName + "_F" + wFileIdCount, "data", wDataSet[wi].mData);
+            gGraph.addGraphLine(wDataSet[wi].mName, "F_"+wFileIdCount, wDataSet[wi].mData);
           }
         }
         updateDisplay(true);
@@ -83,8 +83,8 @@
 
     function updateControls(iGraph, iIndex) {
       var wAxisSelector = document.getElementById('id_control_knob_div_axis_selector');
-      var wLineSelector = document.getElementById('id_control_knob_div_line_selector');
-
+      var wGroupSelector = document.getElementById('id_control_knob_div_group_selector');
+      
       if (null != wAxisSelector) {
         var wHtmlStr = "";
         var wXList = iGraph.getHorizontalAxisList();
@@ -102,16 +102,16 @@
         selectorKnobUpdate(wAxisSelector);
       }
 
-      if (null != wLineSelector) {
+      if (null != wGroupSelector) {
         var wHtmlStr = "";
-        var wGraphLineList = iGraph.getGraphLineList();
-        for (var wi = 0; wi < wGraphLineList.length; ++wi) {
-          var wIndex = wGraphLineList[wi];
+        var wGraphLineGroupList = iGraph.getGraphLineGroupList();
+        for (var wi = 0; wi < wGraphLineGroupList.length; ++wi) {
+          var wIndex = wGraphLineGroupList[wi];
           wHtmlStr += '<option value="' + wIndex + '">' + wIndex + '</option>'
         }
 
-        wLineSelector.innerHTML = wHtmlStr;
-        selectorLineUpdate(wLineSelector);
+        wGroupSelector.innerHTML = wHtmlStr;
+        selectorLineGroupUpdate(wGroupSelector);
       }
     }
 
@@ -177,6 +177,22 @@
       updateDisplay();
     }
     
+    function selectorLineGroupUpdate(iGroupSelector) {
+
+      var wLineSelector = document.getElementById('id_control_knob_div_line_selector');
+      if (null != iGroupSelector) {
+        var wHtmlStr = "";
+        var wGraphLineList = gGraph.getGraphLineList(false, iGroupSelector.value);
+        for (var wi = 0; wi < wGraphLineList.length; ++wi) {
+          var wIndex = wGraphLineList[wi];
+          wHtmlStr += '<option value="' + wIndex + '">' + wIndex + '</option>'
+        }
+
+        wLineSelector.innerHTML = wHtmlStr;
+        selectorLineUpdate(wLineSelector);
+      }
+    }
+
     function selectorLineUpdate(iSelectorDOM) {
       var wParent = iSelectorDOM.parentElement;
       var wKnobDOMList = wParent.getElementsByClassName("class_input_knob");
@@ -325,6 +341,9 @@
           onchange="selectorKnobAction('id_control_knob_div_axis_selector',this)" />
       </div>
       <div id="id_control_knob_line_div">
+        <select id="id_control_knob_div_group_selector" onchange="selectorLineGroupUpdate(this)">
+        </select>
+  
         <select id="id_control_knob_div_line_selector" onchange="selectorLineUpdate(this)">
         </select>
 
