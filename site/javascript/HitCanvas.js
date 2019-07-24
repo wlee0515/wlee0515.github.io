@@ -7,7 +7,6 @@ function HitCanvas(iCanvas, iShowHitCanvas) {
 
   this.mMainCanvas = iCanvas;
   this.mHitObjectList = [];
-  this.mColorId = 0;
 
   this.resize = function(){
     this.mHitCanvas.width = this.mMainCanvas.clientWidth;
@@ -16,7 +15,6 @@ function HitCanvas(iCanvas, iShowHitCanvas) {
   
   this.reset = function() {
     this.resize();
-    this.mColorId = 0;
     this.mHitObjectList = [];
 
     var wCtx = this.mHitCanvas.getContext("2d");
@@ -31,38 +29,39 @@ function HitCanvas(iCanvas, iShowHitCanvas) {
   this.draw = function(iDrawHitAreaFunction) {
   
     var wCtx = this.mHitCanvas.getContext('2d');
-    
-    this.mColorId += 1;
-    var wColor = convertColorIdToColor(this.mColorId );
-
+    var wColor = convertColorIdToColor(this.mHitObjectList.length);
     wCtx.strokeStyle = wColor;
     wCtx.fillStyle = wColor;
-    
     var wObjectId = iDrawHitAreaFunction(this.mHitCanvas, wColor );
+
     this.mHitObjectList.push(wObjectId);
   }
 
-  
+  this.getLocationHitObjectId = function(iX, iY) {
+    var wCtx = this.mHitCanvas.getContext("2d");
+    var wPixel = wCtx.getImageData(iX, iY, 1, 1).data;
+    var wColorId = convertColorToColorId(wPixel[0],wPixel[1],wPixel[2]);
+    
+    if (wColorId < this.mHitObjectList.length) {
+      return this.mHitObjectList[wColorId];
+    }
+    return -1;    
+  }
+
+
   this.onClick = null;
   this.mMainCanvas.addEventListener('click', function (e) {
     var wScroll = getAllScroll(this.mMainCanvas);
-    var wMousePos = {
-      x: e.clientX - this.mMainCanvas.offsetLeft + wScroll.x,
-      y: e.clientY - this.mMainCanvas.offsetTop  + wScroll.y
-
-    }
+    var wMousePos = getDOMRelativeMousePosition(this.mMainCanvas, e.clientX, e.clientY);
+    var wHiObjectId = this.getLocationHitObjectId(wMousePos.x, wMousePos.y);
     
     var wCtx = this.mHitCanvas.getContext("2d");
     
-    this.mColorId += 10;
-    var wColor = convertColorIdToColor(this.mColorId );
-    wCtx.strokeStyle = wColor;
-    wCtx.fillStyle = wColor;
-    
+    wCtx.strokeStyle = "blue";
     wCtx.beginPath();
-    wCtx.arc(wMousePos.x, wMousePos.y, 50, 0, 2 * Math.PI);
+    wCtx.arc(wMousePos.x, wMousePos.y, 10, 0, 2 * Math.PI);
     wCtx.stroke();
-    wCtx.fill();
+
   }.bind(this));
 
 }

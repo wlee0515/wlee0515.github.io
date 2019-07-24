@@ -171,7 +171,7 @@ function Graph() {
   this.getVerticalAxisList = function () {
     var wList = [];
     for (key in this.mVerticalAxis) {
-      if(null != this.mVerticalAxis[key]){
+      if (null != this.mVerticalAxis[key]) {
         wList.push(key);
       }
     }
@@ -181,7 +181,7 @@ function Graph() {
   this.getHorizontalAxisList = function () {
     var wList = [];
     for (key in this.mHorizontalAxis) {
-      if(null != this.mHorizontalAxis[key]){
+      if (null != this.mHorizontalAxis[key]) {
         wList.push(key);
       }
     }
@@ -196,8 +196,8 @@ function Graph() {
           continue;
         }
       }
-      
-      if(null != this.mGraphLine[key]){
+
+      if (null != this.mGraphLine[key]) {
         wList.push(key);
       }
     }
@@ -285,7 +285,7 @@ function Graph() {
   }
 
   this.removeGraphLine = function (iLineIndex) {
-    if (iLineIndex != eLineAttributeName.DataIndexLineName) {      
+    if (iLineIndex != eLineAttributeName.DataIndexLineName) {
       var wNewList = [];
       for (key in this.mGraphLine) {
         if (key != iLineIndex) {
@@ -381,7 +381,7 @@ function Graph() {
       }
     }
     else {
-      this.renderCanvas(iCanvasDOM, true);
+      this.syncData();
       var wAxisRef = null;
       if (true == iIsHorizontalAxis) {
         wAxisRef = this.mHorizontalAxis[iAxisIndex];
@@ -400,7 +400,7 @@ function Graph() {
           var wLineDataRef = this.mGraphLine[key];
 
           if (null != wLineDataRef) {
-            if (false == wLineDataRef.mVisible){
+            if (false == wLineDataRef.mVisible) {
               continue;
             }
 
@@ -429,7 +429,7 @@ function Graph() {
           }
         }
 
-        if (true  == wNotSet) {
+        if (true == wNotSet) {
           return;
         }
 
@@ -451,44 +451,26 @@ function Graph() {
     }
   }
 
-  this.renderCanvas = function (iCanvasDOM, iUpdateOnly = false) {
+  this.renderCanvas = function (iCanvasDOM) {
 
-    var wCtx = iCanvasDOM.getContext("2d");
-    /*
-    wCtx.strokeStyle = "red";
-    var wLine = [[100, 0], [0, 0], [0, 100]];
-    drawPolyLine(iCanvasDOM, wLine);
-    */
-    var wDomWidth = iCanvasDOM.width;
-    var wDomHeight = iCanvasDOM.height;
-    var wBaseScale = 1;
-    var wMajorIncrement = 100;
-    var wMinorIncrement = 20;
-    var wMajorLength = 20;
-    var wMinorLength = 10;
-    var wMajorLineWidth = 1;
-    var wMinorLineWidth = 0.5;
+    this.syncData();
+
+    drawCanvasCenteredAt(iCanvasDOM, function (iDOM) {
+      gGraph.drawGraphArea(iDOM);
+    }, iCanvasDOM.width / 2, iCanvasDOM.height / 2, 1, 1);
+
+  }
+
+
+  this.syncData = function () {
 
     var wDefaultAxisX = "";
 
     for (key in this.mHorizontalAxis) {
       var wAxis = this.mHorizontalAxis[key];
       if (null != wAxis) {
-
-        if ("" == wDefaultAxisX) {
-          wDefaultAxisX = key;
-        }
-
-        if ((false == iUpdateOnly) || (true == wAxis.mVisible)) {
-          wCtx.strokeStyle = wAxis.mColor;
-          var wScale = wBaseScale * Math.pow(2, wAxis.mZoom);
-          drawNumberLine(iCanvasDOM, -wDomWidth, wAxis.mPosition, wDomWidth, wAxis.mPosition,
-            wScale * wAxis.mOffset, wAxis.mPosition + 50, 0,
-            wScale,
-            wMajorIncrement / wScale, wMinorIncrement / wScale,
-            wMajorLength, wMinorLength,
-            wMajorLineWidth, wMinorLineWidth);
-        }
+        wDefaultAxisX = key;
+        break;
       }
     }
 
@@ -497,21 +479,8 @@ function Graph() {
     for (key in this.mVerticalAxis) {
       var wAxis = this.mVerticalAxis[key];
       if (null != wAxis) {
-
-        if ("" == wDefaultAxisY) {
-          wDefaultAxisY = key;
-        }
-
-        if ((false == iUpdateOnly) || (true == wAxis.mVisible)) {
-          wCtx.strokeStyle = wAxis.mColor;
-          var wScale = wBaseScale * Math.pow(2, wAxis.mZoom);
-          drawNumberLine(iCanvasDOM, wAxis.mPosition, wDomHeight, wAxis.mPosition, -wDomHeight,
-            wAxis.mPosition + 50, wScale * wAxis.mOffset, 0,
-            wScale,
-            wMajorIncrement / wScale, wMinorIncrement / wScale,
-            wMajorLength, wMinorLength,
-            wMajorLineWidth, wMinorLineWidth);
-        }
+        wDefaultAxisY = key;
+        break;
       }
     }
 
@@ -553,9 +522,81 @@ function Graph() {
             wXData.mData.push(wXData.mData.length);
           }
         }
+      }
+    }
+  }
+
+  this.drawGraphArea = function (iCanvasDOM) {
+
+    var wCtx = iCanvasDOM.getContext("2d");
+    var wDomWidth = iCanvasDOM.width;
+    var wDomHeight = iCanvasDOM.height;
+    var wBaseScale = 1;
+    var wMajorIncrement = 100;
+    var wMinorIncrement = 20;
+    var wMajorLength = 20;
+    var wMinorLength = 10;
+    var wMajorLineWidth = 1;
+    var wMinorLineWidth = 0.5;
+
+    for (key in this.mHorizontalAxis) {
+      var wAxis = this.mHorizontalAxis[key];
+      if (null != wAxis) {
+        if (true == wAxis.mVisible) {
+          wCtx.strokeStyle = wAxis.mColor;
+          var wScale = wBaseScale * Math.pow(2, wAxis.mZoom);
+          drawNumberLine(iCanvasDOM, -wDomWidth/2, wAxis.mPosition, wDomWidth/2, wAxis.mPosition,
+            wScale * wAxis.mOffset, wAxis.mPosition + 50, 0,
+            wScale,
+            wMajorIncrement / wScale, wMinorIncrement / wScale,
+            wMajorLength, wMinorLength,
+            wMajorLineWidth, wMinorLineWidth);
+        }
+      }
+    }
+
+    for (key in this.mVerticalAxis) {
+      var wAxis = this.mVerticalAxis[key];
+      if (null != wAxis) {
+        if (true == wAxis.mVisible) {
+          wCtx.strokeStyle = wAxis.mColor;
+          var wScale = wBaseScale * Math.pow(2, wAxis.mZoom);
+          drawNumberLine(iCanvasDOM, wAxis.mPosition, wDomHeight/2, wAxis.mPosition, -wDomHeight/2,
+            wAxis.mPosition + 50, wScale * wAxis.mOffset, 0,
+            wScale,
+            wMajorIncrement / wScale, wMinorIncrement / wScale,
+            wMajorLength, wMinorLength,
+            wMajorLineWidth, wMinorLineWidth);
+        }
+      }
+    }
+
+    for (key in this.mGraphLine) {
+      if (key == eLineAttributeName.DataIndexLineName) {
+        continue;
+      }
+
+      var wLine = this.mGraphLine[key];
+      if (null != wLine) {
+
+        if ((null == wLine.mData) || (0 == wLine.mData.length)) {
+          continue;
+        }
+        var wXAxisRef = this.mHorizontalAxis[wLine.mXAxisIndex];
+        var wYAxisRef = this.mVerticalAxis[wLine.mYAxisIndex];
+
+        if ((null == wXAxisRef) || (null == wYAxisRef)) {
+          continue;
+        }
+
+        var wXData = this.mGraphLine[wLine.mXAxisDataIndex];
+
+        if (null == wXData) {
+          continue;
+        }
 
         if ((false == wXAxisRef.mVisible) || (false == wYAxisRef.mVisible)
-         || (false == wXData.mVisible)  || (false == wLine.mVisible)) {
+          || (false == wXData.mVisible) || (false == wLine.mVisible)) {
           continue;
         }
 
@@ -564,13 +605,10 @@ function Graph() {
         var wYScale = wBaseScale * Math.pow(2, wYAxisRef.mZoom);
         var wYOffset = wYAxisRef.mOffset;
 
-        if (false == iUpdateOnly) {
-          
-          wCtx.strokeStyle = wLine.mColor;
-          drawPolyLineXYArray(iCanvasDOM, wXData.mData, wLine.mData,
-            wXScale, -wYScale,
-            wXScale * wXOffset, wYScale * wYOffset);
-        }
+        wCtx.strokeStyle = wLine.mColor;
+        drawPolyLineXYArray(iCanvasDOM, wXData.mData, wLine.mData,
+          wXScale, -wYScale,
+          wXScale * wXOffset, wYScale * wYOffset);
       }
     }
   }

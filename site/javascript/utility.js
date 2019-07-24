@@ -57,3 +57,12 @@ function getAllScroll(iDOM) {
   };
 
 }
+
+function getDOMRelativeMousePosition(iDOM, iMouseX, iMouseY) {
+  
+  var wScroll = getAllScroll(iDOM);
+  return {
+    x: iMouseX - iDOM.offsetLeft + wScroll.x,
+    y: iMouseY - iDOM.offsetTop  + wScroll.y
+  }
+}

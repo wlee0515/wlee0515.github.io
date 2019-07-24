@@ -57,9 +57,7 @@
           updateControls(gGraph);
         }
         clearCanvas(wCanvas);
-        drawCanvasCenteredAt(wCanvas, function (iDOM) {
-          gGraph.renderCanvas(iDOM);
-        }, wCanvas.width / 2, wCanvas.height / 2, 1, 1);
+        gGraph.renderCanvas(wCanvas);
       }
     }
     var wFileIdCount = 0;
