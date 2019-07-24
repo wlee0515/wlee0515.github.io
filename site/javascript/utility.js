@@ -48,8 +48,8 @@ function getAllScroll(iDOM) {
     wScrollY += parseInt(wCurrentDOM.scrollTop);
   }
   
-  wScrollX += parseInt(wCurrentDOM.scrollLeft);
-  wScrollY += parseInt(wCurrentDOM.scrollTop);
+  wScrollX += parseInt(window.pageXOffset);
+  wScrollY += parseInt(window.pageYOffset);
 
   return {
     x: wScrollX,
