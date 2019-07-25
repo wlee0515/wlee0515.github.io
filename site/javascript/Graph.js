@@ -446,21 +446,24 @@ function Graph() {
     } 
   }
 
-  this.removeAllGraphLineInGroup = function (iGroupIndex) {
+  this.removeGraphLineGroup = function (iGroupIndex) {
     
-    if (null == iGroupIndex) {
-      iGroupIndex = eLineGroupAttributeName.DefaultGroupName;
+    if (eLineGroupAttributeName.DefaultGroupName != iGroupIndex) {
+      var wNewList = [];
+      for (key in this.mGraphLineGroup) {
+        if (iGroupIndex != key) {
+          wNewList[key] = this.mGraphLineGroup[key];
+        }
+      }
+      this.mGraphLineGroup = wNewList;
+      if (null != this.mRemoveLineCallback) {
+        this.mRemoveLineCallback(this,iGroupIndex);
+      }
+
+      return true;
     }
 
-    if (null != this.mGraphLineGroup[iGroupIndex]) {
-
-      if (true == this.mGraphLineGroup[iGroupIndex].removeAllLines(iLineIndex, iData)) {
-        if (null != this.mRemoveLineCallback) {
-          this.mRemoveLineCallback(this, iLineIndex, iGroupIndex);
-        }
-        return true;
-      }
-    } 
+    return false;
   }
 
   
@@ -505,6 +508,31 @@ function Graph() {
     return null;
   }
 
+  this.setLineGroupAttribute = function (iGroupIndex, iAttribute, iValue) {
+    
+    if (null == iGroupIndex) {
+      iGroupIndex = eLineGroupAttributeName.DefaultGroupName;
+    }
+
+    if (null != this.mGraphLineGroup[iGroupIndex]) {
+      return this.mGraphLineGroup[iGroupIndex].setLineGroupAttribute(iAttribute, iValue);
+    }
+
+    return false;
+  }
+
+  this.getLineGroupAttribute = function (iGroupIndex, iAttribute) {
+    
+    if (null == iGroupIndex) {
+      iGroupIndex = eLineGroupAttributeName.DefaultGroupName;
+    }
+
+    if (null != this.mGraphLineGroup[iGroupIndex]) {
+      return this.mGraphLineGroup[iGroupIndex].getLineGroupAttribute( iAttribute);
+    }
+
+    return null;
+  }
   this.setLineAttribute = function (iGroupIndex, iLineIndex, iAttribute, iValue) {
     
     if (null == iGroupIndex) {
@@ -577,6 +605,11 @@ function Graph() {
           var wGroupRef = this.mGraphLineGroup[key1];
 
           if (null != wGroupRef) {
+
+            if (false == wGroupRef.mVisible) {
+              continue;
+            }
+
             for (key2 in wGroupRef.mGraphLine) {
               var wLineDataRef = wGroupRef.mGraphLine[key2];
 
@@ -588,7 +621,7 @@ function Graph() {
                 var wAxisName = "";
                 if (true == iIsHorizontalAxis) {
                   wAxisName = wLineDataRef.mXAxisIndex;
-                  wLineDataRef = wGroupRef.mGraphLine[wLineDataRef.mXAxisDataIndex];
+                  wLineDataRef = wGroupRef.mGraphLine[wGroupRef.mXAxisDataIndex];
                 }
                 else {
                   wAxisName = wLineDataRef.mYAxisIndex;
@@ -702,7 +735,7 @@ function Graph() {
               continue;
             }
 
-            var wXData = wGroupRef.mGraphLine[wLine.mXAxisDataIndex];
+            var wXData = wGroupRef.mGraphLine[wGroupRef.mXAxisDataIndex];
             if (null == wXData) {
               var wXData = wGroupRef.mGraphLine[eLineGroupAttributeName.DataIndexLineName];
             }
@@ -789,7 +822,7 @@ function Graph() {
               continue;
             }
 
-            if ((false == wXAxisRef.mVisible) || (false == wYAxisRef.mVisible)
+            if ((false == wGroupRef.mVisible) || (false == wYAxisRef.mVisible)
               || (false == wXData.mVisible) || (false == wLine.mVisible)) {
               continue;
             }
