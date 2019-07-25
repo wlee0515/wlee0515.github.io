@@ -306,7 +306,7 @@ function Graph() {
     return wList;
   }
 
-  this.getGraphLineList = function (iIncludeIndex, iGroupIndex) {
+  this.getGraphLineList = function (iGroupIndex, iIncludeIndex) {
 
     var wList = [];
     if (null == iGroupIndex){
@@ -429,7 +429,7 @@ function Graph() {
     return null;
   }
 
-  this.removeGraphLine = function (iLineIndex, iGroupIndex) {
+  this.removeGraphLine = function (iGroupIndex, iLineIndex) {
 
     if (null == iGroupIndex) {
       iGroupIndex = eLineGroupAttributeName.DefaultGroupName;
@@ -446,7 +446,7 @@ function Graph() {
     } 
   }
 
-  this.removeAllGraphLine = function (iGroupIndex) {
+  this.removeAllGraphLineInGroup = function (iGroupIndex) {
     
     if (null == iGroupIndex) {
       iGroupIndex = eLineGroupAttributeName.DefaultGroupName;
@@ -461,6 +461,16 @@ function Graph() {
         return true;
       }
     } 
+  }
+
+  
+  this.removeAllGraphLine = function () {
+    this.mGraphLineGroup = [];
+    this.mGraphLineGroup[eLineGroupAttributeName.DefaultGroupName] = new GraphLineGroup();
+    if (null != this.mRemoveLineCallback) {
+      this.mRemoveLineCallback(this,);
+    }
+    return true;
   }
 
   this.setAxisAttribute = function (iIsHorizontalAxis, iAxisIndex, iAttribute, iValue) {
@@ -495,7 +505,7 @@ function Graph() {
     return null;
   }
 
-  this.setLineAttribute = function (iLineIndex, iAttribute, iValue, iGroupIndex) {
+  this.setLineAttribute = function (iGroupIndex, iLineIndex, iAttribute, iValue) {
     
     if (null == iGroupIndex) {
       iGroupIndex = eLineGroupAttributeName.DefaultGroupName;
@@ -508,7 +518,7 @@ function Graph() {
     return false;
   }
 
-  this.getLineAttribute = function (iLineIndex, iAttribute, iGroupIndex) {
+  this.getLineAttribute = function (iGroupIndex, iLineIndex, iAttribute) {
     
     if (null == iGroupIndex) {
       iGroupIndex = eLineGroupAttributeName.DefaultGroupName;
@@ -603,6 +613,8 @@ function Graph() {
         }
 
         if (true == wNotSet) {
+          wAxisRef.mZoom = 0;
+          wAxisRef.mOffset = 0;
           return;
         }
 

@@ -19,7 +19,12 @@
       - Overlay
       
     */
+    var gFileInputId = "id_FileUpload";
     var gCanvasDOMId = "OutputCanvas";
+    var gAxisSelectorId = "id_control_knob_div_axis_selector";
+    var gGroupSelectorId = "id_control_knob_div_group_selector";
+    var gLineSelectorId = "id_control_knob_div_line_selector";
+
     var gHitCanvas = null;
     var gGraph = new Graph();
 
@@ -31,7 +36,6 @@
       gGraph.setRemoveHorizontalAxisCallback(updateControls);
       gGraph.setNewLineCallback(updateControls);
       gGraph.setRemoveLineCallback(updateControls);
-
 
       gGraph.addHorizontalAxis();
       gGraph.addVerticalAxis();
@@ -51,7 +55,7 @@
 
     function updateDisplay(iAutoScale) {
       var wCanvas = document.getElementById(gCanvasDOMId);
-      if (null != wCanvas) { 
+      if (null != wCanvas) {
         if (true == iAutoScale) {
           gGraph.autoScale(wCanvas);
           updateControls(gGraph);
@@ -62,29 +66,29 @@
     }
     var wFileIdCount = 0;
     function csvFileUpload() {
-      var wFileUpload = document.getElementById("id_FileUpload");
+      var wFileUpload = document.getElementById(gFileInputId);
 
       var wReader = new FileReader();
       wReader.onload = function (e) {
         var wDataSet = parseCSVtoDataset(e.target.result);
         wFileIdCount++;
 
-        for(var wi = 0; wi < wDataSet.length; ++wi) {
+        for (var wi = 0; wi < wDataSet.length; ++wi) {
           if ("number" == wDataSet[wi].mDataType) {
-            gGraph.addGraphLine(wDataSet[wi].mName, "F_"+wFileIdCount, wDataSet[wi].mData);
+            gGraph.addGraphLine(wDataSet[wi].mName, "F_" + wFileIdCount, wDataSet[wi].mData);
           }
         }
         updateDisplay(true);
       }
 
       wReader.readAsText(wFileUpload.files[0]);
-      
+
     }
 
     function updateControls(iGraph, iIndex) {
-      var wAxisSelector = document.getElementById('id_control_knob_div_axis_selector');
-      var wGroupSelector = document.getElementById('id_control_knob_div_group_selector');
-      
+      var wAxisSelector = document.getElementById(gAxisSelectorId);
+      var wGroupSelector = document.getElementById(gGroupSelectorId);
+
       if (null != wAxisSelector) {
         var wHtmlStr = "";
         var wXList = iGraph.getHorizontalAxisList();
@@ -99,7 +103,7 @@
         }
 
         wAxisSelector.innerHTML = wHtmlStr;
-        selectorKnobUpdate(wAxisSelector);
+        selectorAxisKnobUpdate(wAxisSelector);
       }
 
       if (null != wGroupSelector) {
@@ -115,24 +119,30 @@
       }
     }
 
-    function knobAction(iAxis, iInputDOM) {
+    function axisknobAction(iAxis, iInputDOM) {
       var wIsHorizontal = false;
       if (("X" == iAxis[0]) || ("x" == iAxis[0])) {
         wIsHorizontal = true;
       }
-      gGraph.setAxisAttribute(wIsHorizontal, iAxis, iInputDOM.name, iInputDOM.value);
+
+      if ("visible" == iInputDOM.name) {
+        gGraph.setAxisAttribute(wIsHorizontal, iAxis, iInputDOM.name, iInputDOM.checked);
+      }
+      else {
+        gGraph.setAxisAttribute(wIsHorizontal, iAxis, iInputDOM.name, iInputDOM.value);
+      }
 
       updateDisplay();
     }
 
-    function selectorKnobAction(iAxisSelectorId, iInputDOM) {
+    function selectorAxisKnobAction(iAxisSelectorId, iInputDOM) {
       var wSelector = document.getElementById(iAxisSelectorId);
       if (null != wSelector) {
-        knobAction(wSelector.value, iInputDOM);
+        axisknobAction(wSelector.value, iInputDOM);
       }
     }
 
-    function selectorKnobUpdate(iSelectorDOM) {
+    function selectorAxisKnobUpdate(iSelectorDOM) {
       var wIsHorizontal = false;
 
       if (("X" == iSelectorDOM.value[0]) || ("x" == iSelectorDOM.value[0])) {
@@ -144,68 +154,83 @@
 
       for (wKey in wKnobDOMList) {
         var wKnob = wKnobDOMList[wKey];
-        var wValue = gGraph.getAxisAttribute(wIsHorizontal, iSelectorDOM.value, wKnob.name);
-        if (null != wValue) {
-          wKnob.value = wValue;
+
+
+        if ("visible" == wKnob.name) {
+          var wValue = gGraph.getAxisAttribute(wIsHorizontal, iSelectorDOM.value, wKnob.name);
+          if (null != wValue) {
+            wKnob.checked = wValue;
+          }
+        }
+        else {
+
+          var wValue = gGraph.getAxisAttribute(wIsHorizontal, iSelectorDOM.value, wKnob.name);
+          if (null != wValue) {
+            wKnob.value = wValue;
+          }
         }
       }
     }
 
-    function lineKnobAction(iLine, iInputDOM) {
+    function lineKnobAction(iGroup, iLine, iInputDOM) {
 
       if ("visible" == iInputDOM.name) {
-        gGraph.setLineAttribute(iLine, iInputDOM.name, iInputDOM.checked);
+        gGraph.setLineAttribute(iGroup, iLine, iInputDOM.name, iInputDOM.checked);
       }
       else {
-        gGraph.setLineAttribute(iLine, iInputDOM.name, iInputDOM.value);
+        gGraph.setLineAttribute(iGroup, iLine, iInputDOM.name, iInputDOM.value);
       }
       updateDisplay();
     }
 
-    function selectorLineKnobAction(iLineSelectorId, iInputDOM) {
-      var wSelector = document.getElementById(iLineSelectorId);
-      if (null != wSelector) {
-        lineKnobAction(wSelector.value, iInputDOM);
+    function selectorLineKnobAction(iGroupSelectorId, iLineSelectorId, iInputDOM) {
+
+      var wGroupSelector = document.getElementById(iGroupSelectorId);
+      var wLineSelector = document.getElementById(iLineSelectorId);
+      if ((null != wGroupSelector) && (null != wLineSelector)) {
+        lineKnobAction(wGroupSelector.value, wLineSelector.value, iInputDOM);
       }
     }
 
-    function deleteLine(iLineSelectorId) {
-      var wSelector = document.getElementById(iLineSelectorId);
-      if (null != wSelector) {
-        gGraph.removeGraphLine(wSelector.value);
+    function deleteLine(iGroupSelectorId, iLineSelectorId) {
+      var wGroupSelector = document.getElementById(iGroupSelectorId);
+      var wLineSelector = document.getElementById(iLineSelectorId);
+      if ((null != wGroupSelector) && (null != wLineSelector)) {
+        gGraph.removeGraphLine(wGroupSelector.value, wLineSelector.value);
       }
       updateDisplay();
     }
-    
-    function selectorLineGroupUpdate(iGroupSelector) {
 
-      var wLineSelector = document.getElementById('id_control_knob_div_line_selector');
-      if (null != iGroupSelector) {
+    function selectorLineGroupUpdate(iGroupSelectorDOM) {
+
+      var wLineSelector = document.getElementById(gLineSelectorId);
+      if (null != iGroupSelectorDOM) {
         var wHtmlStr = "";
-        var wGraphLineList = gGraph.getGraphLineList(false, iGroupSelector.value);
+        var wGraphLineList = gGraph.getGraphLineList(iGroupSelectorDOM.value, false);
         for (var wi = 0; wi < wGraphLineList.length; ++wi) {
           var wIndex = wGraphLineList[wi];
           wHtmlStr += '<option value="' + wIndex + '">' + wIndex + '</option>'
         }
 
         wLineSelector.innerHTML = wHtmlStr;
-        selectorLineUpdate(wLineSelector);
+        selectorLineUpdate(iGroupSelectorDOM.id, wLineSelector);
       }
     }
 
-    function selectorLineUpdate(iSelectorDOM) {
-      var wParent = iSelectorDOM.parentElement;
+    function selectorLineUpdate(iGroupSelectorId, iLineSelectorDOM) {
+      var wParent = iLineSelectorDOM.parentElement;
       var wKnobDOMList = wParent.getElementsByClassName("class_input_knob");
+      var wGroupSelectorDOM = document.getElementById(iGroupSelectorId);
 
       for (wKey in wKnobDOMList) {
         var wKnob = wKnobDOMList[wKey];
 
         if ("XAxisDataIndex" == wKnob.name) {
           var wHtmlStr = "";
-          var wGraphLineList = gGraph.getGraphLineList(true);
+          var wGraphLineList = gGraph.getGraphLineList(wGroupSelectorDOM.value, true);
           for (var wi = 0; wi < wGraphLineList.length; ++wi) {
             var wIndex = wGraphLineList[wi];
-            if (wIndex == iSelectorDOM.value) {
+            if (wIndex == iLineSelectorDOM.value) {
               continue;
             }
             wHtmlStr += '<option value="' + wIndex + '">' + wIndex + '</option>'
@@ -238,37 +263,37 @@
 
         }
         else if ("visible" == wKnob.name) {
-          var wValue = gGraph.getLineAttribute(iSelectorDOM.value, wKnob.name);
+          var wValue = gGraph.getLineAttribute(wGroupSelectorDOM.value, iLineSelectorDOM.value, wKnob.name);
           if (null != wValue) {
             wKnob.checked = wValue;
-          }         
+          }
         }
         else {
-          var wValue = gGraph.getLineAttribute(iSelectorDOM.value, wKnob.name);
+          var wValue = gGraph.getLineAttribute(wGroupSelectorDOM.value, iLineSelectorDOM.value, wKnob.name);
           if (null != wValue) {
             wKnob.value = wValue;
           }
         }
       }
     }
-    
-    function addXAxis() { 
+
+    function addXAxis() {
       gGraph.addHorizontalAxis();
       updateDisplay();
     }
 
-    function addYAxis() { 
+    function addYAxis() {
       gGraph.addVerticalAxis();
       updateDisplay();
     }
-    
-    function clearLines() { 
+
+    function clearLines() {
       gGraph.removeAllGraphLine();
       updateDisplay();
     }
-    
-    function autoScale() { 
-      
+
+    function autoScale() {
+
       var wCanvas = document.getElementById(gCanvasDOMId);
       gGraph.autoScale(wCanvas);
       updateDisplay();
@@ -281,7 +306,7 @@
       background-color: rgb(255, 255, 255);
       padding: 0px;
       margin: 0px;
-     /* overflow: hidden;*/
+      /* overflow: hidden;*/
     }
 
     #id_display_div {
@@ -315,58 +340,83 @@
   </div>
   <div id="id_control_div">
       <div>
-        <input type="file" id="id_FileUpload" accept=".csv"/>
+        <input type="file" id="id_FileUpload" accept=".csv" />
         <input type="button" id="upload" value="Upload" onclick="csvFileUpload()" />
       </div>
       <div id="id_control_add_axis_div">
         <input type="button" value="Add X-Axis" onclick="addXAxis()" />
         <input type="button" value="Add Y-Axis" onclick="addYAxis()" />
-        <input type="button" value="Auto Scale" onclick="autoScale()" />
-        <input type="button" value="Clear Lines" onclick="clearLines()" />
+        <input type="button" value="Auto Scale All" onclick="autoScale()" />
+        <input type="button" value="Clear All Lines" onclick="clearLines()" />
       </div>
       <div id="id_control_knob_axis_div">
         <select id="id_control_knob_div_axis_selector" onchange="selectorKnobUpdate(this)">
         </select>
         <span>Offset</span>
         <input type="number" name="offset" class="class_input_knob class_number"
-          onchange="selectorKnobAction('id_control_knob_div_axis_selector',this)" value="0.0" />
+          onchange="selectorAxisKnobAction('id_control_knob_div_axis_selector',this)" value="0.0" />
         <span>Zoom</span>
         <input type="number" name="zoom" class="class_input_knob class_number"
-          onchange="selectorKnobAction('id_control_knob_div_axis_selector',this)" value="1.0" />
+          onchange="selectorAxisKnobAction('id_control_knob_div_axis_selector',this)" value="1.0" />
         <span>Position</span>
         <input type="number" name="position" class="class_input_knob class_number"
-          onchange="selectorKnobAction('id_control_knob_div_axis_selector',this)" value="1.0" />
+          onchange="selectorAxisKnobAction('id_control_knob_div_axis_selector',this)" value="1.0" />
         <span>Color</span>
         <input type="color" name="color" class="class_input_knob class_color"
-          onchange="selectorKnobAction('id_control_knob_div_axis_selector',this)" />
+          onchange="selectorAxisKnobAction('id_control_knob_div_axis_selector',this)" />
+
+        <span>Visible</span>
+        <input type="checkbox" name="visible" class="class_input_knob class_visible"
+          onchange="selectorAxisKnobAction('id_control_knob_div_axis_selector',this)" />
+
+        <input type="button" value="Auto Scale" onclick="deleteLine('id_control_knob_div_axis_selector')" />
+        <input type="button" value="Delete" onclick="deleteLine('id_control_knob_div_axis_selector')" />
+
+      </div>
+      <div id="id_control_knob_group_div">
+          <select id="id_control_knob_div_group_selector" onchange="selectorLineGroupUpdate(this)">
+          </select>
+          
+        <span>X-Data</span>
+        <select name="XAxisDataIndex" class="class_input_knob class_selector"
+          onchange="selectorLineKnobAction('id_control_knob_div_group_selector','id_control_knob_div_line_selector', this)"></select>
+
+        <span>Visible</span>
+        <input type="checkbox" name="visible" class="class_input_knob class_visible"
+          onchange="selectorLineKnobAction('id_control_knob_div_group_selector','id_control_knob_div_line_selector',this)" />
+
+        <input type="button" value="Delete"
+          onclick="deleteLine('id_control_knob_div_group_selector','id_control_knob_div_line_selector')" />
+
+
       </div>
       <div id="id_control_knob_line_div">
-        <select id="id_control_knob_div_group_selector" onchange="selectorLineGroupUpdate(this)">
-        </select>
-  
-        <select id="id_control_knob_div_line_selector" onchange="selectorLineUpdate(this)">
+        <select id="id_control_knob_div_line_selector"
+          onchange="selectorLineUpdate('id_control_knob_div_group_selector',this)">
         </select>
 
         <span>X-Axis</span>
         <select name="XAxisIndex" class="class_input_knob class_selector"
-          onchange="selectorLineKnobAction('id_control_knob_div_line_selector', this)"></select>
+          onchange="selectorLineKnobAction('id_control_knob_div_group_selector','id_control_knob_div_line_selector', this)"></select>
 
         <span>Y-Axis</span>
         <select name="YAxisIndex" class="class_input_knob class_selector"
-          onchange="selectorLineKnobAction('id_control_knob_div_line_selector', this)"></select>
+          onchange="selectorLineKnobAction('id_control_knob_div_group_selector','id_control_knob_div_line_selector', this)"></select>
 
         <span>X-Data</span>
         <select name="XAxisDataIndex" class="class_input_knob class_selector"
-          onchange="selectorLineKnobAction('id_control_knob_div_line_selector', this)"></select>
+          onchange="selectorLineKnobAction('id_control_knob_div_group_selector','id_control_knob_div_line_selector', this)"></select>
 
         <span>Color</span>
         <input type="color" name="color" class="class_input_knob class_color"
-          onchange="selectorLineKnobAction('id_control_knob_div_line_selector',this)" />
+          onchange="selectorLineKnobAction('id_control_knob_div_group_selector','id_control_knob_div_line_selector',this)" />
 
         <span>Visible</span>
-        <input type="checkbox" name="visible" class="class_input_knob class_visible" onchange="selectorLineKnobAction('id_control_knob_div_line_selector',this)" />
-        
-        <input type="button" value="Delete" onclick="deleteLine('id_control_knob_div_line_selector')" />
+        <input type="checkbox" name="visible" class="class_input_knob class_visible"
+          onchange="selectorLineKnobAction('id_control_knob_div_group_selector','id_control_knob_div_line_selector',this)" />
+
+        <input type="button" value="Delete"
+          onclick="deleteLine('id_control_knob_div_group_selector','id_control_knob_div_line_selector')" />
       </div>
 
   </div>
