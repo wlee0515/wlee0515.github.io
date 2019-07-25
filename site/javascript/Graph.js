@@ -179,7 +179,7 @@ function GraphLineGroup() {
     var wNewList = [];
     for (key in this.mGraphLine) {
       if (iLineIndex != key) {
-        wNewList.push(this.mGraphLine[key]);
+        wNewList[key] = this.mGraphLine[key];
         wSuccess = true;
       }
     }
@@ -437,7 +437,7 @@ function Graph() {
 
     if (null != this.mGraphLineGroup[iGroupIndex]) {
 
-      if (true == this.mGraphLineGroup[iGroupIndex].removeLine(iLineIndex, iData)) {
+      if (true == this.mGraphLineGroup[iGroupIndex].removeLine(iLineIndex)) {
         if (null != this.mRemoveLineCallback) {
           this.mRemoveLineCallback(this, iLineIndex, iGroupIndex);
         }
@@ -615,25 +615,25 @@ function Graph() {
         if (true == wNotSet) {
           wAxisRef.mZoom = 0;
           wAxisRef.mOffset = 0;
-          return;
-        }
-
-        var wRange = wMax - wMin;
-        if (1 > Math.abs(wRange)) wRange = 1;
-        var wOffset = Math.floor((wMax + wMin) / 2);
-
-        var wSpan = 0.95;
-        if (true == iIsHorizontalAxis) {
-          wAxisRef.mZoom = Math.floor(Math.log2((wSpan * iCanvasDOM.width) / wRange));
-          wAxisRef.mOffset = -wOffset;
         }
         else {
-          wAxisRef.mZoom = Math.floor(Math.log2((wSpan * iCanvasDOM.height) / wRange));
-          wAxisRef.mOffset = wOffset;
+          var wRange = wMax - wMin;
+          if (1 > Math.abs(wRange)) wRange = 1;
+          var wOffset = Math.floor((wMax + wMin) / 2);
+  
+          var wSpan = 0.95;
+          if (true == iIsHorizontalAxis) {
+            wAxisRef.mZoom = Math.floor(Math.log2((wSpan * iCanvasDOM.width) / wRange));
+            wAxisRef.mOffset = -wOffset;
+          }
+          else {
+            wAxisRef.mZoom = Math.floor(Math.log2((wSpan * iCanvasDOM.height) / wRange));
+            wAxisRef.mOffset = wOffset;
+          }  
         }
-
       }
     }
+    
   }
 
   this.renderCanvas = function (iCanvasDOM) {

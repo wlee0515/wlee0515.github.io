@@ -293,10 +293,10 @@
     }
 
     function autoScale() {
-
       var wCanvas = document.getElementById(gCanvasDOMId);
       gGraph.autoScale(wCanvas);
       updateDisplay();
+      updateControls(gGraph);
     }
 
   </script>
@@ -350,7 +350,7 @@
         <input type="button" value="Clear All Lines" onclick="clearLines()" />
       </div>
       <div id="id_control_knob_axis_div">
-        <select id="id_control_knob_div_axis_selector" onchange="selectorKnobUpdate(this)">
+        <select id="id_control_knob_div_axis_selector" onchange="selectorAxisKnobUpdate(this)">
         </select>
         <span>Offset</span>
         <input type="number" name="offset" class="class_input_knob class_number"
