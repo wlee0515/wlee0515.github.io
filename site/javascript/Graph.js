@@ -238,7 +238,13 @@ function GraphLineGroup() {
   }
 }
 
-function Graph() {
+function Graph(iCanvasDOM) {
+
+  this.mMainCanvasDOM = iCanvasDOM;
+  this.mHitCanvas = new HitCanvas(iCanvasDOM, true);
+  this.mHitCanvas.onClick = function (e, iHitId) {
+    alert(iHitId);
+  }.bind(this)
 
   this.mVerticalAxis = [];
   this.mHorizontalAxis = [];
@@ -599,14 +605,14 @@ function Graph() {
     this.setAxisAttribute(iIsHorizontalAxis, iAxisIndex, eAxisAttributeName.Color, iColor);
   }
 
-  this.autoScale = function (iCanvasDOM, iIsHorizontalAxis = false, iAxisIndex = null) {
+  this.autoScale = function (iIsHorizontalAxis = false, iAxisIndex = null) {
     if (null == iAxisIndex) {
       for (key in this.mVerticalAxis) {
-        this.autoScale(iCanvasDOM, false, key);
+        this.autoScale(false, key);
       }
 
       for (key in this.mHorizontalAxis) {
-        this.autoScale(iCanvasDOM, true, key);
+        this.autoScale(true, key);
       }
     }
     else {
@@ -680,11 +686,11 @@ function Graph() {
   
           var wSpan = 0.95;
           if (true == iIsHorizontalAxis) {
-            wAxisRef.mZoom = Math.floor(Math.log2((wSpan * iCanvasDOM.width) / wRange));
+            wAxisRef.mZoom = Math.floor(Math.log2((wSpan * this.mMainCanvasDOM.width) / wRange));
             wAxisRef.mOffset = -wOffset;
           }
           else {
-            wAxisRef.mZoom = Math.floor(Math.log2((wSpan * iCanvasDOM.height) / wRange));
+            wAxisRef.mZoom = Math.floor(Math.log2((wSpan * this.mMainCanvasDOM.height) / wRange));
             wAxisRef.mOffset = wOffset;
           }  
         }
@@ -693,14 +699,24 @@ function Graph() {
     
   }
 
-  this.renderCanvas = function (iCanvasDOM) {
+  this.renderCanvas = function () {
 
     this.syncData();
 
-    drawCanvasCenteredAt(iCanvasDOM, function (iDOM) {
-      gGraph.drawGraphArea(iDOM);
-    }, iCanvasDOM.width / 2, iCanvasDOM.height / 2, 1, 1);
+    drawCanvasCenteredAt(this.mMainCanvasDOM, function (iDOM) {
+      this.drawGraphArea(iDOM);
+    }.bind(this), this.mMainCanvasDOM.width / 2, this.mMainCanvasDOM.height / 2, 1, 1);
+    
+    this.mHitCanvas.reset();
+/*    {
+    this.mHitCanvas.mHitCanvas.width = this.mMainCanvasDOM.clientWidth;
+    this.mHitCanvas.mHitCanvas.height = this.mMainCanvasDOM.clientHeight;
 
+    }
+*/
+    drawCanvasCenteredAt(this.mHitCanvas.mHitCanvas, function (iDOM) {
+      this.drawHitCanvas(iDOM);
+    }.bind(this), this.mMainCanvasDOM.width / 2, this.mMainCanvasDOM.height / 2, 1, 1);
   }
 
 
@@ -776,7 +792,7 @@ function Graph() {
   }
 
   this.drawGraphArea = function (iCanvasDOM) {
-
+    
     var wCtx = iCanvasDOM.getContext("2d");
     var wDomWidth = iCanvasDOM.width;
     var wDomHeight = iCanvasDOM.height;
@@ -865,5 +881,100 @@ function Graph() {
         }
       }
     }
+  }
+
+  this.drawHitCanvas = function (iHitCanvasDOM) {
+    
+    var wDomWidth = iHitCanvasDOM.width;
+    var wDomHeight = iHitCanvasDOM.height;
+    var wBaseScale = 1;
+    var wMajorIncrement = 100;
+    var wMinorIncrement = 20;
+    var wMajorLength = 20;
+    var wMinorLength = 10;
+    var wMajorLineWidth = 1;
+    var wMinorLineWidth = 0.5;
+
+    for (key in this.mHorizontalAxis) {
+      var wAxis = this.mHorizontalAxis[key];
+      if (null != wAxis) {
+        if (true == wAxis.mVisible) {
+          this.mHitCanvas.draw(function(iCanvasDOM, iColor){
+            var wCtx = iCanvasDOM.getContext("2d");
+
+            wCtx.strokeStyle = "blue";
+            wCtx.beginPath();
+            wCtx.arc(0, 0, 10, 0, 2 * Math.PI);
+            wCtx.stroke();
+
+            wCtx.fillRect(-wDomWidth/2, wAxis.mPosition, wDomWidth, wMajorLength);
+            
+
+            return [key];
+          }.bind(this));
+        }
+      }
+    }
+
+    for (key in this.mVerticalAxis) {
+      var wAxis = this.mVerticalAxis[key];
+      if (null != wAxis) {
+        if (true == wAxis.mVisible) {
+          
+          this.mHitCanvas.draw(function(iCanvasDOM){
+            var wCtx = iCanvasDOM.getContext("2d");
+            wCtx.fillRect(wAxis.mPosition, -wDomHeight/2, wMajorLength, wDomHeight);
+            return [key];
+          }.bind(this));
+        }
+      }
+    }
+/*
+    for (key1 in this.mGraphLineGroup) {
+      var wGroupRef = this.mGraphLineGroup[key1];
+
+      if (null != wGroupRef) {
+        for (key2 in wGroupRef.mGraphLine) {
+
+          if (key2 == eLineGroupAttributeName.DataIndexLineName) {
+            continue;
+          }
+
+          var wLine = wGroupRef.mGraphLine[key2];
+          if (null != wLine) {
+
+            var wXAxisRef = this.mHorizontalAxis[wLine.mXAxisIndex];
+            var wYAxisRef = this.mVerticalAxis[wLine.mYAxisIndex];
+
+            if ((null == wXAxisRef) || (null == wYAxisRef)) {
+              continue;
+            }
+
+            var wXData = wGroupRef.mGraphLine[wGroupRef.mXAxisDataIndex];
+
+            if (null == wXData) {
+              continue;
+            }
+
+            if ((false == wGroupRef.mVisible) || (false == wYAxisRef.mVisible)
+              || (false == wXData.mVisible) || (false == wLine.mVisible)) {
+              continue;
+            }
+
+            var wXScale = wBaseScale * Math.pow(2, wXAxisRef.mZoom);
+            var wXOffset = wXAxisRef.mOffset;
+            var wYScale = wBaseScale * Math.pow(2, wYAxisRef.mZoom);
+            var wYOffset = wYAxisRef.mOffset;
+
+            wCtx.strokeStyle = wLine.mColor;
+            drawPolyLineXYArray(iCanvasDOM, wXData.mData, wLine.mData,
+              wXScale, -wYScale,
+              wXScale * wXOffset, wYScale * wYOffset);
+          
+          }
+        }
+      }
+    }
+    */
   }
 }

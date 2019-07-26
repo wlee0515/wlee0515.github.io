@@ -8,23 +8,19 @@ function HitCanvas(iCanvas, iShowHitCanvas) {
   this.mMainCanvas = iCanvas;
   this.mHitObjectList = [];
 
-  this.resize = function(){
-    this.mHitCanvas.width = this.mMainCanvas.clientWidth;
-    this.mHitCanvas.height = this.mMainCanvas.clientHeight;
-  }
-  
   this.reset = function() {
-    this.resize();
+    
+    this.mHitCanvas.width = this.mMainCanvas.clientWidth;
+    this.mHitCanvas.height = this.mMainCanvas.clientHeight
     this.mHitObjectList = [];
 
     var wCtx = this.mHitCanvas.getContext("2d");
     var wColor = convertColorIdToColor(this.mColorId );
-    wCtx.strokeStyle = wColor;
-    wCtx.fillStyle = wColor;
+    wCtx.strokeStyle = "white";
+    wCtx.fillStyle = "white";
     wCtx.fillRect(0, 0, this.mHitCanvas.width, this.mHitCanvas.height);
   }
   this.reset();
-  window.addEventListener('resize', this.reset.bind(this))
   
   this.draw = function(iDrawHitAreaFunction) {
   
@@ -39,6 +35,12 @@ function HitCanvas(iCanvas, iShowHitCanvas) {
 
   this.getLocationHitObjectId = function(iX, iY) {
     var wCtx = this.mHitCanvas.getContext("2d");
+    
+    wCtx.strokeStyle = "blue";
+    wCtx.beginPath();
+    wCtx.arc(iX, iY, 10, 0, 2 * Math.PI);
+    wCtx.stroke();
+
     var wPixel = wCtx.getImageData(iX, iY, 1, 1).data;
     var wColorId = convertColorToColorId(wPixel[0],wPixel[1],wPixel[2]);
     
@@ -55,13 +57,11 @@ function HitCanvas(iCanvas, iShowHitCanvas) {
     var wMousePos = getDOMRelativeMousePosition(this.mMainCanvas, e.clientX, e.clientY);
     var wHiObjectId = this.getLocationHitObjectId(wMousePos.x, wMousePos.y);
     
-    var wCtx = this.mHitCanvas.getContext("2d");
-    
-    wCtx.strokeStyle = "blue";
-    wCtx.beginPath();
-    wCtx.arc(wMousePos.x, wMousePos.y, 10, 0, 2 * Math.PI);
-    wCtx.stroke();
-
+    if (-1 != wHiObjectId) {
+      if (null != this.onClick){
+        this.onClick(e, wHiObjectId);
+      }  
+    }
   }.bind(this));
 
 }

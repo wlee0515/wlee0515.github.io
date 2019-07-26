@@ -22,10 +22,12 @@
     var gGroupSelectorId = "id_control_knob_div_group_selector";
     var gLineSelectorId = "id_control_knob_div_line_selector";
 
-    var gHitCanvas = null;
-    var gGraph = new Graph();
+    var gGraph = null;
   
     function init() {
+
+      var wCanvas = document.getElementById(gCanvasDOMId);
+      gGraph = new Graph(wCanvas);
 
       gGraph.setNewVerticalAxisCallback(updateControls);
       gGraph.setRemoveVerticalAxisCallback(updateControls);
@@ -37,11 +39,7 @@
       gGraph.addHorizontalAxis();
       gGraph.addVerticalAxis();
 
-
-      var wCanvas = document.getElementById(gCanvasDOMId);
-
       resize();
-      gHitCanvas = new HitCanvas(wCanvas, true);
     }
 
     function resize() {
@@ -54,11 +52,11 @@
       var wCanvas = document.getElementById(gCanvasDOMId);
       if (null != wCanvas) {
         if (true == iAutoScale) {
-          gGraph.autoScale(wCanvas);
+          gGraph.autoScale();
           updateControls(gGraph);
         }
         clearCanvas(wCanvas);
-        gGraph.renderCanvas(wCanvas);
+        gGraph.renderCanvas();
       }
     }
 
@@ -418,7 +416,6 @@
       if (null != iAxisSelectorDOMId) {
         wAxisSelector = document.getElementById(iAxisSelectorDOMId);
       }
-      var wCanvas = document.getElementById(gCanvasDOMId);
 
       if (null != wAxisSelector) {
         
@@ -428,10 +425,10 @@
           wIsHorizontal = true;
         }
 
-        gGraph.autoScale(wCanvas,wIsHorizontal,wAxisSelector.value );
+        gGraph.autoScale(wIsHorizontal,wAxisSelector.value );
       }
       else {
-        gGraph.autoScale(wCanvas);
+        gGraph.autoScale();
       }
 
       updateDisplay();
