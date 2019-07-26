@@ -18,7 +18,7 @@ var eLineAttributeName = {
 
 var eLineGroupAttributeName = {
   DataIndexLineName: "Data_Index",
-  DefaultGroupName: "Default_Group",
+  DefaultGroupName: "Workspace",
   XAxisDataIndex: "XAxisDataIndex",
   XAxisIndex: "XAxisIndex",
   Visible: "visible",
@@ -429,6 +429,30 @@ function Graph() {
     return null;
   }
 
+  this.copyGraphLineToGroup = function (iLineIndex, iFromGroupIndex, iToGroupIndex) {
+
+    if (null == iToGroupIndex) {
+      iGroupIndex = eLineGroupAttributeName.DefaultGroupName;
+    }
+    
+    if (iToGroupIndex != iFromGroupIndex) {
+      if ((null != iFromGroupIndex)&&(null != iLineIndex)) {
+        var wLineRef = this.getGraphLine( iLineIndex, iFromGroupIndex);
+        if (null != wLineRef) {
+          var wNewLineName = iFromGroupIndex + "_" + iLineIndex;
+          this.addGraphLine( wNewLineName, iToGroupIndex, wLineRef.mData);
+          var wNewLineRef = this.getGraphLine( iLineIndex, iToGroupIndex);
+          if (null != wNewLineRef) {
+            wNewLineRef.mColor = wLineRef.mColor;
+            wNewLineRef.mYAxisIndex = wLineRef.mYAxisIndex;
+            wNewLineRef.mXAxisIndex = wLineRef.mXAxisIndex;
+          }
+        }          
+      }  
+    }
+
+    return false;
+  }
   this.removeGraphLine = function (iGroupIndex, iLineIndex) {
 
     if (null == iGroupIndex) {

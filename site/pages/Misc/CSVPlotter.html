@@ -24,7 +24,7 @@
 
     var gHitCanvas = null;
     var gGraph = new Graph();
-
+  
     function init() {
 
       gGraph.setNewVerticalAxisCallback(updateControls);
@@ -61,6 +61,7 @@
         gGraph.renderCanvas(wCanvas);
       }
     }
+
     var wFileIdCount = 0;
     function csvFileUpload() {
       var wFileUpload = document.getElementById(gFileInputId);
@@ -77,9 +78,7 @@
         }
         updateDisplay(true);
       }
-
       wReader.readAsText(wFileUpload.files[0]);
-
     }
 
     function updateControls(iGraph, iIndex) {
@@ -87,32 +86,76 @@
       var wGroupSelector = document.getElementById(gGroupSelectorId);
 
       if (null != wAxisSelector) {
+        var wSelectedAxisValue = wAxisSelector.value;
+        var wValueAvailable = false;
+
         var wHtmlStr = "";
         var wXList = iGraph.getHorizontalAxisList();
         for (var wi = 0; wi < wXList.length; ++wi) {
           var wIndex = wXList[wi];
-          wHtmlStr += '<option value="' + wIndex + '">' + wIndex + '</option>'
+          wHtmlStr += '<option value="' + wIndex + '">' + wIndex + '</option>';
+
+          if (wSelectedAxisValue == wIndex) {
+            wValueAvailable = true;
+          }
         }
         var wYList = iGraph.getVerticalAxisList();
         for (var wi = 0; wi < wYList.length; ++wi) {
           var wIndex = wYList[wi];
-          wHtmlStr += '<option value="' + wIndex + '">' + wIndex + '</option>'
+          wHtmlStr += '<option value="' + wIndex + '">' + wIndex + '</option>';
+          
+          if (wSelectedAxisValue == wIndex) {
+            wValueAvailable = true;
+          }
         }
 
         wAxisSelector.innerHTML = wHtmlStr;
+        
+        if (true == wValueAvailable) {
+          wAxisSelector.value = wSelectedAxisValue;
+        }
+
         selectorAxisKnobUpdate(wAxisSelector);
       }
 
       if (null != wGroupSelector) {
+        
+        var wSelectedGroupValue = wGroupSelector.value;
+        var wValueAvailable = false;
+
         var wHtmlStr = "";
         var wGraphLineGroupList = iGraph.getGraphLineGroupList();
         for (var wi = 0; wi < wGraphLineGroupList.length; ++wi) {
           var wIndex = wGraphLineGroupList[wi];
-          wHtmlStr += '<option value="' + wIndex + '">' + wIndex + '</option>'
+          wHtmlStr += '<option value="' + wIndex + '">' + wIndex + '</option>';
+          if (wSelectedGroupValue == wIndex) {
+            wValueAvailable = true;
+          }
         }
 
         wGroupSelector.innerHTML = wHtmlStr;
-        selectorLineGroupUpdate(wGroupSelector);
+        
+        var wSelectedLineValue = "";
+        var wLineValueAvailable = false;
+        if (true == wValueAvailable) {
+          wGroupSelector.value = wSelectedGroupValue;
+
+          var wLineSelector = document.getElementById(gLineSelectorId);
+          if (null != wLineSelector) {
+            wSelectedLineValue = wLineSelector.value;
+            wLineValueAvailable = true;
+          }
+        }
+
+        selectorLineGroupUpdate(wGroupSelector, gLineSelectorId);
+
+        if (true == wLineValueAvailable) {
+          
+          var wLineSelector = document.getElementById(gLineSelectorId);
+          if (null != wLineSelector) {
+            wLineSelector.value = wSelectedLineValue;
+          }
+        }
       }
     }
 
@@ -146,9 +189,9 @@
       }
     }
 
-    function selectorLineGroupUpdate(iGroupSelectorDOM) {
+    function selectorLineGroupUpdate(iGroupSelectorDOM, iLineSelectorId) {
 
-      var wLineSelector = document.getElementById(gLineSelectorId);
+      var wLineSelector = document.getElementById(iLineSelectorId);
       if (null != iGroupSelectorDOM) {
         var wHtmlStr = "";
         var wGraphLineList = gGraph.getGraphLineList(iGroupSelectorDOM.value, false);
@@ -176,6 +219,11 @@
           }
 
           wKnob.innerHTML = wHtmlStr;
+          
+          var wValue = gGraph.getLineGroupAttribute(iGroupSelectorDOM.value, wKnob.name);
+          if (null != wValue) {
+            wKnob.value = wValue;
+          }
         }
         else if ("visible" == wKnob.name) {
           var wValue = gGraph.getLineGroupAttribute(iGroupSelectorDOM.value, wKnob.name);
@@ -200,21 +248,7 @@
       for (wKey in wKnobDOMList) {
         var wKnob = wKnobDOMList[wKey];
 
-        if ("XAxisDataIndex" == wKnob.name) {
-          var wHtmlStr = "";
-          var wGraphLineList = gGraph.getGraphLineList(wGroupSelectorDOM.value, true);
-          for (var wi = 0; wi < wGraphLineList.length; ++wi) {
-            var wIndex = wGraphLineList[wi];
-            if (wIndex == iLineSelectorDOM.value) {
-              continue;
-            }
-            wHtmlStr += '<option value="' + wIndex + '">' + wIndex + '</option>'
-          }
-
-          wKnob.innerHTML = wHtmlStr;
-        }
-
-        else if ("XAxisIndex" == wKnob.name) {
+        if ("XAxisIndex" == wKnob.name) {
           var wHtmlStr = "";
           var wAxisList = gGraph.getHorizontalAxisList();
           for (var wi = 0; wi < wAxisList.length; ++wi) {
@@ -358,6 +392,17 @@
       updateDisplay();
     }
 
+    function copyLine(iGroupSelectorId, iLineSelectorId, iToGroup) {
+
+      var wGroupSelector = document.getElementById(iGroupSelectorId);
+      var wLineSelector = document.getElementById(iLineSelectorId);
+      if ((null != wGroupSelector) && (null != wLineSelector)) {
+        
+        gGraph.copyGraphLineToGroup(wLineSelector.value, wGroupSelector.value, iToGroup);
+      }
+      updateDisplay();
+    }
+
     function addXAxis() {
       gGraph.addHorizontalAxis();
       updateDisplay();
@@ -468,7 +513,7 @@
 
       </div>
       <div id="id_control_knob_group_div">
-        <select id="id_control_knob_div_group_selector" onchange="selectorLineGroupUpdate(this)">
+        <select id="id_control_knob_div_group_selector" onchange="selectorLineGroupUpdate(this, 'id_control_knob_div_line_selector')">
         </select>
 
         <span>X-Axis</span>
@@ -506,6 +551,8 @@
 
         <input type="button" value="Delete"
           onclick="deleteLine('id_control_knob_div_group_selector','id_control_knob_div_line_selector')" />
+        <input type="button" value="Copy to Workspace"
+          onclick="copyLine('id_control_knob_div_group_selector','id_control_knob_div_line_selector')" />
       </div>
 
   </div>
