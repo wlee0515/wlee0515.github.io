@@ -7,10 +7,8 @@ var eAxisAttributeName = {
 }
 
 var eLineAttributeName = {
-  DataIndexLineName: "Data_Index",
   Data: "data",
   Color: "color",
-  XAxisDataIndex: "XAxisDataIndex",
   XAxisIndex: "XAxisIndex",
   YAxisIndex: "YAxisIndex",
   Visible: "visible",
@@ -80,7 +78,6 @@ function GraphAxis() {
 function GraphLine() {
   this.mData = [];
   this.mColor = getRandomColor();
-  this.mXAxisDataIndex = eLineAttributeName.DataIndexLineName;
   this.mXAxisIndex = "";
   this.mYAxisIndex = "";
   this.mVisible = true;
@@ -93,10 +90,6 @@ function GraphLine() {
     }
     else if (eLineAttributeName.Color == iAttribute) {
       this.mColor = iValue;
-      return true;
-    }
-    else if (eLineAttributeName.XAxisDataIndex == iAttribute) {
-      this.mXAxisDataIndex = iValue;
       return true;
     }
     else if (eLineAttributeName.XAxisIndex == iAttribute) {
@@ -121,9 +114,6 @@ function GraphLine() {
     }
     else if (eLineAttributeName.Color == iAttribute) {
       return this.mColor;
-    }
-    else if (eLineAttributeName.XAxisDataIndex == iAttribute) {
-      return this.mXAxisDataIndex;
     }
     else if (eLineAttributeName.XAxisIndex == iAttribute) {
       return this.XAxisIndex;
@@ -780,7 +770,7 @@ function Graph(iCanvasDOM) {
               var wXData = wGroupRef.mGraphLine[eLineGroupAttributeName.DataIndexLineName];
             }
 
-            if (eLineGroupAttributeName.DataIndexLineName == wLine.mXAxisDataIndex) {
+            if (eLineGroupAttributeName.DataIndexLineName == wGroupRef.mXAxisDataIndex) {
               while (wXData.mData.length < wLine.mData.length) {
                 wXData.mData.push(wXData.mData.length);
               }
@@ -843,6 +833,9 @@ function Graph(iCanvasDOM) {
         for (key2 in wGroupRef.mGraphLine) {
 
           if (key2 == eLineGroupAttributeName.DataIndexLineName) {
+            continue;
+          }
+          if (key2 == wGroupRef.mXAxisDataIndex) {
             continue;
           }
 
@@ -929,52 +922,5 @@ function Graph(iCanvasDOM) {
         }
       }
     }
-/*
-    for (key1 in this.mGraphLineGroup) {
-      var wGroupRef = this.mGraphLineGroup[key1];
-
-      if (null != wGroupRef) {
-        for (key2 in wGroupRef.mGraphLine) {
-
-          if (key2 == eLineGroupAttributeName.DataIndexLineName) {
-            continue;
-          }
-
-          var wLine = wGroupRef.mGraphLine[key2];
-          if (null != wLine) {
-
-            var wXAxisRef = this.mHorizontalAxis[wLine.mXAxisIndex];
-            var wYAxisRef = this.mVerticalAxis[wLine.mYAxisIndex];
-
-            if ((null == wXAxisRef) || (null == wYAxisRef)) {
-              continue;
-            }
-
-            var wXData = wGroupRef.mGraphLine[wGroupRef.mXAxisDataIndex];
-
-            if (null == wXData) {
-              continue;
-            }
-
-            if ((false == wGroupRef.mVisible) || (false == wYAxisRef.mVisible)
-              || (false == wXData.mVisible) || (false == wLine.mVisible)) {
-              continue;
-            }
-
-            var wXScale = wBaseScale * Math.pow(2, wXAxisRef.mZoom);
-            var wXOffset = wXAxisRef.mOffset;
-            var wYScale = wBaseScale * Math.pow(2, wYAxisRef.mZoom);
-            var wYOffset = wYAxisRef.mOffset;
-
-            wCtx.strokeStyle = wLine.mColor;
-            drawPolyLineXYArray(iCanvasDOM, wXData.mData, wLine.mData,
-              wXScale, -wYScale,
-              wXScale * wXOffset, wYScale * wYOffset);
-          
-          }
-        }
-      }
-    }
-    */
   }
 }
