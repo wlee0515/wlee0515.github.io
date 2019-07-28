@@ -449,9 +449,9 @@ function Graph(iCanvasDOM) {
           this.addGraphLine( wNewLineName, iToGroupIndex, wLineRef.mData);
           var wNewLineRef = this.getGraphLine( iLineIndex, iToGroupIndex);
           if (null != wNewLineRef) {
-            wNewLineRef.mColor = wLineRef.mColor;
-            wNewLineRef.mYAxisIndex = wLineRef.mYAxisIndex;
-            wNewLineRef.mXAxisIndex = wLineRef.mXAxisIndex;
+            wNewLineRef.mColor = "" + wLineRef.mColor;
+            wNewLineRef.mYAxisIndex = "" + wLineRef.mYAxisIndex;
+            wNewLineRef.mXAxisIndex = "" + wLineRef.mXAxisIndex;
           }
         }          
       }  
