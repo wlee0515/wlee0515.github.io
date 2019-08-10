@@ -28,13 +28,15 @@
 
       var wCanvas = document.getElementById(gCanvasDOMId);
       gGraph = new Graph(wCanvas);
-
+/*
       gGraph.setNewVerticalAxisCallback(updateControls);
       gGraph.setRemoveVerticalAxisCallback(updateControls);
       gGraph.setNewHorizontalAxisCallback(updateControls);
       gGraph.setRemoveHorizontalAxisCallback(updateControls);
       gGraph.setNewLineCallback(updateControls);
       gGraph.setRemoveLineCallback(updateControls);
+*/
+      gGraph.setOnChangeCallback(updateControls);
 
       gGraph.addHorizontalAxis();
       gGraph.addVerticalAxis();
@@ -48,13 +50,9 @@
       updateDisplay(false);
     }
 
-    function updateDisplay(iAutoScale) {
+    function updateDisplay() {
       var wCanvas = document.getElementById(gCanvasDOMId);
       if (null != wCanvas) {
-        if (true == iAutoScale) {
-          gGraph.autoScale();
-          updateControls(gGraph);
-        }
         clearCanvas(wCanvas);
         gGraph.renderCanvas();
       }
@@ -74,7 +72,8 @@
             gGraph.addGraphLine(wDataSet[wi].mName, "F_" + wFileIdCount, wDataSet[wi].mData);
           }
         }
-        updateDisplay(true);
+
+        autoScale();
       }
       wReader.readAsText(wFileUpload.files[0]);
     }
@@ -140,6 +139,8 @@
         selectorLineGroupUpdate(wGroupSelector, gLineSelectorId);
 
       }
+      
+      updateDisplay(true);
     }
 
     function selectorAxisKnobUpdate(iSelectorDOM) {
@@ -296,8 +297,6 @@
       else {
         gGraph.setAxisAttribute(wIsHorizontal, iAxis, iInputDOM.name, iInputDOM.value);
       }
-
-      updateDisplay();
     }
 
     function selectorAxisKnobAction(iAxisSelectorId, iInputDOM) {
@@ -315,7 +314,6 @@
       else {
         gGraph.setLineGroupAttribute(iGroup, iInputDOM.name, iInputDOM.value);
       }
-      updateDisplay();
     }
 
     function selectorLineGroupKnobAction(iGroupSelectorId, iInputDOM) {
@@ -335,7 +333,6 @@
       else {
         gGraph.setLineAttribute(iGroup, iLine, iInputDOM.name, iInputDOM.value);
       }
-      updateDisplay();
     }
 
     function selectorLineKnobAction(iGroupSelectorId, iLineSelectorId, iInputDOM) {
@@ -363,7 +360,6 @@
           gGraph.removeVerticalAxis(wAxisSelector.value);  
         }
       }
-      updateDisplay();
     }
 
 
@@ -387,7 +383,6 @@
           gGraph.removeGraphLine(wGroupSelector.value, wLineSelector.value);
         }
       }
-      updateDisplay();
     }
 
     function copyLine(iGroupSelectorId, iLineSelectorId, iToGroup) {
@@ -398,17 +393,14 @@
         
         gGraph.copyGraphLineToGroup(wLineSelector.value, wGroupSelector.value, iToGroup);
       }
-      updateDisplay();
     }
 
     function addXAxis() {
       gGraph.addHorizontalAxis();
-      updateDisplay();
     }
 
     function addYAxis() {
       gGraph.addVerticalAxis();
-      updateDisplay();
     }
 
     function autoScale( iAxisSelectorDOMId) {
@@ -430,8 +422,6 @@
       else {
         gGraph.autoScale();
       }
-
-      updateDisplay();
       updateControls(gGraph);
     }
 
@@ -472,7 +462,7 @@
 
 <body onload="init()" onresize="resize()">
   <div id="id_display_div">
-    <canvas id="OutputCanvas""></canvas>
+    <canvas id="OutputCanvas"></canvas>
   </div>
   <div id="id_control_div">
       <div>
