@@ -23,19 +23,19 @@
     var gLineSelectorId = "id_control_knob_div_line_selector";
 
     var gGraph = null;
-  
+
     function init() {
 
       var wCanvas = document.getElementById(gCanvasDOMId);
       gGraph = new Graph(wCanvas);
-/*
-      gGraph.setNewVerticalAxisCallback(updateControls);
-      gGraph.setRemoveVerticalAxisCallback(updateControls);
-      gGraph.setNewHorizontalAxisCallback(updateControls);
-      gGraph.setRemoveHorizontalAxisCallback(updateControls);
-      gGraph.setNewLineCallback(updateControls);
-      gGraph.setRemoveLineCallback(updateControls);
-*/
+      /*
+            gGraph.setNewVerticalAxisCallback(updateControls);
+            gGraph.setRemoveVerticalAxisCallback(updateControls);
+            gGraph.setNewHorizontalAxisCallback(updateControls);
+            gGraph.setRemoveHorizontalAxisCallback(updateControls);
+            gGraph.setNewLineCallback(updateControls);
+            gGraph.setRemoveLineCallback(updateControls);
+      */
       gGraph.setOnChangeCallback(updateControls);
 
       gGraph.addHorizontalAxis();
@@ -100,14 +100,14 @@
         for (var wi = 0; wi < wYList.length; ++wi) {
           var wIndex = wYList[wi];
           wHtmlStr += '<option value="' + wIndex + '">' + wIndex + '</option>';
-          
+
           if (wSelectedAxisValue == wIndex) {
             wValueAvailable = true;
           }
         }
 
         wAxisSelector.innerHTML = wHtmlStr;
-        
+
         if (true == wValueAvailable) {
           wAxisSelector.value = wSelectedAxisValue;
         }
@@ -116,7 +116,7 @@
       }
 
       if (null != wGroupSelector) {
-        
+
         var wSelectedGroupValue = wGroupSelector.value;
         var wValueAvailable = false;
 
@@ -131,7 +131,7 @@
         }
 
         wGroupSelector.innerHTML = wHtmlStr;
-        
+
         if (true == wValueAvailable) {
           wGroupSelector.value = wSelectedGroupValue;
         }
@@ -139,7 +139,7 @@
         selectorLineGroupUpdate(wGroupSelector, gLineSelectorId);
 
       }
-      
+
       updateDisplay(true);
     }
 
@@ -195,10 +195,10 @@
 
           wLineSelector.innerHTML = wHtmlStr;
 
-          if ((true == wValueExist) && ("" != wLineValue)){
+          if ((true == wValueExist) && ("" != wLineValue)) {
             wLineSelector.value = wLineValue;
           }
-  
+
           selectorLineUpdate(iGroupSelectorDOM.id, wLineSelector);
         }
       }
@@ -218,7 +218,7 @@
           }
 
           wKnob.innerHTML = wHtmlStr;
-          
+
           var wValue = gGraph.getLineGroupAttribute(iGroupSelectorDOM.value, wKnob.name);
           if (null != wValue) {
             wKnob.value = wValue;
@@ -343,21 +343,21 @@
         lineKnobAction(wGroupSelector.value, wLineSelector.value, iInputDOM);
       }
     }
-    
+
     function deleteAxis(iAxisSelectorId) {
 
       var wAxisSelector = document.getElementById(iAxisSelectorId);
 
       if (null != wAxisSelector) {
-        
+
         var wIsHorizontal = false;
 
         if (("X" == wAxisSelector.value[0]) || ("x" == wAxisSelector.value[0])) {
-          
+
           gGraph.removeHorizontalAxis(wAxisSelector.value);
         }
         else {
-          gGraph.removeVerticalAxis(wAxisSelector.value);  
+          gGraph.removeVerticalAxis(wAxisSelector.value);
         }
       }
     }
@@ -390,7 +390,7 @@
       var wGroupSelector = document.getElementById(iGroupSelectorId);
       var wLineSelector = document.getElementById(iLineSelectorId);
       if ((null != wGroupSelector) && (null != wLineSelector)) {
-        
+
         gGraph.copyGraphLineToGroup(wLineSelector.value, wGroupSelector.value, iToGroup);
       }
     }
@@ -403,21 +403,21 @@
       gGraph.addVerticalAxis();
     }
 
-    function autoScale( iAxisSelectorDOMId) {
+    function autoScale(iAxisSelectorDOMId) {
       var wAxisSelector = null;
       if (null != iAxisSelectorDOMId) {
         wAxisSelector = document.getElementById(iAxisSelectorDOMId);
       }
 
       if (null != wAxisSelector) {
-        
+
         var wIsHorizontal = false;
 
         if (("X" == wAxisSelector.value[0]) || ("x" == wAxisSelector.value[0])) {
           wIsHorizontal = true;
         }
 
-        gGraph.autoScale(wIsHorizontal,wAxisSelector.value );
+        gGraph.autoScale(wIsHorizontal, wAxisSelector.value);
       }
       else {
         gGraph.autoScale();
@@ -440,11 +440,11 @@
       width: 100vw;
     }
 
-    #id_control_div {
+    #div_menu {
       position: fixed;
-      top: 0px;
-      left: 0px;
-      padding: 3px;
+      top: 3px;
+      left: 3px;
+      padding: 5px;
       background-color: rgba(255, 255, 255, 0.75);
     }
 
@@ -458,13 +458,65 @@
       width: 50px;
     }
   </style>
+  <style>
+    
+    .menu_icon_container {
+      display: inline-block;
+      cursor: pointer;
+    }
+
+    .bar1,
+    .bar2,
+    .bar3 {
+      width: 35px;
+      height: 5px;
+      background-color: #333;
+      margin: 5px 0;
+      transition: 0.4s;
+    }
+
+    .change .bar1 {
+      -webkit-transform: translate(0px, 10.5px) rotate(-45deg);
+      transform: translate(0px, 10.5px) rotate(-45deg);
+    }
+
+    .change .bar2 {
+      opacity: 0;
+    }
+
+    .change .bar3 {
+      -webkit-transform: translate(0px, -10.5px) rotate(45deg);
+      transform: translate(0px, -10.5px) rotate(45deg);
+    }
+    
+    .hidden {
+      display: none;
+    }
+  </style>
+  
+  <script>
+
+      function myFunction(x) {
+        x.classList.toggle("change");
+  
+        var wControl = document.getElementById("id_control_div");
+        wControl.classList.toggle("hidden");
+      }
+  
+    </script>
 </head>
 
 <body onload="init()" onresize="resize()">
   <div id="id_display_div">
     <canvas id="OutputCanvas"></canvas>
   </div>
-  <div id="id_control_div">
+  <div id="div_menu">
+    <div class="menu_icon_container" onclick="myFunction(this)">
+      <div class="bar1"></div>
+      <div class="bar2"></div>
+      <div class="bar3"></div>
+    </div>
+    <div id="id_control_div" class="hidden">
       <div>
         <input type="file" id="id_FileUpload" accept=".csv" />
         <input type="button" id="upload" value="Upload" onclick="csvFileUpload()" />
@@ -500,7 +552,8 @@
 
       </div>
       <div id="id_control_knob_group_div">
-        <select id="id_control_knob_div_group_selector" onchange="selectorLineGroupUpdate(this, 'id_control_knob_div_line_selector')">
+        <select id="id_control_knob_div_group_selector"
+          onchange="selectorLineGroupUpdate(this, 'id_control_knob_div_line_selector')">
         </select>
 
         <span>X-Axis</span>
@@ -541,7 +594,7 @@
         <input type="button" value="Copy to Workspace"
           onclick="copyLine('id_control_knob_div_group_selector','id_control_knob_div_line_selector')" />
       </div>
-
+    </div>
   </div>
 </body>
 
