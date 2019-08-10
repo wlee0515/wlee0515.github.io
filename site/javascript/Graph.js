@@ -1076,18 +1076,6 @@ function Graph(iCanvasDOM) {
 
     this.renderCanvas();
 
-    if (!iEvent) {
-      iEvent = window.event;
-    }
-    //IE9 & Other Browsers
-    if (iEvent.stopPropagation) {
-      iEvent.stopPropagation();
-    }
-    //IE8 and Lower
-    else {
-      iEvent.cancelBubble = true;
-    }
-    
     if (null != iEvent.preventDefault) {
       iEvent.preventDefault();
     } else {
