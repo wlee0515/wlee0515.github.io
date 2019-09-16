@@ -1,85 +1,13 @@
 <html>
 <head>
     <title>Web ACM Display</title>
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/4.7.0/css/font-awesome.min.css">
-    <script type="text/javascript">
-
-        // glMatrix v0.9.5
-        glMatrixArrayType = typeof Float32Array != "undefined" ? Float32Array : typeof WebGLFloatArray != "undefined" ? WebGLFloatArray : Array;
-
-        var vec3 = {};
-        vec3.create = function (a) { var b = new glMatrixArrayType(3); if (a) { b[0] = a[0]; b[1] = a[1]; b[2] = a[2] } return b };
-        vec3.set = function (a, b) { b[0] = a[0]; b[1] = a[1]; b[2] = a[2]; return b };
-        vec3.add = function (a, b, c) { if (!c || a == c) { a[0] += b[0]; a[1] += b[1]; a[2] += b[2]; return a } c[0] = a[0] + b[0]; c[1] = a[1] + b[1]; c[2] = a[2] + b[2]; return c };
-        vec3.subtract = function (a, b, c) { if (!c || a == c) { a[0] -= b[0]; a[1] -= b[1]; a[2] -= b[2]; return a } c[0] = a[0] - b[0]; c[1] = a[1] - b[1]; c[2] = a[2] - b[2]; return c };
-        vec3.negate = function (a, b) { b || (b = a); b[0] = -a[0]; b[1] = -a[1]; b[2] = -a[2]; return b };
-        vec3.scale = function (a, b, c) { if (!c || a == c) { a[0] *= b; a[1] *= b; a[2] *= b; return a } c[0] = a[0] * b; c[1] = a[1] * b; c[2] = a[2] * b; return c };
-        vec3.normalize = function (a, b) { b || (b = a); var c = a[0], d = a[1], e = a[2], g = Math.sqrt(c * c + d * d + e * e); if (g) { if (g == 1) { b[0] = c; b[1] = d; b[2] = e; return b } } else { b[0] = 0; b[1] = 0; b[2] = 0; return b } g = 1 / g; b[0] = c * g; b[1] = d * g; b[2] = e * g; return b };
-        vec3.cross = function (a, b, c) { c || (c = a); var d = a[0], e = a[1]; a = a[2]; var g = b[0], f = b[1]; b = b[2]; c[0] = e * b - a * f; c[1] = a * g - d * b; c[2] = d * f - e * g; return c };
-        vec3.length = function (a) { var b = a[0], c = a[1]; a = a[2]; return Math.sqrt(b * b + c * c + a * a) }; vec3.dot = function (a, b) { return a[0] * b[0] + a[1] * b[1] + a[2] * b[2] };
-        vec3.direction = function (a, b, c) { c || (c = a); var d = a[0] - b[0], e = a[1] - b[1]; a = a[2] - b[2]; b = Math.sqrt(d * d + e * e + a * a); if (!b) { c[0] = 0; c[1] = 0; c[2] = 0; return c } b = 1 / b; c[0] = d * b; c[1] = e * b; c[2] = a * b; return c };
-        vec3.lerp = function (a, b, c, d) { d || (d = a); d[0] = a[0] + c * (b[0] - a[0]); d[1] = a[1] + c * (b[1] - a[1]); d[2] = a[2] + c * (b[2] - a[2]); return d }; vec3.str = function (a) { return "[" + a[0] + ", " + a[1] + ", " + a[2] + "]" };
-
-        var mat3 = {};
-        mat3.create = function (a) { var b = new glMatrixArrayType(9); if (a) { b[0] = a[0]; b[1] = a[1]; b[2] = a[2]; b[3] = a[3]; b[4] = a[4]; b[5] = a[5]; b[6] = a[6]; b[7] = a[7]; b[8] = a[8]; b[9] = a[9] } return b };
-        mat3.set = function (a, b) { b[0] = a[0]; b[1] = a[1]; b[2] = a[2]; b[3] = a[3]; b[4] = a[4]; b[5] = a[5]; b[6] = a[6]; b[7] = a[7]; b[8] = a[8]; return b };
-        mat3.identity = function (a) { a[0] = 1; a[1] = 0; a[2] = 0; a[3] = 0; a[4] = 1; a[5] = 0; a[6] = 0; a[7] = 0; a[8] = 1; return a };
-        mat3.transpose = function (a, b) { if (!b || a == b) { var c = a[1], d = a[2], e = a[5]; a[1] = a[3]; a[2] = a[6]; a[3] = c; a[5] = a[7]; a[6] = d; a[7] = e; return a } b[0] = a[0]; b[1] = a[3]; b[2] = a[6]; b[3] = a[1]; b[4] = a[4]; b[5] = a[7]; b[6] = a[2]; b[7] = a[5]; b[8] = a[8]; return b };
-        mat3.toMat4 = function (a, b) { b || (b = mat4.create()); b[0] = a[0]; b[1] = a[1]; b[2] = a[2]; b[3] = 0; b[4] = a[3]; b[5] = a[4]; b[6] = a[5]; b[7] = 0; b[8] = a[6]; b[9] = a[7]; b[10] = a[8]; b[11] = 0; b[12] = 0; b[13] = 0; b[14] = 0; b[15] = 1; return b };
-        mat3.str = function (a) { return "[" + a[0] + ", " + a[1] + ", " + a[2] + ", " + a[3] + ", " + a[4] + ", " + a[5] + ", " + a[6] + ", " + a[7] + ", " + a[8] + "]" };
-
-        var mat4 = {};
-        mat4.create = function (a) { var b = new glMatrixArrayType(16); if (a) { b[0] = a[0]; b[1] = a[1]; b[2] = a[2]; b[3] = a[3]; b[4] = a[4]; b[5] = a[5]; b[6] = a[6]; b[7] = a[7]; b[8] = a[8]; b[9] = a[9]; b[10] = a[10]; b[11] = a[11]; b[12] = a[12]; b[13] = a[13]; b[14] = a[14]; b[15] = a[15] } return b };
-        mat4.set = function (a, b) { b[0] = a[0]; b[1] = a[1]; b[2] = a[2]; b[3] = a[3]; b[4] = a[4]; b[5] = a[5]; b[6] = a[6]; b[7] = a[7]; b[8] = a[8]; b[9] = a[9]; b[10] = a[10]; b[11] = a[11]; b[12] = a[12]; b[13] = a[13]; b[14] = a[14]; b[15] = a[15]; return b };
-        mat4.identity = function (a) { a[0] = 1; a[1] = 0; a[2] = 0; a[3] = 0; a[4] = 0; a[5] = 1; a[6] = 0; a[7] = 0; a[8] = 0; a[9] = 0; a[10] = 1; a[11] = 0; a[12] = 0; a[13] = 0; a[14] = 0; a[15] = 1; return a };
-        mat4.transpose = function (a, b) { if (!b || a == b) { var c = a[1], d = a[2], e = a[3], g = a[6], f = a[7], h = a[11]; a[1] = a[4]; a[2] = a[8]; a[3] = a[12]; a[4] = c; a[6] = a[9]; a[7] = a[13]; a[8] = d; a[9] = g; a[11] = a[14]; a[12] = e; a[13] = f; a[14] = h; return a } b[0] = a[0]; b[1] = a[4]; b[2] = a[8]; b[3] = a[12]; b[4] = a[1]; b[5] = a[5]; b[6] = a[9]; b[7] = a[13]; b[8] = a[2]; b[9] = a[6]; b[10] = a[10]; b[11] = a[14]; b[12] = a[3]; b[13] = a[7]; b[14] = a[11]; b[15] = a[15]; return b };
-        mat4.determinant = function (a) { var b = a[0], c = a[1], d = a[2], e = a[3], g = a[4], f = a[5], h = a[6], i = a[7], j = a[8], k = a[9], l = a[10], o = a[11], m = a[12], n = a[13], p = a[14]; a = a[15]; return m * k * h * e - j * n * h * e - m * f * l * e + g * n * l * e + j * f * p * e - g * k * p * e - m * k * d * i + j * n * d * i + m * c * l * i - b * n * l * i - j * c * p * i + b * k * p * i + m * f * d * o - g * n * d * o - m * c * h * o + b * n * h * o + g * c * p * o - b * f * p * o - j * f * d * a + g * k * d * a + j * c * h * a - b * k * h * a - g * c * l * a + b * f * l * a };
-        mat4.inverse = function (a, b) {
-            b || (b = a); var c = a[0], d = a[1], e = a[2], g = a[3], f = a[4], h = a[5], i = a[6], j = a[7], k = a[8], l = a[9], o = a[10], m = a[11], n = a[12], p = a[13], r = a[14], s = a[15], A = c * h - d * f, B = c * i - e * f, t = c * j - g * f, u = d * i - e * h, v = d * j - g * h, w = e * j - g * i, x = k * p - l * n, y = k * r - o * n, z = k * s - m * n, C = l * r - o * p, D = l * s - m * p, E = o * s - m * r, q = 1 / (A * E - B * D + t * C + u * z - v * y + w * x); b[0] = (h * E - i * D + j * C) * q; b[1] = (-d * E + e * D - g * C) * q; b[2] = (p * w - r * v + s * u) * q; b[3] = (-l * w + o * v - m * u) * q; b[4] = (-f * E + i * z - j * y) * q; b[5] = (c * E - e * z + g * y) * q; b[6] = (-n * w + r * t - s * B) * q; b[7] = (k * w - o * t + m * B) * q; b[8] = (f * D - h * z + j * x) * q;
-            b[9] = (-c * D + d * z - g * x) * q; b[10] = (n * v - p * t + s * A) * q; b[11] = (-k * v + l * t - m * A) * q; b[12] = (-f * C + h * y - i * x) * q; b[13] = (c * C - d * y + e * x) * q; b[14] = (-n * u + p * B - r * A) * q; b[15] = (k * u - l * B + o * A) * q; return b
-        };
-        mat4.toRotationMat = function (a, b) { b || (b = mat4.create()); b[0] = a[0]; b[1] = a[1]; b[2] = a[2]; b[3] = a[3]; b[4] = a[4]; b[5] = a[5]; b[6] = a[6]; b[7] = a[7]; b[8] = a[8]; b[9] = a[9]; b[10] = a[10]; b[11] = a[11]; b[12] = 0; b[13] = 0; b[14] = 0; b[15] = 1; return b };
-        mat4.toMat3 = function (a, b) { b || (b = mat3.create()); b[0] = a[0]; b[1] = a[1]; b[2] = a[2]; b[3] = a[4]; b[4] = a[5]; b[5] = a[6]; b[6] = a[8]; b[7] = a[9]; b[8] = a[10]; return b };
-        mat4.toInverseMat3 = function (a, b) { var c = a[0], d = a[1], e = a[2], g = a[4], f = a[5], h = a[6], i = a[8], j = a[9], k = a[10], l = k * f - h * j, o = -k * g + h * i, m = j * g - f * i, n = c * l + d * o + e * m; if (!n) return null; n = 1 / n; b || (b = mat3.create()); b[0] = l * n; b[1] = (-k * d + e * j) * n; b[2] = (h * d - e * f) * n; b[3] = o * n; b[4] = (k * c - e * i) * n; b[5] = (-h * c + e * g) * n; b[6] = m * n; b[7] = (-j * c + d * i) * n; b[8] = (f * c - d * g) * n; return b };
-        mat4.multiply = function (a, b, c) {
-            c || (c = a); var d = a[0], e = a[1], g = a[2], f = a[3], h = a[4], i = a[5], j = a[6], k = a[7], l = a[8], o = a[9], m = a[10], n = a[11], p = a[12], r = a[13], s = a[14]; a = a[15]; var A = b[0], B = b[1], t = b[2], u = b[3], v = b[4], w = b[5], x = b[6], y = b[7], z = b[8], C = b[9], D = b[10], E = b[11], q = b[12], F = b[13], G = b[14]; b = b[15]; c[0] = A * d + B * h + t * l + u * p; c[1] = A * e + B * i + t * o + u * r; c[2] = A * g + B * j + t * m + u * s; c[3] = A * f + B * k + t * n + u * a; c[4] = v * d + w * h + x * l + y * p; c[5] = v * e + w * i + x * o + y * r; c[6] = v * g + w * j + x * m + y * s; c[7] = v * f + w * k + x * n + y * a; c[8] = z * d + C * h + D * l + E * p; c[9] = z * e + C * i + D * o + E * r; c[10] = z *
-            g + C * j + D * m + E * s; c[11] = z * f + C * k + D * n + E * a; c[12] = q * d + F * h + G * l + b * p; c[13] = q * e + F * i + G * o + b * r; c[14] = q * g + F * j + G * m + b * s; c[15] = q * f + F * k + G * n + b * a; return c
-        };
-        mat4.multiplyVec3 = function (a, b, c) { c || (c = b); var d = b[0], e = b[1]; b = b[2]; c[0] = a[0] * d + a[4] * e + a[8] * b + a[12]; c[1] = a[1] * d + a[5] * e + a[9] * b + a[13]; c[2] = a[2] * d + a[6] * e + a[10] * b + a[14]; return c };
-        mat4.multiplyVec4 = function (a, b, c) { c || (c = b); var d = b[0], e = b[1], g = b[2]; b = b[3]; c[0] = a[0] * d + a[4] * e + a[8] * g + a[12] * b; c[1] = a[1] * d + a[5] * e + a[9] * g + a[13] * b; c[2] = a[2] * d + a[6] * e + a[10] * g + a[14] * b; c[3] = a[3] * d + a[7] * e + a[11] * g + a[15] * b; return c };
-        mat4.translate = function (a, b, c) { var d = b[0], e = b[1]; b = b[2]; if (!c || a == c) { a[12] = a[0] * d + a[4] * e + a[8] * b + a[12]; a[13] = a[1] * d + a[5] * e + a[9] * b + a[13]; a[14] = a[2] * d + a[6] * e + a[10] * b + a[14]; a[15] = a[3] * d + a[7] * e + a[11] * b + a[15]; return a } var g = a[0], f = a[1], h = a[2], i = a[3], j = a[4], k = a[5], l = a[6], o = a[7], m = a[8], n = a[9], p = a[10], r = a[11]; c[0] = g; c[1] = f; c[2] = h; c[3] = i; c[4] = j; c[5] = k; c[6] = l; c[7] = o; c[8] = m; c[9] = n; c[10] = p; c[11] = r; c[12] = g * d + j * e + m * b + a[12]; c[13] = f * d + k * e + n * b + a[13]; c[14] = h * d + l * e + p * b + a[14]; c[15] = i * d + o * e + r * b + a[15]; return c };
-        mat4.scale = function (a, b, c) { var d = b[0], e = b[1]; b = b[2]; if (!c || a == c) { a[0] *= d; a[1] *= d; a[2] *= d; a[3] *= d; a[4] *= e; a[5] *= e; a[6] *= e; a[7] *= e; a[8] *= b; a[9] *= b; a[10] *= b; a[11] *= b; return a } c[0] = a[0] * d; c[1] = a[1] * d; c[2] = a[2] * d; c[3] = a[3] * d; c[4] = a[4] * e; c[5] = a[5] * e; c[6] = a[6] * e; c[7] = a[7] * e; c[8] = a[8] * b; c[9] = a[9] * b; c[10] = a[10] * b; c[11] = a[11] * b; c[12] = a[12]; c[13] = a[13]; c[14] = a[14]; c[15] = a[15]; return c };
-        mat4.rotate = function (a, b, c, d) {
-            var e = c[0], g = c[1]; c = c[2]; var f = Math.sqrt(e * e + g * g + c * c); if (!f) return null; if (f != 1) { f = 1 / f; e *= f; g *= f; c *= f } var h = Math.sin(b), i = Math.cos(b), j = 1 - i; b = a[0]; f = a[1]; var k = a[2], l = a[3], o = a[4], m = a[5], n = a[6], p = a[7], r = a[8], s = a[9], A = a[10], B = a[11], t = e * e * j + i, u = g * e * j + c * h, v = c * e * j - g * h, w = e * g * j - c * h, x = g * g * j + i, y = c * g * j + e * h, z = e * c * j + g * h; e = g * c * j - e * h; g = c * c * j + i; if (d) { if (a != d) { d[12] = a[12]; d[13] = a[13]; d[14] = a[14]; d[15] = a[15] } } else d = a; d[0] = b * t + o * u + r * v; d[1] = f * t + m * u + s * v; d[2] = k * t + n * u + A * v; d[3] = l * t + p * u + B *
-            v; d[4] = b * w + o * x + r * y; d[5] = f * w + m * x + s * y; d[6] = k * w + n * x + A * y; d[7] = l * w + p * x + B * y; d[8] = b * z + o * e + r * g; d[9] = f * z + m * e + s * g; d[10] = k * z + n * e + A * g; d[11] = l * z + p * e + B * g; return d
-        }; mat4.rotateX = function (a, b, c) { var d = Math.sin(b); b = Math.cos(b); var e = a[4], g = a[5], f = a[6], h = a[7], i = a[8], j = a[9], k = a[10], l = a[11]; if (c) { if (a != c) { c[0] = a[0]; c[1] = a[1]; c[2] = a[2]; c[3] = a[3]; c[12] = a[12]; c[13] = a[13]; c[14] = a[14]; c[15] = a[15] } } else c = a; c[4] = e * b + i * d; c[5] = g * b + j * d; c[6] = f * b + k * d; c[7] = h * b + l * d; c[8] = e * -d + i * b; c[9] = g * -d + j * b; c[10] = f * -d + k * b; c[11] = h * -d + l * b; return c };
-        mat4.rotateY = function (a, b, c) { var d = Math.sin(b); b = Math.cos(b); var e = a[0], g = a[1], f = a[2], h = a[3], i = a[8], j = a[9], k = a[10], l = a[11]; if (c) { if (a != c) { c[4] = a[4]; c[5] = a[5]; c[6] = a[6]; c[7] = a[7]; c[12] = a[12]; c[13] = a[13]; c[14] = a[14]; c[15] = a[15] } } else c = a; c[0] = e * b + i * -d; c[1] = g * b + j * -d; c[2] = f * b + k * -d; c[3] = h * b + l * -d; c[8] = e * d + i * b; c[9] = g * d + j * b; c[10] = f * d + k * b; c[11] = h * d + l * b; return c };
-        mat4.rotateZ = function (a, b, c) { var d = Math.sin(b); b = Math.cos(b); var e = a[0], g = a[1], f = a[2], h = a[3], i = a[4], j = a[5], k = a[6], l = a[7]; if (c) { if (a != c) { c[8] = a[8]; c[9] = a[9]; c[10] = a[10]; c[11] = a[11]; c[12] = a[12]; c[13] = a[13]; c[14] = a[14]; c[15] = a[15] } } else c = a; c[0] = e * b + i * d; c[1] = g * b + j * d; c[2] = f * b + k * d; c[3] = h * b + l * d; c[4] = e * -d + i * b; c[5] = g * -d + j * b; c[6] = f * -d + k * b; c[7] = h * -d + l * b; return c };
-        mat4.frustum = function (a, b, c, d, e, g, f) { f || (f = mat4.create()); var h = b - a, i = d - c, j = g - e; f[0] = e * 2 / h; f[1] = 0; f[2] = 0; f[3] = 0; f[4] = 0; f[5] = e * 2 / i; f[6] = 0; f[7] = 0; f[8] = (b + a) / h; f[9] = (d + c) / i; f[10] = -(g + e) / j; f[11] = -1; f[12] = 0; f[13] = 0; f[14] = -(g * e * 2) / j; f[15] = 0; return f };
-        mat4.perspective = function (a, b, c, d, e) { a = c * Math.tan(a * Math.PI / 360); b = a * b; return mat4.frustum(-b, b, -a, a, c, d, e) };
-        mat4.ortho = function (a, b, c, d, e, g, f) { f || (f = mat4.create()); var h = b - a, i = d - c, j = g - e; f[0] = 2 / h; f[1] = 0; f[2] = 0; f[3] = 0; f[4] = 0; f[5] = 2 / i; f[6] = 0; f[7] = 0; f[8] = 0; f[9] = 0; f[10] = -2 / j; f[11] = 0; f[12] = -(a + b) / h; f[13] = -(d + c) / i; f[14] = -(g + e) / j; f[15] = 1; return f };
-        mat4.lookAt = function (a, b, c, d) {
-            d || (d = mat4.create()); var e = a[0], g = a[1]; a = a[2]; var f = c[0], h = c[1], i = c[2]; c = b[1]; var j = b[2]; if (e == b[0] && g == c && a == j) return mat4.identity(d); var k, l, o, m; c = e - b[0]; j = g - b[1]; b = a - b[2]; m = 1 / Math.sqrt(c * c + j * j + b * b); c *= m; j *= m; b *= m; k = h * b - i * j; i = i * c - f * b; f = f * j - h * c; if (m = Math.sqrt(k * k + i * i + f * f)) { m = 1 / m; k *= m; i *= m; f *= m } else f = i = k = 0; h = j * f - b * i; l = b * k - c * f; o = c * i - j * k; if (m = Math.sqrt(h * h + l * l + o * o)) { m = 1 / m; h *= m; l *= m; o *= m } else o = l = h = 0; d[0] = k; d[1] = h; d[2] = c; d[3] = 0; d[4] = i; d[5] = l; d[6] = j; d[7] = 0; d[8] = f; d[9] =
-            o; d[10] = b; d[11] = 0; d[12] = -(k * e + i * g + f * a); d[13] = -(h * e + l * g + o * a); d[14] = -(c * e + j * g + b * a); d[15] = 1; return d
-        };
-        mat4.str = function (a) { return "[" + a[0] + ", " + a[1] + ", " + a[2] + ", " + a[3] + ", " + a[4] + ", " + a[5] + ", " + a[6] + ", " + a[7] + ", " + a[8] + ", " + a[9] + ", " + a[10] + ", " + a[11] + ", " + a[12] + ", " + a[13] + ", " + a[14] + ", " + a[15] + "]" };
-
-        quat4 = {};
-        quat4.create = function (a) { var b = new glMatrixArrayType(4); if (a) { b[0] = a[0]; b[1] = a[1]; b[2] = a[2]; b[3] = a[3] } return b };
-        quat4.set = function (a, b) { b[0] = a[0]; b[1] = a[1]; b[2] = a[2]; b[3] = a[3]; return b };
-        quat4.calculateW = function (a, b) { var c = a[0], d = a[1], e = a[2]; if (!b || a == b) { a[3] = -Math.sqrt(Math.abs(1 - c * c - d * d - e * e)); return a } b[0] = c; b[1] = d; b[2] = e; b[3] = -Math.sqrt(Math.abs(1 - c * c - d * d - e * e)); return b };
-        quat4.inverse = function (a, b) { if (!b || a == b) { a[0] *= 1; a[1] *= 1; a[2] *= 1; return a } b[0] = -a[0]; b[1] = -a[1]; b[2] = -a[2]; b[3] = a[3]; return b };
-        quat4.length = function (a) { var b = a[0], c = a[1], d = a[2]; a = a[3]; return Math.sqrt(b * b + c * c + d * d + a * a) };
-        quat4.normalize = function (a, b) { b || (b = a); var c = a[0], d = a[1], e = a[2], g = a[3], f = Math.sqrt(c * c + d * d + e * e + g * g); if (f == 0) { b[0] = 0; b[1] = 0; b[2] = 0; b[3] = 0; return b } f = 1 / f; b[0] = c * f; b[1] = d * f; b[2] = e * f; b[3] = g * f; return b };
-        quat4.multiply = function (a, b, c) { c || (c = a); var d = a[0], e = a[1], g = a[2]; a = a[3]; var f = b[0], h = b[1], i = b[2]; b = b[3]; c[0] = d * b + a * f + e * i - g * h; c[1] = e * b + a * h + g * f - d * i; c[2] = g * b + a * i + d * h - e * f; c[3] = a * b - d * f - e * h - g * i; return c };
-        quat4.multiplyVec3 = function (a, b, c) { c || (c = b); var d = b[0], e = b[1], g = b[2]; b = a[0]; var f = a[1], h = a[2]; a = a[3]; var i = a * d + f * g - h * e, j = a * e + h * d - b * g, k = a * g + b * e - f * d; d = -b * d - f * e - h * g; c[0] = i * a + d * -b + j * -h - k * -f; c[1] = j * a + d * -f + k * -b - i * -h; c[2] = k * a + d * -h + i * -f - j * -b; return c };
-        quat4.toMat3 = function (a, b) { b || (b = mat3.create()); var c = a[0], d = a[1], e = a[2], g = a[3], f = c + c, h = d + d, i = e + e, j = c * f, k = c * h; c = c * i; var l = d * h; d = d * i; e = e * i; f = g * f; h = g * h; g = g * i; b[0] = 1 - (l + e); b[1] = k - g; b[2] = c + h; b[3] = k + g; b[4] = 1 - (j + e); b[5] = d - f; b[6] = c - h; b[7] = d + f; b[8] = 1 - (j + l); return b };
-        quat4.toMat4 = function (a, b) { b || (b = mat4.create()); var c = a[0], d = a[1], e = a[2], g = a[3], f = c + c, h = d + d, i = e + e, j = c * f, k = c * h; c = c * i; var l = d * h; d = d * i; e = e * i; f = g * f; h = g * h; g = g * i; b[0] = 1 - (l + e); b[1] = k - g; b[2] = c + h; b[3] = 0; b[4] = k + g; b[5] = 1 - (j + e); b[6] = d - f; b[7] = 0; b[8] = c - h; b[9] = d + f; b[10] = 1 - (j + l); b[11] = 0; b[12] = 0; b[13] = 0; b[14] = 0; b[15] = 1; return b };
-        quat4.slerp = function (a, b, c, d) { d || (d = a); var e = c; if (a[0] * b[0] + a[1] * b[1] + a[2] * b[2] + a[3] * b[3] < 0) e = -1 * c; d[0] = 1 - c * a[0] + e * b[0]; d[1] = 1 - c * a[1] + e * b[1]; d[2] = 1 - c * a[2] + e * b[2]; d[3] = 1 - c * a[3] + e * b[3]; return d };
-        quat4.str = function (a) { return "[" + a[0] + ", " + a[1] + ", " + a[2] + ", " + a[3] + "]" };
-
-    </script>
+    <script src="javascript/EarthModel.js"></script>
+    <script src="javascript/glMatrix_v0_9_5.js"></script>
+    <script src="javascript/glDrawFunctions.js"></script>
+    <script src="javascript/ModelLibrary.js"></script>
+    <script src="javascript/AnimationDirector.js"></script>
+    <script src="javascript/SimulationDirector.js"></script>
 
     <script id="shader-fs" type="x-shader/x-fragment">
     precision mediump float;
@@ -124,1440 +52,6 @@
 
     vColor = aVertexColor;
     }
-    </script>
-
-    <script>
-
-        function normalizeAngle(iAngle) {
-            var wNewAngle = iAngle;
-            while (wNewAngle > Math.PI) {
-                wNewAngle -= 2 * Math.PI;
-            }
-
-            while (wNewAngle < -Math.PI) {
-                wNewAngle += 2 * Math.PI;
-            }
-            return wNewAngle;
-        }
-
-		function findVertexBoxSize( iVertexArray) {
-		
-			if (0 < iVertexArray.length)
-			{
-				var wTop = [ iVertexArray[0], iVertexArray[1], iVertexArray[2]];
-				var wBottom = [ iVertexArray[0], iVertexArray[1], iVertexArray[2]];
-				
-				for (var wi = 0; wi < iVertexArray.length; ++wi) {
-					var wIndex = wi %3;
-					if ( wTop[wIndex] < iVertexArray[wi]) wTop[wIndex] = iVertexArray[wi];
-					if ( wBottom[wIndex] > iVertexArray[wi]) wBottom[wIndex] = iVertexArray[wi];
-				}
-				
-				return {
-					Top    : wTop,
-					Bottom : wBottom
-				}
-			}
-		
-		}
-		
-        DrawTypeEnum = {
-
-            //   0 gl.POINTS To draw a series of points.
-            //   1 gl.LINES To draw a series of unconnected line segments (individual lines).
-            //   2 gl.LINE_STRIP To draw a series of connected line segments.
-            //   3 gl.LINE_LOOP To draw a series of connected line segments. It also joins the first and last vertices to form a loop.
-            //   4 gl.TRIANGLES To draw a series of separate triangles.
-            //   5 gl.TRIANGLE_STRIP To draw a series of connected triangles in strip fashion.
-            //   6 gl.TRIANGLE_FAN To draw a series of connected triangles sharing the first vertex in a fan-like fashion.
-
-            POINTS: 0,
-            LINES: 1,
-            LINE_STRIP: 2,
-            LINE_LOOP: 3,
-            TRIANGLES: 4,
-            TRIANGLE_STRIP: 5,
-            TRIANGLE_FAN: 6
-        };
-
-        BufferTypeEnum = {
-            //  0. gl.STATIC_DRAW: Contents of the buffer are likely to be used often and not change often. Contents are written to the buffer, but not read.
-            //  1. gl.DYNAMIC_DRAW: Contents of the buffer are likely to be used often and change often. Contents are written to the buffer, but not read.
-            //  2. gl.STREAM_DRAW: Contents of the buffer are likely to not be used often. Contents are written to the buffer, but not read.
-
-            STATIC_DRAW: 0,
-            DYNAMIC_DRAW: 1,
-            STREAM_DRAW: 2,
-        }
-
-        function DrawBuffer(/*iBufferTypeEnum,*/ iDrawTypeEnum, iVertexList, iVertixNormal, iColorList) {
-
-            // this.BufferTypeEnum = iBufferTypeEnum;
-            this.DrawTypeEnum = iDrawTypeEnum;
-            this.PositionData = iVertexList;
-            this.NormalData = iVertixNormal;
-            this.ColorData = iColorList;
-
-            this.PositoinItemSize = 3;
-            this.NormalItemSize = 3;
-            this.ColorItemSize = 4;
-
-            var wLength = this.PositionData.length - this.PositionData.length % this.PositoinItemSize;
-            if (this.PositionData.length >= wLength) {
-                this.PositionData.length = wLength;
-            }
-
-            this.ItemCount = wLength / this.PositoinItemSize;
-
-
-            var wNLength = this.ItemCount * this.NormalItemSize;
-
-            while (this.NormalData.length < wNLength) {
-                var wLastIndex = this.NormalData.length - this.NormalItemSize;
-                this.NormalData.push(this.NormalData[wLastIndex]);
-                this.NormalData.push(this.NormalData[wLastIndex + 1]);
-                this.NormalData.push(this.NormalData[wLastIndex + 2]);
-
-            }
-
-            if (this.NormalData.length >= wNLength) {
-                this.NormalData.length = wNLength;
-            }
-
-            var wCLength = this.ItemCount * this.ColorItemSize;
-
-            while (this.ColorData.length < wCLength) {
-                var wLastIndex = this.ColorData.length - this.ColorItemSize;
-                this.ColorData.push(this.ColorData[wLastIndex]);
-                this.ColorData.push(this.ColorData[wLastIndex + 1]);
-                this.ColorData.push(this.ColorData[wLastIndex + 2]);
-                this.ColorData.push(this.ColorData[wLastIndex + 3]);
-
-            }
-
-            if (this.ColorData.length >= wCLength) {
-                this.ColorData.length = wCLength;
-            }
-        }
-
-        function Model(iModelName) {
-
-            this.ModelName = iModelName;
-            this.ModelIsLoaded = false;
-            this.BufferList = new Array();
-			this.BoundingBoxTop = [0,0,0];
-			this.BoundingBoxBottom = [0,0,0];
-
-            this.addBuffer = function (iDrawTypeEnum, iVertexList, iVertixNormalList, iColorList) {
-			
-                this.BufferList.push(new DrawBuffer(iDrawTypeEnum, iVertexList, iVertixNormalList, iColorList));
-				
-				var wBoundingCorners = findVertexBoxSize(iVertexList);
-				
-				if ( 1 == this.BufferList.length){
-					this.BoundingBoxTop = wBoundingCorners.Top;
-					this.BoundingBoxBottom = wBoundingCorners.Bottom;
-				}
-				else {
-					for (var wi = 0; wi < 3; ++wi) {
-						if ( this.BoundingBoxTop[wi] < wBoundingCorners.Top[wi]) this.BoundingBoxTop[wi] = wBoundingCorners.Top[wi];
-						if ( this.BoundingBoxBottom[wi] > wBoundingCorners.Bottom[wi]) this.BoundingBoxBottom[wi] = wBoundingCorners.Bottom[wi];
-					}
-				}
-            }
-        }
-
-        function ModelLibrary() {
-            this.ModelList = new Array();
-
-            this.addNewModel = function (iModelRef) {
-                this.ModelList.push(iModelRef);
-                iModelRef.ModelIsLoaded = false;
-                this.HasNewModel = true;
-            }
-
-            this.findModel = function (iModelName) {
-
-                for (var wi = 0; wi < this.ModelList.length; ++wi) {
-
-                    if (iModelName == this.ModelList[wi].ModelName) {
-                        return this.ModelList[wi];
-                    }
-                }
-
-                return null;
-            }
-
-            this.getModelNameList = function () {
-                var wNameList = new Array();
-
-                for (var wi = 0; wi < this.ModelList.length; ++wi) {
-
-                    wNameList.push(this.ModelList[wi].ModelName);
-                }
-
-                return wNameList;
-            }
-
-            this.updateNewModelIntoGLBuffer = function (iGL, iForceUpLoad) {
-
-                if ((true == this.HasNewModel) || (true == iForceUpLoad)) {
-                    for (var wi = 0; wi < this.ModelList.length; ++wi) {
-
-                        if ((false == this.ModelList[wi].ModelIsLoaded) || (true == iForceUpLoad)) {
-
-                            for (var wj = 0; wj < this.ModelList[wi].BufferList.length; ++wj) {
-
-                                this.ModelList[wi].BufferList[wj].PositionBuffer = iGL.createBuffer();
-                                iGL.bindBuffer(iGL.ARRAY_BUFFER, this.ModelList[wi].BufferList[wj].PositionBuffer);
-                                iGL.bufferData(iGL.ARRAY_BUFFER, new Float32Array(this.ModelList[wi].BufferList[wj].PositionData), iGL.STATIC_DRAW);
-                                this.ModelList[wi].BufferList[wj].PositionBuffer.itemSize = this.ModelList[wi].BufferList[wj].PositoinItemSize;
-                                this.ModelList[wi].BufferList[wj].PositionBuffer.numItems = this.ModelList[wi].BufferList[wj].ItemCount;
-
-                                this.ModelList[wi].BufferList[wj].NormalBuffer = iGL.createBuffer();
-                                iGL.bindBuffer(iGL.ARRAY_BUFFER, this.ModelList[wi].BufferList[wj].NormalBuffer);
-                                iGL.bufferData(iGL.ARRAY_BUFFER, new Float32Array(this.ModelList[wi].BufferList[wj].NormalData), iGL.STATIC_DRAW);
-                                this.ModelList[wi].BufferList[wj].NormalBuffer.itemSize = this.ModelList[wi].BufferList[wj].NormalItemSize;
-                                this.ModelList[wi].BufferList[wj].NormalBuffer.numItems = this.ModelList[wi].BufferList[wj].ItemCount;
-
-                                this.ModelList[wi].BufferList[wj].ColorBuffer = iGL.createBuffer();
-                                iGL.bindBuffer(iGL.ARRAY_BUFFER, this.ModelList[wi].BufferList[wj].ColorBuffer);
-                                iGL.bufferData(iGL.ARRAY_BUFFER, new Float32Array(this.ModelList[wi].BufferList[wj].ColorData), iGL.STATIC_DRAW);
-                                this.ModelList[wi].BufferList[wj].ColorBuffer.itemSize = this.ModelList[wi].BufferList[wj].ColorItemSize;
-                                this.ModelList[wi].BufferList[wj].ColorBuffer.numItems = this.ModelList[wi].BufferList[wj].ItemCount;
-                            }
-
-                            this.ModelList[wi].ModelIsLoaded = true;
-                        }
-                    }
-
-                    this.HasNewModel = false;
-                }
-            }
-        }
-
-
-        function DrawDescription(iId, iModelRef, iLatitude, iLongitude, iAltitude, iRoll, iPitch, iYaw) {
-            this.Id = iId;
-            this.Latitude = iLatitude;
-            this.Longitude = iLongitude;
-            this.Altitude = iAltitude;
-            this.roll = iRoll;
-            this.pitch = iPitch;
-            this.yaw = iYaw;
-            this.ModelRef = iModelRef;
-            this.scale_x = 1.0;
-            this.scale_y = 1.0;
-            this.scale_z = 1.0;
-
-        }
-
-        function AnimationFrame() {
-
-            this.DrawList = new Array();
-
-            this.addDrawDescription = function (iId, iModelRef, iLatitude, iLongitude, iAltitude, iRoll, iPitch, iYaw) {
-                var wNewDescription = new DrawDescription(iId, iModelRef, iLatitude, iLongitude, iAltitude, iRoll, iPitch, iYaw);
-                this.DrawList.push(wNewDescription);
-                return wNewDescription;
-            }
-
-            this.clearDrawList = function () {
-                this.DrawList.length = 0;
-            }
-
-            this.getDrawDescriptionID = function (iId) {
-
-                if (null != iId) {
-                    for (var wi = 0; wi < this.DrawList.length; ++wi) {
-                        if (iId == this.DrawList[wi].Id) {
-                            return this.DrawList[wi];
-                        }
-                    }
-
-                }
-                return null;
-            }
-
-            
-            this.deleteDrawDescription = function (iId) {
-
-                if (null != iId) {
-
-                    var wNewDrawDescriptionArray = new Array();
-                    var wStartDeleting = false;
-                    for (var wi = 0; wi < this.DrawList.length; ++wi) {
-                        if (iId != this.DrawList[wi].Id) {
-                            wNewDrawDescriptionArray.push(this.DrawList[wi]);
-                        }
-                    }
-                    this.DrawList = wNewDrawDescriptionArray;
-                }
-            }
-        }
-
-        function AnimationDirector(iMaxFrameCount) {
-
-            this.maxFrameCount = iMaxFrameCount;
-
-            this.RecordingIndex = -1;
-            this.PlaybackIndex = 0;
-            this.EndIndex = 0;
-            this.StartIndex = 0;
-
-            this.ModulatedRate_X = null;
-            this.ModulatedRate_Y = null;
-            this.ModulatedRate_Z = null;
-
-            this.FixedToCameraAnimationFrame = new AnimationFrame();
-            this.FixedToCameraAnimationFrame_Modulated = new AnimationFrame();
-            this.StaticAnimationFrame = new AnimationFrame();
-            this.AnimationElementList = new Array();
-
-            this.CameraFocusID = "";
-            this.TetherCameraFocusID = "";
-            this.CameraTerrainElevation = 0;
-			this.DrawAllIntegratedFrames = false;
-
-            this.createAnimationElement = function () {
-
-                return {
-                    SingleFrame: new AnimationFrame(),
-                    IntegratedFrame: new AnimationFrame()
-                }
-            }
-
-            this.clearAnimationFrames = function () {
-
-                this.RecordingIndex = -1;
-                this.PlaybackIndex = 0;
-                this.EndIndex = 0;
-                this.StartIndex = 0;
-                this.AnimationElementList.length = 0;
-            }
-
-            this.getFrameCount = function () {
-
-                var wDistance = this.EndIndex - this.StartIndex;
-                if (0 > wDistance) wDistance += this.AnimationElementList.length;
-
-                return wDistance;
-            }
-
-            this.getFrameAt = function (iIndex) {
-
-                if (null == this.maxFrameCount) {
-
-                    while (iIndex > this.AnimationElementList.length) {
-
-                        this.StartIndex = 0;
-                        this.EndIndex = this.AnimationElementList.length;
-
-                        var wNewFrame = this.createAnimationElement();
-                        this.AnimationElementList.push(wNewFrame);
-                    }
-
-                    return this.AnimationElementList[iIndex];
-
-                }
-                else {
-
-                    var wRealIndex = iIndex + this.StartIndex;
-
-                    if (this.maxFrameCount > this.AnimationElementList.length) {
-
-                        while (wRealIndex >= this.maxFrameCount) {
-
-                            this.EndIndex = this.AnimationElementList.length;
-
-                            var wNewFrame = this.createAnimationElement();
-                            this.AnimationElementList.push(wNewFrame);
-                        }
-
-                        this.StartIndex = 0;
-                        this.EndIndex = this.AnimationElementList.length;
-
-                        var wNewFrame = this.createAnimationElement();
-                        this.AnimationElementList.push(wNewFrame);
-                        return wNewFrame;
-                    }
-                    else {
-                        this.EndIndex++;
-                        this.EndIndex %= this.AnimationElementList.length;
-                        this.StartIndex = this.EndIndex + 1;
-                        this.StartIndex %= this.AnimationElementList.length;
-
-                        this.AnimationElementList[this.EndIndex].clearDrawList();
-                        return this.AnimationElementList[this.EndIndex];
-                    }
-                }
-                return null;
-            }
-
-            this.getNextRecordingFrame = function () {
-
-                ++this.RecordingIndex;
-
-                var wNewRecordingIndex = this.StartIndex + this.RecordingIndex;
-
-                if (wNewRecordingIndex < this.AnimationElementList.length) {
-                    return this.AnimationElementList[wNewRecordingIndex];
-                }
-
-                if (null == this.maxFrameCount) {
-
-                    this.StartIndex = 0;
-                    this.EndIndex = this.AnimationElementList.length;
-
-                    var wNewFrame = this.createAnimationElement();
-                    this.AnimationElementList.push(wNewFrame);
-                    return wNewFrame;
-                }
-                else {
-
-                    if (this.maxFrameCount > this.AnimationElementList.length) {
-
-                        this.StartIndex = 0;
-                        this.EndIndex = this.AnimationElementList.length;
-
-                        var wNewFrame = this.createAnimationElement();
-                        this.AnimationElementList.push(wNewFrame);
-                        return wNewFrame;
-                    }
-                    else {
-                        this.EndIndex++;
-                        this.EndIndex %= this.AnimationElementList.length;
-                        this.StartIndex = this.EndIndex + 1;
-                        this.StartIndex %= this.AnimationElementList.length;
-
-                        this.AnimationElementList[this.EndIndex].clearDrawList();
-                        return this.AnimationElementList[this.EndIndex];
-                    }
-                }
-                return null;
-            }
-
-            this.getPlaybackFrame = function () {
-
-                if (0 != this.AnimationElementList.length) {
-                    return this.AnimationElementList[this.PlaybackIndex % this.AnimationElementList.length];
-                }
-                return null;
-            }
-
-            this.setPlaybackPercentage = function (iValue) {
-                var wPercentage = iValue / 100;
-                if (1.0 < wPercentage) wPercentage = 1.0;
-                if (0 > wPercentage) wPercentage = 0.0;
-
-                var wDistance = this.EndIndex - this.StartIndex;
-                if (0 > wDistance) wDistance += this.AnimationElementList.length;
-
-                var wTravel = Math.floor(wPercentage * wDistance);
-
-                this.PlaybackIndex = wTravel + this.StartIndex;
-
-                if (0 != this.AnimationElementList.length) {
-                    this.PlaybackIndex %= this.AnimationElementList.length;
-                }
-            }
-
-            this.getPlaybackFrameNumber = function () {
-
-                var wTraveled = this.PlaybackIndex - this.StartIndex;
-                if (0 > wTraveled) wTraveled += this.AnimationElementList.length;
-
-                return wTraveled;
-            }
-
-
-            this.getPlaybackPercentage = function () {
-
-                var wTraveled = this.getPlaybackFrameNumber();
-
-                var wDistance = this.getFrameCount();
-
-                if (0 == wDistance) return 0;
-                return 100 * (wTraveled / wDistance);
-            }
-
-            this.setPlaybackToStart = function () {
-
-                this.PlaybackIndex = this.StartIndex;
-            }
-
-            this.setPlaybackToEnd = function () {
-
-                this.PlaybackIndex = this.EndIndex;
-            }
-
-
-            this.setRecordingFrameToStart = function () {
-
-                this.RecordingIndex = this.StartIndex - 1;
-            }
-
-            this.setRecordingFrameToEnd = function () {
-
-                this.RecordingIndex = this.EndIndex;
-            }
-
-            this.isPlaybackAtStart = function () {
-
-                return this.PlaybackIndex == this.StartIndex;
-            }
-
-            this.isPlaybackAtEnd = function () {
-
-                return this.PlaybackIndex == this.EndIndex;
-            }
-
-            this.incrementPlaybackIndex = function () {
-
-                if (this.PlaybackIndex != this.EndIndex) {
-                    this.PlaybackIndex++;
-                    this.PlaybackIndex %= this.AnimationElementList.length;
-                }
-            }
-
-            this.decrementPlaybackIndex = function () {
-
-                if (this.PlaybackIndex != this.StartIndex) {
-                    this.PlaybackIndex--;
-                    if (0 > this.PlaybackIndex) this.PlaybackIndex += this.AnimationElementList.length;
-                    this.PlaybackIndex %= this.AnimationElementList.length;
-                }
-            }
-
-            this.wCenterSet = false;
-            this.Latitude = null;
-            this.Longitude = null;
-            this.Altitude = null;
-
-            this.getPlaybackFrameCameraCenter = function () {
-
-                if ("" != this.CameraFocusID) {
-                    var wPlaybackFrame = this.getPlaybackFrame();
-
-                    if (null != wPlaybackFrame) {
-                        var wCameraFocus = wPlaybackFrame.SingleFrame.getDrawDescriptionID(this.CameraFocusID);
-
-                        if (null == wCameraFocus) {
-                            wCameraFocus = this.StaticAnimationFrame.getDrawDescriptionID(this.CameraFocusID);
-                        }
-                        
-                        var wCameraTether = null;
-                        if ("" != this.TetherCameraFocusID) {
-                            wCameraTether = wPlaybackFrame.SingleFrame.getDrawDescriptionID(this.TetherCameraFocusID);
-
-                            if (null == wCameraTether) {
-                                wCameraTether = this.StaticAnimationFrame.getDrawDescriptionID(this.TetherCameraFocusID);
-                            }
-                        }
-
-                        if (null != wCameraFocus) {
-
-                            if ((null == wCameraTether) || (wCameraFocus == wCameraTether)) {
-
-                                if (false == this.wCenterSet) {
-                                    this.wCenterSet = false;
-                                    this.Latitude = wCameraFocus.Latitude;
-                                    this.Longitude = wCameraFocus.Longitude;
-                                    this.Altitude = wCameraFocus.Altitude;
-                                    return {
-                                        Latitude: wCameraFocus.Latitude,
-                                        Longitude: wCameraFocus.Longitude,
-                                        Altitude: wCameraFocus.Altitude,
-
-                                        roll: 0,
-                                        pitch: 0,
-                                        yaw: 0
-                                    }
-
-                                }
-                                else {
-                                    return {
-                                        Latitude: this.Latitude,
-                                        Longitude: this.Longitude,
-                                        Altitude: this.Altitude,
-
-                                        roll: 0,
-                                        pitch: 0,
-                                        yaw: 0
-                                    }
-                                }
-                            }
-                            else {
-
-                                var dX = wCameraTether.Latitude - wCameraFocus.Latitude;
-                                var dY = wCameraTether.Longitude - wCameraFocus.Longitude;
-                                var dZ = wCameraTether.Altitude - wCameraFocus.Altitude;
-
-                                var wRadiusXY = Math.sqrt(dX * dX + dY * dY);
-
-                                return {
-                                    Latitude:  wCameraFocus.Latitude,
-                                    Longitude: wCameraFocus.Longitude,
-                                    Altitude:  wCameraFocus.Altitude,
-
-                                    roll: 0,
-                                    pitch: Math.atan2(dZ, wRadiusXY),
-                                    yaw: Math.atan2(dX, dY)
-                                }
-                            }
-                        }
-                    }
-
-                }
-
-                return {
-                    Latitude:  0,
-                    Longitude: 0,
-                    Altitude:  this.CameraTerrainElevation,
-
-                    roll: 0,
-                    pitch: 0,
-                    yaw: 0
-                }
-            }
-
-            this.applyFunctionToIntegratedFrame = function (iDrawFunction, iFrameSkip, iLatitude, iLongitude, iAltitude) {
-                
-				if (0 != this.AnimationElementList.length)
-				{
-					var wEndFrame = this.getPlaybackFrameNumber();
-					if (true == this.DrawAllIntegratedFrames) {
-						wEndFrame = this.EndIndex;
-					}
-					
-					var wTravelLength = wEndFrame - this.StartIndex;
-					if (0 > wTravelLength) wTravelLength += this.AnimationElementList.length;
-	
-					var wInc = iFrameSkip + 1;
-					for (var wi = 0; wi < wTravelLength; wi+= wInc) {
-						wFrameIndex = this.StartIndex + wi;
-						wFrameIndex %= this.AnimationElementList.length;
-	
-						iDrawFunction(this.AnimationElementList[wFrameIndex].IntegratedFrame, iLatitude, iLongitude, iAltitude);
-					}
-				
-					iDrawFunction(this.AnimationElementList[wEndFrame].IntegratedFrame, iLatitude, iLongitude, iAltitude);
-					
-				}
-            }
-
-            this.deleteDescription = function (iId) {
-
-
-                for (var wi = 0; wi < this.AnimationElementList.length; ++wi) {
-                    this.AnimationElementList[wi].SingleFrame.deleteDrawDescription(iId);
-                    this.AnimationElementList[wi].IntegratedFrame.deleteDrawDescription(iId);
-                }
-
-                this.FixedToCameraAnimationFrame.deleteDrawDescription(iId);
-                this.FixedToCameraAnimationFrame_Modulated.deleteDrawDescription(iId);
-                this.StaticAnimationFrame.deleteDrawDescription(iId);
-            }
-
-        }
-
-    </script>
-    <script>
-	
-        var gEarthRadius = 6371000;
-
-		function convertGCtoNED(iLatitude, iLongitude, iAltitude , iRefLatitude, iRefLongitude, iRefAltitude) {
-
-		    var wDLat = normalizeAngle(iLatitude - iRefLatitude);
-		    var wDLong = normalizeAngle(iLongitude - iRefLongitude);
-
-		    var wRadius = gEarthRadius;
-		    var wDx = wDLat;
-		    wDx *= wRadius;
-		    var wDy = wDLong * Math.cos(iLatitude);
-		    wDy *= wRadius;
-		    var wAlt = iAltitude - iRefAltitude;
-
-			return {
-			    North: wDx,
-			    East: wDy,
-			    Down: -wAlt
-			};
-		}
-		
-		function addNEDToGC(iLatitude, iLongitude, iAltitude, iNorth, iEast, iDown) {
-
-		    var wRadius = gEarthRadius + iAltitude;
-		    var wDLat = iNorth / wRadius;
-		    var wNewLat = iLatitude + wDLat;
-
-		    var wDLong = iEast / (Math.cos(wNewLat) * wRadius);
-		    var wNewLong = iLongitude + wDLong;
-
-		    var wNewAlt = iAltitude - iDown;
-
-			return {
-			    Latitude : wNewLat,
-			    Longitude: wNewLong,
-			    Altitude: wNewAlt
-			}
-		}
-		
-        function SimulationModel(iId, iModelRef, iTracerModelRef) {
-            this.Id = iId;
-            this.ModelRef = iModelRef;
-            this.TracerModelRef = iTracerModelRef;
-
-            this.Position = new Float64Array(3);
-            this.Velocity = new Float64Array(3);
-            this.Acceleration = new Float64Array(3);
-
-            this.AngularPosition = new Float64Array(3);
-            this.AngularVelocity = new Float64Array(3);
-            this.AngularAcceleration = new Float64Array(3);
-			
-			this.PositionHistory = new Array();
-			this.PositionHistoryStartIndex = 0;
-
-			this.reset = function() {
-			
-                this.Position[0] = 0;
-                this.Position[1] = 0;
-                this.Position[2] = 0;
-                this.AngularPosition[0] = 0;
-                this.AngularPosition[1] = 0;
-                this.AngularPosition[2] = 0;
-                this.Velocity[0] = 0;
-                this.Velocity[1] = 0;
-                this.Velocity[2] = 0;
-                this.AngularVelocity[0] = 0;
-                this.AngularVelocity[1] = 0;
-                this.AngularVelocity[2] = 0;
-                this.Acceleration[0] = 0;
-                this.Acceleration[1] = 0;
-                this.Acceleration[2] = 0;
-                this.AngularAcceleration[0] = 0;
-                this.AngularAcceleration[1] = 0;
-                this.AngularAcceleration[2] = 0;
-				
-				this.PositionHistory.length = 0;
-			}
-			
-            this.setPosition = function ( iLatitude, iLongitude, iAltitude, iRoll, iPitch, iYaw) {
-
-                this.Position[0] = iLatitude;
-                this.Position[1] = iLongitude;
-                this.Position[2] = iAltitude;
-                this.AngularPosition[0] = iRoll;
-                this.AngularPosition[1] = iPitch;
-                this.AngularPosition[2] = iYaw;
-            }
-
-            this.setVelocity = function (iX, iY, iZ, iRoll, iPitch, iYaw) {
-
-                this.Velocity[0] = iX;
-                this.Velocity[1] = iY;
-                this.Velocity[2] = iZ;
-                this.AngularVelocity[0] = iRoll;
-                this.AngularVelocity[1] = iPitch;
-                this.AngularVelocity[2] = iYaw;
-            }
-
-            this.setAcceleration = function (iX, iY, iZ, iRoll, iPitch, iYaw) {
-
-                this.Acceleration[0] = iX;
-                this.Acceleration[1] = iY;
-                this.Acceleration[2] = iZ;
-                this.AngularAcceleration[0] = iRoll;
-                this.AngularAcceleration[1] = iPitch;
-                this.AngularAcceleration[2] = iYaw;
-            }
-
-            this.integrate = function (iDt) {
-				
-				if ( 6 > this.PositionHistory.length) {
-					var wPositionData = new Float64Array(6);
-					wPositionData[0] = this.Position[0];
-					wPositionData[1] = this.Position[1];
-					wPositionData[2] = this.Position[2];
-					wPositionData[3] = this.AngularPosition[0];
-					wPositionData[4] = this.AngularPosition[1];
-					wPositionData[5] = this.AngularPosition[2];
-					
-					this.PositionHistory.push (wPositionData);
-					this.PositionHistoryStartIndex = 0;
-
-				}
-				else {
-				
-					if ( 0 != this.PositionHistory.length)
-					{
-						var wPositionData = this.PositionHistory[this.PositionHistoryStartIndex];
-						wPositionData[0] = this.Position[0];
-						wPositionData[1] = this.Position[1];
-						wPositionData[2] = this.Position[2];
-						wPositionData[3] = this.AngularPosition[0];
-						wPositionData[4] = this.AngularPosition[1];
-						wPositionData[5] = this.AngularPosition[2];
-						
-						this.PositionHistoryStartIndex++;
-						this.PositionHistoryStartIndex %= this.PositionHistory.length;
-					}
-				}
-				
-				var wDeltaPosition = vec3.create([0, 0, 0]);
-                for (var wi = 0; wi < 3; ++wi) {
-                    this.Velocity[wi] += this.Acceleration[wi] * iDt;
-                    wDeltaPosition[wi] = this.Velocity[wi] * iDt;
-
-                    this.AngularVelocity[wi] += this.AngularAcceleration[wi] * iDt;
-                    this.AngularPosition[wi] += this.AngularVelocity[wi] * iDt;
-                }
-				
-				var wNewPosition = addNEDToGC(this.Position[0],this.Position[1],this.Position[2],wDeltaPosition[0],wDeltaPosition[1],wDeltaPosition[2]);
-				this.Position[2] = wNewPosition.Altitude;
-                this.Position[1] = wNewPosition.Longitude;
-                this.Position[0] = wNewPosition.Latitude;
-            }
-			
-			this.drawAnimatedFrame = function(iAnimationElement) {
-			
-				var wSimMadelRef = this;
-				
-                if (null != wSimMadelRef.ModelRef) {
-                    iAnimationElement.SingleFrame.addDrawDescription(wSimMadelRef.Id, wSimMadelRef.ModelRef,
-                      wSimMadelRef.Position[0], wSimMadelRef.Position[1], wSimMadelRef.Position[2],
-                      wSimMadelRef.AngularPosition[0], wSimMadelRef.AngularPosition[1], wSimMadelRef.AngularPosition[2]
-                      )
-                }
-
-				var wLastPosition = wSimMadelRef.PositionHistory[wSimMadelRef.PositionHistoryStartIndex];
-                 if (null != wLastPosition) {
-				
-				
-					var wRot1 = mat4.create();
-					mat4.identity(wRot1);
-					mat4.rotate(wRot1, wSimMadelRef.AngularPosition[2], [0,0,1]);
-					mat4.rotate(wRot1, wSimMadelRef.AngularPosition[1], [0,1,0]);
-					mat4.rotate(wRot1, wSimMadelRef.AngularPosition[0], [1,0,0]);
-					
-					var wPLeft1 = mat4.multiplyVec3(wRot1, [0,wSimMadelRef.ModelRef.BoundingBoxBottom[1],0]);
-					var wPRight1 = mat4.multiplyVec3(wRot1, [0,wSimMadelRef.ModelRef.BoundingBoxTop[1],0]);
-
-					var wRot2 = mat4.create();
-					mat4.identity(wRot2);
-					mat4.rotate(wRot2, wLastPosition[5], [0,0,1]);
-					mat4.rotate(wRot2, wLastPosition[4], [0,1,0]);
-					mat4.rotate(wRot2, wLastPosition[3], [1,0,0]);
-					
-					var wPLeft2 = mat4.multiplyVec3(wRot2, [0,wSimMadelRef.ModelRef.BoundingBoxBottom[1],0]);
-					var wPRight2 = mat4.multiplyVec3(wRot2, [0,wSimMadelRef.ModelRef.BoundingBoxTop[1],0]);
-
-					var wDeltaPosition = convertGCtoNED(wLastPosition[0], wLastPosition[1],wLastPosition[2],
-														wSimMadelRef.Position[0], wSimMadelRef.Position[1], wSimMadelRef.Position[2])
-					
-					
-					wPLeft2[0] += wDeltaPosition.North;
-                     wPLeft2[1] += wDeltaPosition.East;
-					wPLeft2[2] += wDeltaPosition.Down;
-					
-					wPRight2[0] += wDeltaPosition.North;
-                     wPRight2[1] += wDeltaPosition.East;
-					wPRight2[2] += wDeltaPosition.Down;
-					
-					var wDLeft =  [wPLeft2[0] - wPLeft1[0], wPLeft2[1] - wPLeft1[1], wPLeft2[2] - wPLeft1[2]];
-					var wDRight =  [wPRight2[0] - wPRight1[0], wPRight2[1] - wPRight1[1], wPRight2[2] - wPRight1[2]];
-					
-					var wLLeft = Math.sqrt( wDLeft[0]*wDLeft[0] + wDLeft[1]*wDLeft[1] + wDLeft[2]*wDLeft[2]);
-					var wLRight = Math.sqrt( wDRight[0]*wDRight[0] + wDRight[1]*wDRight[1] + wDRight[2]*wDRight[2]);
-					
-					var wLLeft_XY = Math.sqrt( wDLeft[0]*wDLeft[0] + wDLeft[1]*wDLeft[1]);
-					var wLRight_XY = Math.sqrt( wDRight[0]*wDRight[0] + wDRight[1]*wDRight[1]);
-					
-					var wYawLeft = Math.atan2(wDLeft[1],wDLeft[0]);
-					var wYawRight = Math.atan2(wDRight[1],wDRight[0]);
-					
-					if (wLLeft_XY[0] < 0.001)
-					{
-					  return;
-					}
-					
-					if (wLRight_XY[0] < 0.001)
-					{
-					  return;
-					}
-					
-					var wPitchLeft = Math.atan2(-wDLeft[2], wLLeft_XY);
-					var wPitchRight = Math.atan2(-wDRight[2],wLRight_XY);
-					
-					var wTL_Position = addNEDToGC(wSimMadelRef.Position[0], wSimMadelRef.Position[1], wSimMadelRef.Position[2], wPLeft1[0],wPLeft1[1],wPLeft1[2]);
-					var wTR_Position = addNEDToGC(wSimMadelRef.Position[0], wSimMadelRef.Position[1], wSimMadelRef.Position[2], wPRight1[0],wPRight1[1],wPRight1[2]);
-					
-					
-					var wLineR =gModelLibrary.findModel("Line_R");
-					
-					if (null != wLineR) {
-					
-						var wBuffer = iAnimationElement.IntegratedFrame.addDrawDescription(wSimMadelRef.Id, wLineR,
-										wTL_Position.Latitude, wTL_Position.Longitude, wTL_Position.Altitude,
-										0.0 , wPitchLeft, wYawLeft
-										);
-						wBuffer.scale_x = wLLeft;
-					
-					}
-					
-					var wLineG =gModelLibrary.findModel("Line_G");
-					
-					if (null != wLineG) {
-					
-						var wBuffer = iAnimationElement.IntegratedFrame.addDrawDescription(wSimMadelRef.Id, wLineG,
-										wTR_Position.Latitude, wTR_Position.Longitude, wTR_Position.Altitude,
-										0.0 , wPitchRight, wYawRight
-										);
-						wBuffer.scale_x = wLRight;
-					
-					}
-                }
-			}
-
-        }
-
-        function SimulationDirector() {
-            this.ModelList = new Array();
-
-            this.getModelAt = function (iIndex) {
-                if (0 <= iIndex) {
-                    if (0 != this.ModelList.length) {
-                        return this.ModelList[iIndex % this.ModelList.length]
-                    }
-                }
-                return null;
-            }
-
-
-            this.getModelIndex = function (iId) {
-
-                for (var wi = 0; wi < this.ModelList.length; ++wi) {
-                    if (iId == this.ModelList[wi].Id) {
-                        return wi;
-                    }
-                }
-
-                return -1;
-            }
-
-
-            this.addSimulationModel = function (iId, iModelRef, iTracerModelRef) {
-                var wNewModel = new SimulationModel(iId, iModelRef, iTracerModelRef);
-                this.ModelList.push(wNewModel);
-
-                return wNewModel;
-            }
-
-
-            this.deleteSimulationModel = function (iId) {
-                var wModelList = new Array();
-
-                for (var wi = 0; wi < this.ModelList.length; ++wi) {
-
-                    if (iId != this.ModelList[wi].Id) {
-                        wModelList.push(this.ModelList[wi]);
-                    }
-                }
-                this.ModelList = wModelList;
-            }
-
-            this.integrate = function (iDt) {
-                for (var wi = 0; wi < this.ModelList.length; ++wi) {
-                    this.ModelList[wi].integrate(iDt);
-                }
-            }
-
-            this.drawAnimationFrame = function (iAnimationElement) {
-
-                for (var wi = 0; wi < this.ModelList.length; ++wi) {
-
-                    var wSimMadelRef = this.ModelList[wi];
-                    
-					wSimMadelRef.drawAnimatedFrame(iAnimationElement);
-                }
-            }
-
-
-            this.integrate_Specific = function (iDt, iId) {
-
-                for (var wi = 0; wi < this.ModelList.length; ++wi) {
-                    
-                    if (iId == this.ModelList[wi].Id) {
-                        this.ModelList[wi].integrate(iDt);
-                    }
-                }
-            }
-
-            this.drawAnimationFrame_Specific = function (iAnimationElement, iId) {
-
-                for (var wi = 0; wi < this.ModelList.length; ++wi) {
-
-                    var wSimMadelRef = this.ModelList[wi];
-                    
-                    if (iId == wSimMadelRef.Id) {
-                        wSimMadelRef.drawAnimatedFrame(iAnimationElement);
-                    }
-                }
-            }
-
-            this.getSimulationModelIdList = function () {
-                var wIdList = new Array();
-
-                for (var wi = 0; wi < this.ModelList.length; ++wi) {
-
-                    wIdList.push(this.ModelList[wi].Id);
-                }
-
-                return wIdList;
-            }
-
-        }
-
-    </script>
-    <script>
-
-        function RunwayDefinition(iId, iLatitude, iLongitude, iElevation, iBearing, iLength, iWidth) {
-            this.Id = iId;
-            this.Latitude = iLatitude;
-            this.Longitude = iLongitude;
-            this.Elevation = iElevation;
-            this.Bearing = iBearing;
-            this.Length = iLength;
-            this.Width = iWidth;
-
-        }
-
-        function RunwayManager() {
-            this.RunwayList = new Array();
-            this.RunwayPositionNeedsUpdate = true;
-            this.isFirstPass = true;
-
-            this.addRunwayDiscription = function (iId, iLatitude, iLongitude, iElevation, iBearing, iLength, iWidth) {
-                this.RunwayList.push(new RunwayDefinition(iId, iLatitude, iLongitude, iElevation, iBearing, iLength, iWidth));
-                this.RunwayPositionNeedsUpdate = true;
-                this.isFirstPass = true;
-            }
-
-
-            this.getClosestRunway = function (iLatitude, iLongitude) {
-                
-                if (0 != this.RunwayList.length) {
-                    
-                    var wIndex = 0;
-                    var wDLat0 = iLatitude - this.RunwayList[0].Latitude;
-                    var wDLong0 = iLongitude - this.RunwayList[0].Longitude;
-                    var wClosestDistance = wDLat0 * wDLat0 + wDLong0 * wDLong0;
-
-                    for (var wi = 1; wi < this.RunwayList.length; ++wi) {
-                        var wDLat = iLatitude - this.RunwayList[wi].Latitude;
-                        var wDLong = iLongitude - this.RunwayList[wi].Longitude;
-                        var wClosestDistance_Temp = wDLat * wDLat + wDLong * wDLong;
-
-                        if (wClosestDistance_Temp < wClosestDistance) {
-                            wClosestDistance = wClosestDistance_Temp;
-                            wIndex = wi;
-                        }
-                    }
-
-                    return this.RunwayList[wIndex];
-                }
-
-                return null;
-            }
-
-
-
-            this.drawAnimationFrame = function (iAnimationFrame, iRunwayModelRef) {
-
-                for (var wi = 0; wi < this.RunwayList.length; ++wi) {
-
-                    var wRunway = this.RunwayList[wi];
-
-                    if (null != iRunwayModelRef) {
-                        var wDescription = iAnimationFrame.addDrawDescription(wRunway.Id, iRunwayModelRef,
-                                              wRunway.Latitude, wRunway.Longitude, wRunway.Elevation,
-                                              0, 0, wRunway.Bearing
-                                            )
-                        wDescription.scale_x = wRunway.Length;
-                        wDescription.scale_y = wRunway.Width;
-
-                    }
-                }
-            }
-
-        }
-
-
-
-
-    </script>
-    <script>
-        var gModelLibrary = new ModelLibrary();
-        var gAnimationDirector = new AnimationDirector();
-
-        var gInitialCameraControl = {
-            XOffset: -20,
-            YOffset: 0,
-            ZOffset: 0,
-            RollOffset: 0,
-            PitchOffset: -Math.PI / 6,
-            YawOffset: Math.PI - Math.PI / 6,
-            TargetIndex: 10000,
-            TetherTargetIndex: 10000,
-            TetherTargetEnable: false,
-            ViewPointRollOffset: 0,
-            ViewPointPitchOffset: 0,
-            ViewPointYawOffset: 0,
-        }
-
-        var gCameraControl = {
-            XOffset: gInitialCameraControl.XOffset,
-            YOffset: gInitialCameraControl.YOffset,
-            ZOffset: gInitialCameraControl.ZOffset,
-            RollOffset: gInitialCameraControl.RollOffset,
-            PitchOffset: gInitialCameraControl.PitchOffset,
-            YawOffset: gInitialCameraControl.YawOffset,
-            TargetIndex: gInitialCameraControl.TargetIndex,
-            TetherTargetIndex: gInitialCameraControl.TetherTargetIndex,
-            TetherTargetEnable: gInitialCameraControl.TetherTargetEnable,
-            ViewPointRollOffset: gInitialCameraControl.ViewPointRollOffset,
-            ViewPointPitchOffset: gInitialCameraControl.ViewPointPitchOffset,
-            ViewPointYawOffset: gInitialCameraControl.ViewPointYawOffset
-
-        }
-
-        var gl;
-        function initGL(iCanvas) {
-            try {
-                gl = iCanvas.getContext("experimental-webgl");
-                gl.viewportWidth = iCanvas.width;
-                gl.viewportHeight = iCanvas.height;
-            } catch (e) {
-            }
-            if (!gl) {
-                alert("Could not initialise WebGL, sorry :-(");
-            }
-
-            initShaders();
-
-            gl.clearColor(0.0, 0.0, 0.0, 0.0);
-            gl.enable(gl.DEPTH_TEST);
-        }
-
-        function resizeGL(iCanvas) {
-
-            try {
-                wGl = iCanvas.getContext("experimental-webgl");
-                wGl.viewportWidth = iCanvas.width;
-                wGl.viewportHeight = iCanvas.height;
-            } catch (e) {
-            }
-        }
-
-        function getShader(gl, id) {
-            var shaderScript = document.getElementById(id);
-            if (!shaderScript) {
-                return null;
-            }
-
-            var str = "";
-            var k = shaderScript.firstChild;
-            while (k) {
-                if (k.nodeType == 3) {
-                    str += k.textContent;
-                }
-                k = k.nextSibling;
-            }
-
-            var shader;
-            if (shaderScript.type == "x-shader/x-fragment") {
-                shader = gl.createShader(gl.FRAGMENT_SHADER);
-            } else if (shaderScript.type == "x-shader/x-vertex") {
-                shader = gl.createShader(gl.VERTEX_SHADER);
-            } else {
-                return null;
-            }
-
-            gl.shaderSource(shader, str);
-            gl.compileShader(shader);
-
-            if (!gl.getShaderParameter(shader, gl.COMPILE_STATUS)) {
-                alert(gl.getShaderInfoLog(shader));
-                return null;
-            }
-
-            return shader;
-        }
-
-
-        var shaderProgram;
-
-        function initShaders() {
-            var fragmentShader = getShader(gl, "shader-fs");
-            var vertexShader = getShader(gl, "shader-vs");
-
-            shaderProgram = gl.createProgram();
-            gl.attachShader(shaderProgram, vertexShader);
-            gl.attachShader(shaderProgram, fragmentShader);
-            gl.linkProgram(shaderProgram);
-
-            if (!gl.getProgramParameter(shaderProgram, gl.LINK_STATUS)) {
-                alert("Could not initialise shaders");
-            }
-
-            gl.useProgram(shaderProgram);
-
-            shaderProgram.vertexPositionAttribute = gl.getAttribLocation(shaderProgram, "aVertexPosition");
-            gl.enableVertexAttribArray(shaderProgram.vertexPositionAttribute);
-
-            shaderProgram.vertexNormalAttribute = gl.getAttribLocation(shaderProgram, "aVertexNormal");
-            gl.enableVertexAttribArray(shaderProgram.vertexNormalAttribute);
-
-            shaderProgram.vertexColorAttribute = gl.getAttribLocation(shaderProgram, "aVertexColor");
-            gl.enableVertexAttribArray(shaderProgram.vertexColorAttribute);
-
-            shaderProgram.pMatrixUniform = gl.getUniformLocation(shaderProgram, "uPMatrix");
-            shaderProgram.mvMatrixUniform = gl.getUniformLocation(shaderProgram, "uMVMatrix");
-            shaderProgram.nMatrixUniform = gl.getUniformLocation(shaderProgram, "uNMatrix");
-            shaderProgram.ambientColorUniform = gl.getUniformLocation(shaderProgram, "uAmbientColor");
-            shaderProgram.lightingDirectionUniform = gl.getUniformLocation(shaderProgram, "uLightingDirection");
-            shaderProgram.directionalColorUniform = gl.getUniformLocation(shaderProgram, "uDirectionalColor");
-        }
-
-
-        var mvMatrix = mat4.create();
-        var pMatrix = mat4.create();
-        var mvMatrixStack = [];
-
-
-        function mvPushMatrix() {
-            var copy = mat4.create();
-            mat4.set(mvMatrix, copy);
-            mvMatrixStack.push(copy);
-        }
-
-        function mvPopMatrix() {
-            if (mvMatrixStack.length == 0) {
-                throw "Invalid popMatrix!";
-            }
-            mvMatrix = mvMatrixStack.pop();
-        }
-
-        function setMatrixUniforms() {
-            gl.uniformMatrix4fv(shaderProgram.pMatrixUniform, false, pMatrix);
-            gl.uniformMatrix4fv(shaderProgram.mvMatrixUniform, false, mvMatrix);
-
-            var normalMatrix = mat3.create();
-            mat4.toInverseMat3(mvMatrix, normalMatrix);
-            mat3.transpose(normalMatrix);
-            gl.uniformMatrix3fv(shaderProgram.nMatrixUniform, false, normalMatrix);
-        }
-
-        function drawAnimatedFrame(iAnimatedFrame, iLatitude, iLongitude , iAltitude) {
-
-            var wDrawList = iAnimatedFrame.DrawList;
-
-            for (var wi = 0; wi < wDrawList.length; ++wi) {
-
-                if (null != wDrawList[wi].ModelRef) {
-
-                    var wModel = wDrawList[wi].ModelRef;
-
-                    mvPushMatrix();
-
-                    var wPosition = convertGCtoNED(wDrawList[wi].Latitude, wDrawList[wi].Longitude, wDrawList[wi].Altitude, iLatitude, iLongitude, iAltitude);
-					var wX = wPosition.North;
-					var wY = wPosition.East;
-					var wZ = wPosition.Down;
-
-					if ((10000 < Math.abs(wX)) || (10000 <  Math.abs(wY))) {
-					    continue;
-					}
-					
-                    mat4.translate(mvMatrix, [wX, wY, wZ]);
-                    mat4.rotate(mvMatrix, wDrawList[wi].yaw, [0, 0, 1]);
-                    mat4.rotate(mvMatrix, wDrawList[wi].pitch, [0, 1, 0]);
-                    mat4.rotate(mvMatrix, wDrawList[wi].roll, [1, 0, 0]);
-
-                    var wScale = mat4.create([wDrawList[wi].scale_x, 0, 0, 0, 0, wDrawList[wi].scale_y, 0, 0, 0, 0, wDrawList[wi].scale_z, 0, 0,0,0,1]);
-
-                    mat4.multiply(mvMatrix, wScale);
-
-                    for (var wj = 0; wj < wModel.BufferList.length; ++wj) {
-                        gl.bindBuffer(gl.ARRAY_BUFFER, wModel.BufferList[wj].PositionBuffer);
-                        gl.vertexAttribPointer(shaderProgram.vertexPositionAttribute, wModel.BufferList[wj].PositionBuffer.itemSize, gl.FLOAT, false, 0, 0);
-
-                        gl.bindBuffer(gl.ARRAY_BUFFER, wModel.BufferList[wj].NormalBuffer);
-                        gl.vertexAttribPointer(shaderProgram.vertexNormalAttribute, wModel.BufferList[wj].NormalBuffer.itemSize, gl.FLOAT, false, 0, 0);
-
-                        gl.bindBuffer(gl.ARRAY_BUFFER, wModel.BufferList[wj].ColorBuffer);
-                        gl.vertexAttribPointer(shaderProgram.vertexColorAttribute, wModel.BufferList[wj].ColorBuffer.itemSize, gl.FLOAT, false, 0, 0);
-
-                        setMatrixUniforms();
-
-                        //   0 gl.POINTS To draw a series of points.
-                        //   1 gl.LINES To draw a series of unconnected line segments (individual lines).
-                        //   2 gl.LINE_STRIP To draw a series of connected line segments.
-                        //   3 gl.LINE_LOOP To draw a series of connected line segments. It also joins the first and last vertices to form a loop.
-                        //   4 gl.TRIANGLES To draw a series of separate triangles.
-                        //   5 gl.TRIANGLE_STRIP To draw a series of connected triangles in strip fashion.
-                        //   6 gl.TRIANGLE_FAN To draw a series of connected triangles sharing the first vertex in a fan-like fashion.
-
-                        var wEnum = gl.POINTS;
-                        switch (wModel.BufferList[wj].DrawTypeEnum) {
-                            case DrawTypeEnum.POINTS:
-                                wEnum = gl.POINTS;
-                                break;
-                            case DrawTypeEnum.LINES:
-                                wEnum = gl.LINES;
-                                break;
-                            case DrawTypeEnum.LINE_STRIP:
-                                wEnum = gl.LINE_STRIP;
-                                break;
-                            case DrawTypeEnum.LINE_LOOP:
-                                wEnum = gl.LINE_LOOP;
-                                break;
-                            case DrawTypeEnum.TRIANGLES:
-                                wEnum = gl.TRIANGLES;
-                                break;
-                            case DrawTypeEnum.TRIANGLE_STRIP:
-                                wEnum = gl.TRIANGLE_STRIP;
-                                break;
-                            case DrawTypeEnum.TRIANGLE_FAN:
-                                wEnum = gl.TRIANGLE_FAN;
-                                break;
-
-                        }
-
-                        gl.drawArrays(wEnum, 0, wModel.BufferList[wj].PositionBuffer.numItems);
-                    }
-                    mvPopMatrix();
-                }
-            }
-        }
-
-        function drawScene() {
-
-            gModelLibrary.updateNewModelIntoGLBuffer(gl);
-
-            //View Point Manipulation
-            gl.viewport(0, 0, gl.viewportWidth, gl.viewportHeight);
-            gl.clear(gl.COLOR_BUFFER_BIT | gl.DEPTH_BUFFER_BIT);
-
-            mat4.perspective(45, gl.viewportWidth / gl.viewportHeight, 0.1, 3000.0, pMatrix);
-            mat4.identity(mvMatrix);
-            mat4.rotate(mvMatrix, Math.PI / 2, [1, 0, 0]);
-            mat4.rotate(mvMatrix, -Math.PI / 2, [0, 0, 1]);
-
-
-
-            mat4.translate(mvMatrix, [-gCameraControl.XOffset, 0.0, 0.0]);
-
-
-            var lightingDirection = [1.0, 0.0, -1.0];
-            var adjustedLD = vec3.create();
-            vec3.normalize(lightingDirection, adjustedLD);
-
-            vec3.scale(adjustedLD, -1);
-
-            gl.uniform3fv(shaderProgram.lightingDirectionUniform, adjustedLD);
-            gl.uniform3f(shaderProgram.directionalColorUniform, 1.0, 1.0, 1.0);
-            gl.uniform3f(shaderProgram.ambientColorUniform, 0.5, 0.5, 0.5);
-
-
-            var wCameraCenter = gAnimationDirector.getPlaybackFrameCameraCenter();
-            
-            gCameraControl.ViewPointRollOffset  = -gCameraControl.RollOffset + wCameraCenter.roll;
-            gCameraControl.ViewPointPitchOffset = -gCameraControl.PitchOffset + wCameraCenter.pitch;
-            gCameraControl.ViewPointYawOffset   = -gCameraControl.YawOffset + wCameraCenter.yaw;
-
-
-            mat4.rotate(mvMatrix, gCameraControl.ViewPointRollOffset  , [1, 0, 0]);
-            mat4.rotate(mvMatrix, gCameraControl.ViewPointPitchOffset , [0, 1, 0]);
-            mat4.rotate(mvMatrix, gCameraControl.ViewPointYawOffset   , [0, 0, 1]);
-
-            drawAnimatedFrame(gAnimationDirector.FixedToCameraAnimationFrame, 0.0, 0.0, 0.0);
-
-            mvPushMatrix();
-
-            var wModulation = [wCameraCenter.Latitude, wCameraCenter.Longitude, wCameraCenter.Altitude];
-            
-            if ((null != gAnimationDirector.ModulatedRate_X) && (0 != gAnimationDirector.ModulatedRate_X)) {
-				var wDA = (1/60)*(Math.PI/180);
-                var wRatio = wCameraCenter.Latitude / wDA;
-                var wRemainder = Math.floor(wRatio);
-                wModulation[0] = wDA * wRemainder;
-				wModulation[0] = 0;
-			}
-
-            if ((null != gAnimationDirector.ModulatedRate_Y) && (0 != gAnimationDirector.ModulatedRate_Y)) {
-				var wDA = (1/60)*(Math.PI/180);
-                var wRatio = wCameraCenter.Longitude / wDA;
-                var wRemainder = Math.floor(wRatio);
-                wModulation[1] = wDA * wRemainder;
-				wModulation[1] = 0;
-            }
-
-            if ((null != gAnimationDirector.ModulatedRate_Z) && (0 != gAnimationDirector.ModulatedRate_Z)) {
-
-                var wAlt = wCameraCenter.Altitude - gAnimationDirector.CameraTerrainElevation;
-                if (gAnimationDirector.ModulatedRate_Z < wAlt) {
-                    wModulation[2] = wCameraCenter.Altitude - gAnimationDirector.ModulatedRate_Z;
-                }
-                else {
-                    wModulation[2] = gAnimationDirector.CameraTerrainElevation;
-                }
-				
-            }
-
-           var wPosition = convertGCtoNED(wModulation[0], wModulation[1], wModulation[2], wCameraCenter.Latitude, wCameraCenter.Longitude, wCameraCenter.Altitude);			
-			
-            if ((null != gAnimationDirector.ModulatedRate_X) && (0 != gAnimationDirector.ModulatedRate_X)) {
-			
-                var wRatio = wPosition.North / gAnimationDirector.ModulatedRate_X;
-                var wRemainder = wRatio - Math.floor(wRatio);
-                wModulation[0] = gAnimationDirector.ModulatedRate_X * wRemainder;
-			}
-
-            if ((null != gAnimationDirector.ModulatedRate_Y) && (0 != gAnimationDirector.ModulatedRate_Y)) {
-			
-                var wRatio = wPosition.East / gAnimationDirector.ModulatedRate_Y;
-                var wRemainder = wRatio - Math.floor(wRatio);
-                wModulation[1] = gAnimationDirector.ModulatedRate_Y * wRemainder;
-            }
-			
-			wModulation[2] = wPosition.Down;
-			
-            mat4.translate(mvMatrix, wModulation);
-
-            drawAnimatedFrame(gAnimationDirector.FixedToCameraAnimationFrame_Modulated, 0.0,0.0,0.0);
-
-            mvPopMatrix();
-
-
-            mvPushMatrix();
-			
-            drawAnimatedFrame(gAnimationDirector.StaticAnimationFrame, wCameraCenter.Latitude, wCameraCenter.Longitude, wCameraCenter.Altitude);
-
-            var wFrame = gAnimationDirector.getPlaybackFrame();
-
-            if (null != wFrame) {
-                drawAnimatedFrame(wFrame.SingleFrame, wCameraCenter.Latitude, wCameraCenter.Longitude, wCameraCenter.Altitude);
-            }
-
-            gAnimationDirector.applyFunctionToIntegratedFrame(drawAnimatedFrame, 5, wCameraCenter.Latitude, wCameraCenter.Longitude, wCameraCenter.Altitude);
-
-            mvPopMatrix();
-
-
-        }
-
     </script>
     <script>
 
@@ -1893,14 +387,17 @@
 
     </script>
 
-    <script src="Aim9.txt"></script>
-    <script src="Apache.txt"></script>
-    <script src="f16.txt"></script>
-    <script src="mig29.txt"></script>
-    <script src="b17.txt"></script>
-    <script src="Tank.txt"></script>
-    <script src="RunwayDefinition.txt"></script>
+    <script src="models/Aim9.txt"></script>
+    <script src="models/Apache.txt"></script>
+    <script src="models/f16.txt"></script>
+    <script src="models/mig29.txt"></script>
+    <script src="models/b17.txt"></script>
+    <script src="models/Tank.txt"></script>
+    <script src="definition/RunwayDefinition.txt"></script>
     <script>
+
+        var gModelLibrary = new ModelLibrary();
+        var gAnimationDirector = new AnimationDirector();
 
         loadModel("Aim9", getModel_Aim9());
         loadModel("Apache", getModel_Apache());
@@ -1990,6 +487,7 @@
 
         gRunwayManager.drawAnimationFrame(gAnimationDirector.StaticAnimationFrame, wRunwayModel);
 
+
         var gDeltaTime = 50;
         var gTimeBuffer = 0;
         var gLastIterationTime = 0;
@@ -2025,8 +523,21 @@
         var gSimulationDirector = new SimulationDirector();
         var gRecorderFileDirector = null;
 
-        var wModelRef1 = gModelLibrary.findModel("Blue_Tank");
+        //Test Code Start
+        
+        var wModelRef1 = gModelLibrary.findModel("f16_R");
         var wTracerModelRef1 = gModelLibrary.findModel("Tracer");
+
+        var wSimModelRef = gSimulationDirector.addSimulationModel("Test", wModelRef1, wTracerModelRef1);
+
+        wSimModelRef.Position[0] = wNewRunway.Latitude;
+        wSimModelRef.Position[1] = wNewRunway.Longitude;
+        wSimModelRef.Position[2] = wNewRunway.Elevation;
+        wSimModelRef.Velocity[0] = 1.0;
+
+        setCameraTargetSelection("Test");
+
+        //Test Code End
 
         function init() {
             resize();
@@ -2044,6 +555,7 @@
 
 
             UpdateModelSelection();
+            UpdateSimModelSelection();
 
             processTick();
 
@@ -2148,13 +660,13 @@
 
 
             
-            var wSimModelRef = gSimulationDirector.getModelAt(gCameraControl.TargetIndex);
+            var wSimModelRef = gSimulationDirector.getModelAt(getGLCameraControl().TargetIndex);
             if (null != wSimModelRef) {
                 gAnimationDirector.CameraFocusID = wSimModelRef.Id;
             }
 
-            var wSimModelRef2 = gSimulationDirector.getModelAt(gCameraControl.TetherTargetIndex);
-            if ((null != wSimModelRef) && (true == gCameraControl.TetherTargetEnable)) {
+            var wSimModelRef2 = gSimulationDirector.getModelAt(getGLCameraControl().TetherTargetIndex);
+            if ((null != wSimModelRef) && (true == getGLCameraControl().TetherTargetEnable)) {
                 gAnimationDirector.TetherCameraFocusID = wSimModelRef2.Id;
             }
             else {
@@ -2182,7 +694,7 @@
 
             var wFakeHorizon = document.getElementById("OutpuCanvasBackgroundImage");
             var wFakeHorizonHeight = wFakeHorizon.height;
-            var wFakeHorizonOffset = (0.49 * wFakeHorizon.height) * normalizeAngle(-gCameraControl.ViewPointPitchOffset) / (45 * Math.PI / 180);
+            var wFakeHorizonOffset = (0.49 * wFakeHorizon.height) * normalizeAngle(-getGLCameraControl().ViewPointPitchOffset) / (45 * Math.PI / 180);
             var wFakeHorizonOffsetInit = -0.25 * wFakeHorizonHeight;
 
             var wHalfFakeHorizon = 0.25*wFakeHorizonHeight;
@@ -2199,8 +711,7 @@
         }
 
         function drawCanvas() {
-
-            drawScene();
+            drawGLAnimationDirectorScene(gAnimationDirector);
         }
 
         function canvasMouseDown(iEvent) {
@@ -2222,11 +733,11 @@
                             gMouseHandler.mouseDownLocation_X_L = x;
                             gMouseHandler.mouseDownLocation_Y_L = y;
 
-                            gMouseHandler.InitCameraPitch = gCameraControl.PitchOffset;
-                            gMouseHandler.InitCameraYaw = gCameraControl.YawOffset;
+                            gMouseHandler.InitCameraPitch = getGLCameraControl().PitchOffset;
+                            gMouseHandler.InitCameraYaw = getGLCameraControl().YawOffset;
 
-                            gMouseHandler.InitCmaeraY = gCameraControl.YOffset;
-                            gMouseHandler.InitCmaeraZ = gCameraControl.ZOffset;
+                            gMouseHandler.InitCmaeraY = getGLCameraControl().YOffset;
+                            gMouseHandler.InitCmaeraZ = getGLCameraControl().ZOffset;
                         }
 
                         break;
@@ -2238,8 +749,8 @@
                             gMouseHandler.mouseDownLocation_X_R = x;
                             gMouseHandler.mouseDownLocation_Y_R = y;
 
-                            gMouseHandler.InitCameraRoll = gCameraControl.RollOffset;
-                            gMouseHandler.InitCmaeraX = gCameraControl.XOffset;
+                            gMouseHandler.InitCameraRoll = getGLCameraControl().RollOffset;
+                            gMouseHandler.InitCmaeraX = getGLCameraControl().XOffset;
                         }
 
                         break;
@@ -2279,16 +790,16 @@
                 if ((wDX * wDX + wDY * wDY) > 100) {
 
                     if (true == gMouseHandler.ShiftDown_L) {
-                        gCameraControl.YOffset = gMouseHandler.InitCmaeraY - 0.05 * wDX;
-                        gCameraControl.ZOffset = gMouseHandler.InitCmaeraZ - 0.05 * wDY;
+                        getGLCameraControl().YOffset = gMouseHandler.InitCmaeraY - 0.05 * wDX;
+                        getGLCameraControl().ZOffset = gMouseHandler.InitCmaeraZ - 0.05 * wDY;
 
                     }
                     else {
-                        var dPitch = Math.atan(wDY / gCameraControl.XOffset);
-                        var dYaw = Math.atan(-wDX / gCameraControl.XOffset);
+                        var dPitch = Math.atan(wDY / getGLCameraControl().XOffset);
+                        var dYaw = Math.atan(-wDX / getGLCameraControl().XOffset);
 
-                        gCameraControl.PitchOffset = gMouseHandler.InitCameraPitch + 0.5 * dPitch;
-                        gCameraControl.YawOffset = gMouseHandler.InitCameraYaw + 0.5 * dYaw;
+                        getGLCameraControl().PitchOffset = gMouseHandler.InitCameraPitch + 0.5 * dPitch;
+                        getGLCameraControl().YawOffset = gMouseHandler.InitCameraYaw + 0.5 * dYaw;
 
                     }
                 }
@@ -2301,13 +812,13 @@
                 var wDY = y - gMouseHandler.mouseDownLocation_Y_R;
                 /*
                 if (true == gMouseHandler.ShiftDown_R) {
-                  var dRoll = Math.atan(wDX / gCameraControl.XOffset);
+                  var dRoll = Math.atan(wDX / getGLCameraControl().XOffset);
         
-                  gCameraControl.RollOffset = gMouseHandler.InitCameraRoll + 0.5 * dRoll;
+                  getGLCameraControl().RollOffset = gMouseHandler.InitCameraRoll + 0.5 * dRoll;
                 }
                 else */{
 
-                    gCameraControl.XOffset = gMouseHandler.InitCmaeraX - 0.1 * wDY;
+                    getGLCameraControl().XOffset = gMouseHandler.InitCmaeraX - 0.1 * wDY;
                 }
 
             }
@@ -2335,11 +846,11 @@
         }
 
         function setCameraTargetSelection(iSimModelId) {
-            gCameraControl.TargetIndex = gSimulationDirector.getModelIndex(iSimModelId) + 1000 * gSimulationDirector.ModelList.length;
+            getGLCameraControl().TargetIndex = gSimulationDirector.getModelIndex(iSimModelId) + 1000 * gSimulationDirector.ModelList.length;
         }
 
         function setCameraTetherSelection(iSimModelId) {
-            gCameraControl.TetherTargetIndex = gSimulationDirector.getModelIndex(iSimModelId) + 1000 * gSimulationDirector.ModelList.length;
+            getGLCameraControl().TetherTargetIndex = gSimulationDirector.getModelIndex(iSimModelId) + 1000 * gSimulationDirector.ModelList.length;
         }
 
         function convertFrameToTimeString(iFrameCount) {
@@ -2747,10 +1258,10 @@
 
         function UpdateSimModelSelection() {
 
-            var wSelectedModelID = gSimulationDirector.getModelAt(gCameraControl.TargetIndex).Id;
+            var wSelectedModelID = gSimulationDirector.getModelAt(getGLCameraControl().TargetIndex).Id;
             var wSelectedModelIndex = 0;
 
-            var wSelectedTetherModelID = gSimulationDirector.getModelAt(gCameraControl.TargetIndex).Id;
+            var wSelectedTetherModelID = gSimulationDirector.getModelAt(getGLCameraControl().TargetIndex).Id;
             var wSelectedTetherModelIndex = 0;
 
 
@@ -2788,76 +1299,76 @@
 
             switch (iType) {
                 case "P_L":
-                    gCameraControl.YOffset -= 1;
+                    getGLCameraControl().YOffset -= 1;
                     break;
                 case "P_R":
-                    gCameraControl.YOffset += 1;
+                    getGLCameraControl().YOffset += 1;
                     break;
                 case "P_U":
-                    gCameraControl.ZOffset -= 1;
+                    getGLCameraControl().ZOffset -= 1;
                     break;
                 case "P_D":
-                    gCameraControl.ZOffset += 1;
+                    getGLCameraControl().ZOffset += 1;
                     break;
 
                 case "R_L":
-                    gCameraControl.YawOffset += 5 * Math.PI / 180;
+                    getGLCameraControl().YawOffset += 5 * Math.PI / 180;
                     break;
                 case "R_R":
-                    gCameraControl.YawOffset -= 5 * Math.PI / 180;
+                    getGLCameraControl().YawOffset -= 5 * Math.PI / 180;
                     break;
                 case "R_U":
-                    gCameraControl.PitchOffset -= 5 * Math.PI / 180;
+                    getGLCameraControl().PitchOffset -= 5 * Math.PI / 180;
                     break;
                 case "R_D":
-                    gCameraControl.PitchOffset += 5 * Math.PI / 180;
+                    getGLCameraControl().PitchOffset += 5 * Math.PI / 180;
                     break;
 
                 case "Z_I":
-                    gCameraControl.XOffset *= 0.8;
-                    if (-1.0 < gCameraControl.XOffset) gCameraControl.XOffset = -1.0;
+                    getGLCameraControl().XOffset *= 0.8;
+                    if (-1.0 <     getGLCameraControl().XOffset)     getGLCameraControl().XOffset = -1.0;
                     break;
                 case "Z_O":
-                    gCameraControl.XOffset *= 1.2;
-                    if (-100.0 > gCameraControl.XOffset) gCameraControl.XOffset = -100.0;
+                    getGLCameraControl().XOffset *= 1.2;
+                    if (-100.0 >     getGLCameraControl().XOffset)     getGLCameraControl().XOffset = -100.0;
                     break;
 
                 case "T_B":
-                    gCameraControl.TargetIndex--;
-                    if (0 >= gCameraControl.TargetIndex) gCameraControl.TargetIndex = 0;
+                    getGLCameraControl().TargetIndex--;
+                    if (0 >=     getGLCameraControl().TargetIndex) getGLCameraControl.TargetIndex = 0;
                     break;
                 case "T_N":
-                    gCameraControl.TargetIndex++;
+                    getGLCameraControl.TargetIndex++;
                     break;
 
                 case "T2_B":
-                    gCameraControl.TetherTargetIndex--;
-                    if (0 >= gCameraControl.TetherTargetIndex) gCameraControl.TetherTargetIndex = 0;
+                    getGLCameraControl.TetherTargetIndex--;
+                    if (0 >= getGLCameraControl.TetherTargetIndex) getGLCameraControl.TetherTargetIndex = 0;
                     break;
                 case "T2_N":
-                    gCameraControl.TetherTargetIndex++;
+                    getGLCameraControl.TetherTargetIndex++;
                     break;
                 case "T2_Enable":
-                    gCameraControl.TetherTargetEnable = !gCameraControl.TetherTargetEnable;
+                    getGLCameraControl.TetherTargetEnable = !getGLCameraControl.TetherTargetEnable;
                     break;
 
                 case "Reset_Pan":
-                    gCameraControl.YOffset = gInitialCameraControl.YOffset;
-                    gCameraControl.ZOffset = gInitialCameraControl.ZOffset;
+                    getGLCameraControl.YOffset = gInitialCameraControl.YOffset;
+                    getGLCameraControl.ZOffset = gInitialCameraControl.ZOffset;
                     break;
 
                 case "Reset_Rotate":
-                    gCameraControl.YawOffset = gInitialCameraControl.YawOffset;
-                    gCameraControl.PitchOffset = gInitialCameraControl.PitchOffset;
+                    getGLCameraControl.YawOffset = gInitialCameraControl.YawOffset;
+                    getGLCameraControl.PitchOffset = gInitialCameraControl.PitchOffset;
                     break;
 
                 case "Reset_Zoom":
-                    gCameraControl.XOffset = gInitialCameraControl.XOffset;
+                    getGLCameraControl.XOffset = gInitialCameraControl.XOffset;
                     break;
                 case "Reset_Target":
-                    gCameraControl.TargetIndex = gInitialCameraControl.TargetIndex;
-                    gCameraControl.TetherTargetIndex = gInitialCameraControl.TetherTargetIndex;
-                    gCameraControl.TetherTargetEnable = gInitialCameraControl.TetherTargetEnable;
+                    getGLCameraControl.TargetIndex = gInitialCameraControl.TargetIndex;
+                    getGLCameraControl.TetherTargetIndex = gInitialCameraControl.TetherTargetIndex;
+                    getGLCameraControl.TetherTargetEnable = gInitialCameraControl.TetherTargetEnable;
                     break;
 
             }
@@ -3103,7 +1614,7 @@
 <body onload="init()" onresize="resize()">
     <div id="div_OutputCanvas">
         <canvas id="OutputCanvas"></canvas>
-        <img src="horizon.jpg" id="OutpuCanvasBackgroundImage" style="position:fixed;top:0;left:0;z-index:-10;">
+        <img src="image/horizon.jpg" id="OutpuCanvasBackgroundImage" style="position:fixed;top:0;left:0;z-index:-10;">
     </div>
     <div id="div_ConsolControl">
         <div id="FIle_Control">
