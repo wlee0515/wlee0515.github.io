@@ -2,10 +2,8 @@
 
 var EntityCount = 0;
 
-function Entity (iMaxSpd, iMaxAccel) {
+function Entity () {
   
-  this.maxSpeed = iMaxSpd;
-  this.maxAcceleration = iMaxAccel;
   this.EntityID = ++EntityCount;
   
   this.EntityPosition = new matrix(3,1);
