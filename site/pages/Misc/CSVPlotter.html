@@ -433,6 +433,19 @@
       padding: 0px;
       margin: 0px;
       /* overflow: hidden;*/
+      -webkit-touch-callout: none;
+      /* iOS Safari */
+      -webkit-user-select: none;
+      /* Safari */
+      -khtml-user-select: none;
+      /* Konqueror HTML */
+      -moz-user-select: none;
+      /* Firefox */
+      -ms-user-select: none;
+      /* Internet Explorer/Edge */
+      user-select: none;
+      /* Non-prefixed version, currently
+                                  supported by Chrome and Opera */
     }
 
     #id_display_div {
@@ -459,7 +472,6 @@
     }
   </style>
   <style>
-    
     .menu_icon_container {
       display: inline-block;
       cursor: pointer;
@@ -488,22 +500,22 @@
       -webkit-transform: translate(0px, -10.5px) rotate(45deg);
       transform: translate(0px, -10.5px) rotate(45deg);
     }
-    
+
     .hidden {
       display: none;
     }
   </style>
-  
+
   <script>
 
-      function myFunction(x) {
-        x.classList.toggle("change");
-  
-        var wControl = document.getElementById("id_control_div");
-        wControl.classList.toggle("hidden");
-      }
-  
-    </script>
+    function myFunction(x) {
+      x.classList.toggle("change");
+
+      var wControl = document.getElementById("id_control_div");
+      wControl.classList.toggle("hidden");
+    }
+
+  </script>
 </head>
 
 <body onload="init()" onresize="resize()">

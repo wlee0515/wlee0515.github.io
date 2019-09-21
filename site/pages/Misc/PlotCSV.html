@@ -1,0 +1,837 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml">
+<head>
+    <title></title>
+    <style type="text/css">
+        body
+        {
+            font-family: Arial;
+            font-size: 10pt;
+        }
+
+        table
+        {
+            border: 1px solid #ccc;
+        }
+
+            table th
+            {
+                background-color: #F7F7F7;
+                color: #333;
+                font-weight: bold;
+            }
+
+            table th, table td
+            {
+                padding: 5px;
+                border-color: #ccc;
+            }
+    </style>
+</head>
+<body>
+    <script type="text/javascript">
+        function AxisGraphInformation(iName, iIndex, iColour) {
+            return {
+                mName: iName,
+                mIndex: iIndex,
+                mColour: iColour,
+                mScaleX: 0,
+                mScaleY: 0,
+                mTranslationX: 0,
+                mTranslationY: 0,
+                mVisible: true,
+                mControlled: true
+            }
+        }
+
+        function CopyAxisGraphInformation(iAxisInfo) {
+            return {
+                mName: iAxisInfo.mName,
+                mIndex: iAxisInfo.mIndex,
+                mColour: iAxisInfo.mColour,
+                mScaleX: iAxisInfo.mScaleX,
+                mScaleY: iAxisInfo.mScaleY,
+                mTranslationX: iAxisInfo.mTranslationX,
+                mTranslationY: iAxisInfo.mTranslationY,
+                mVisible: iAxisInfo.mVisible,
+                mControlled: iAxisInfo.mControlled
+            }
+        }
+
+        gAxisColourArray = [ "#00FF00", "#00FFFF", "#FF00FF", "#FFFF00", "#FF0000", "#FFFFFF",
+                             /*"#00F000", "#00F0F0", "#F000F0", "#F0F000", "#F00000", "#F0F0F0",
+                             "#000F00", "#000F0F", "#0F000F", "#0F0F00", "#0F0000", "#0F0F0F"*/];
+
+        var gDataTable;
+        var gAxisInformation;
+        var gXAxisInformation;
+        var gXAxisScaleLock = true;
+        var gYAxisScaleLock = true;
+        var gXAxisTranslationLock = true;
+        var gYAxisTranslationLock = true;
+        var gAllAxisControl = false;
+
+        var gMouseIsDown = false;
+        var gMouseRightClick = false;
+        var gMouseMovementOn = false;
+        var gMousePosition = 0;
+        var gInitialMouseX = 0;
+        var gInitialMouseY = 0;
+        var gInitialMouseRX = 0;
+        var gInitialMouseRY = 0;
+
+        var gXSelection = 1;
+        var gYSelection = 2;
+        var gZoomPercentIncrease = 10;
+        var gInitialZoom = 100;
+        var gXScale = 0;
+        var gYScale = 0;
+        var gXTranslate = 0;
+        var gYTranslate = 0;
+        var gPanSpeed = 1;
+        var gTableRowMin = 0;
+        var gTableRowMax = 10;
+
+        function Upload() {
+            var fileUpload = document.getElementById("fileUpload");
+            var regex = /^([a-zA-Z0-9\s_\\.\-:])+(.csv|.txt)$/;
+            if (regex.test(fileUpload.value.toLowerCase())) {
+                if (typeof (FileReader) != "undefined") {
+                    var reader = new FileReader();
+                    reader.onload = function (e) {
+                        alert("File in System");
+                        gDataTable = new Array();
+                        var rows = e.target.result.split("\n");
+
+                        for (var i = 0; i < rows.length; i++) {
+                            var wNewRow = new Array();
+                            var cells = rows[i].split(",");
+                            if (cells.length > 1) {
+                                wNewRow[0] = i;
+                                for (var j = 0; j < cells.length; j++) {
+                                    wNewRow[j + 1] = cells[j];
+                                }
+                                if (wNewRow.length > 0) {
+                                    gDataTable[i] = wNewRow;
+                                }
+                            }
+                        }
+                        alert("File Data Loaded");
+
+                        var canvas = document.getElementById('myCanvas');
+                        canvas.addEventListener('mousemove', mouseMovement, false);
+                        //canvas.addEventListener("mousedown", mouseClick, false);
+                        canvas.addEventListener("click", mouseClick, false);
+                        canvas.addEventListener("mouseup", mouseUP, false);
+                        canvas.addEventListener("mouseout", mouseOut, false);
+                        canvas.addEventListener("contextmenu", mouseRightClick, false);
+
+                        var wXSelection = document.getElementById('XAxisSelection');
+                        var wYSelection = document.getElementById('YAxisSelection');
+                        var wYControlSelection = document.getElementById('YAxisControlSelection');
+
+                        var wAxisOptionSelect = "";
+                        var wAxisOptionCheckbox = "";
+
+                        if (0 != gDataTable[0].length) {
+                            gAxisInformation = new Array();
+                            for (var j = 0; j < gDataTable[0].length; j++) {
+                                gAxisInformation[j] = AxisGraphInformation('Colume ' + j, j, gAxisColourArray[j % gAxisColourArray.length]);
+                                wAxisOptionSelect += '<option value="' + gAxisInformation[j].mName + '">' + gAxisInformation[j].mName + '</option>';
+                                wAxisOptionCheckbox += '<input type="checkbox" id="CheckBox' + gAxisInformation[j].mName + '">' + gAxisInformation[j].mName + '<br/>';
+                            }
+
+                            gXAxisInformation = CopyAxisGraphInformation(gAxisInformation[0]);
+                        }
+
+                        wXSelection.innerHTML = '<option value="' + gAxisInformation[0].mName + '">X Axis Selection</option>' + wAxisOptionSelect;
+                        wYControlSelection.innerHTML = '<option value="-1">Control All Axis</option>' + wAxisOptionSelect;
+                        wYSelection.innerHTML = wAxisOptionCheckbox;
+                        wYControlSelection.size = gAxisInformation.length + 1;
+                        alert("File Axis Information created");
+
+                        plot();
+                        alert("File Data Ploted");
+
+                        makeTable();
+
+                        alert("File Data Table created");
+
+                    }
+                    reader.readAsText(fileUpload.files[0]);
+                } else {
+                    alert("This browser does not support HTML5.");
+                }
+            } else {
+                alert("Please upload a valid CSV file.");
+            }
+        }
+        function writeMessage(canvas, message) {
+            var context = canvas.getContext('2d');
+            context.clearRect(0, 0, canvas.width, canvas.height);
+            context.font = '18pt Calibri';
+            context.fillStyle = 'black';
+            context.fillText(message, 10, 25);
+        }
+        function getAbsMousePos(evt) {
+            return {
+                x: evt.clientX,
+                y: evt.clientY
+            };
+        }
+        function getMousePos(canvas, evt) {
+            var mousePos = getAbsMousePos(evt);
+            var rect = canvas.getBoundingClientRect();
+            return {
+                x: evt.clientX - rect.left,
+                y: evt.clientY - rect.top
+            };
+        }
+        function mouseClick(evt) {
+            var canvas = document.getElementById('myCanvas');
+            var mousePos = getMousePos(canvas, evt);
+            if (true == gMouseIsDown) gMouseIsDown = false;
+            else gMouseIsDown = true;
+            gMouseRightClick = false;
+            gInitialMouseX = mousePos.x;
+            gInitialMouseY = mousePos.y;
+        }
+        function mouseRightClick(evt) {
+            evt.preventDefault();
+            var canvas = document.getElementById('myCanvas');
+            var mousePos = getMousePos(canvas, evt);
+            if (true == gMouseRightClick) gMouseRightClick = false;
+            else gMouseRightClick = true;
+            gMouseIsDown = false;
+            gInitialMouseRX = mousePos.x;
+            gInitialMouseRY = mousePos.y;
+        }
+        function mouseUP(evt) {
+            // gMouseIsDown = false;
+            // gMouseRightClick = false
+        }
+        function mouseOut(evt) {
+            gMouseIsDown = false;
+            gMouseRightClick = false
+            gMouseMovementOn = false;
+            plot();
+        }
+        function mouseMovement(evt) {
+            var canvas = document.getElementById('myCanvas');
+            var mousePos = getMousePos(canvas, evt);
+            gMouseMovementOn = true;
+            gMousePosition = mousePos;
+
+            if (true == gMouseIsDown) {
+                var deltaX = mousePos.x - gInitialMouseX;
+                var deltaY = mousePos.y - gInitialMouseY;
+                gInitialMouseX = mousePos.x;
+                gInitialMouseY = mousePos.y;
+                gXTranslate += deltaX;
+                gYTranslate += deltaY;
+
+                updateAxisTransformation(0, 0, deltaX, deltaY);
+            }
+            if (true == gMouseRightClick) {
+                var deltaX = mousePos.x - gInitialMouseRX;
+                var deltaY = mousePos.y - gInitialMouseRY;
+                gInitialMouseRX = mousePos.x;
+                gInitialMouseRY = mousePos.y;
+                gXScale += deltaX / 100;
+                gYScale += deltaY / 100;
+
+                updateAxisTransformation( deltaX / 100, deltaY / 100, 0, 0);
+            }
+
+            plot();
+        }
+        function plotOld() {
+            // Colour format "RRGGBB"
+            alert("Plotting");
+            gXSelection = document.getElementById("XAxisSelection").value;
+            gYSelection = document.getElementById("YAxisSelection").value;
+
+            var canvas = document.getElementById('myCanvas');
+            var context = canvas.getContext('2d');
+            var wYScale = gInitialZoom * Math.pow(1.0 + gZoomPercentIncrease / 2, -gYScale);
+            var wXScale = gInitialZoom * Math.pow(1.0 + gZoomPercentIncrease / 2, gXScale);
+
+            var wYOffset = gYTranslate * gPanSpeed + canvas.height / 2;
+            var wXOffset = gXTranslate * gPanSpeed + canvas.width / 2;
+
+            var wTickLengthXStart = -10 + canvas.height / 2;
+            var wTickLengthXEnd = 10 + canvas.height / 2;
+            var wTickLengthYStart = -10 + canvas.width / 2;
+            var wTickLengthYEnd = 10 + canvas.width / 2;
+            var wTickTextOffset = 10;
+
+            var wXAxisTickIntervals = 10;
+            var wYAxisTickIntervals = 10;
+
+            var wCountsPerTickX = 0.00001;
+            var wCounter = 1;
+            while ((canvas.width / 2) / (wCountsPerTickX * wXScale) > 10) {
+                if (wCounter % 2 == 0) {
+                    wCountsPerTickX *= 2;
+                }
+                else {
+                    wCountsPerTickX *= 5;
+                }
+
+                wCounter++;
+            }
+
+            var wCountsPerTickY = 0.00001;
+            var wCounter = 1;
+            while ((canvas.height / 2) / (wCountsPerTickY * wYScale) > 10) {
+                if (wCounter % 2 == 0) {
+                    wCountsPerTickY *= 2;
+                }
+                else {
+                    wCountsPerTickY *= 5;
+                }
+                wCounter++;
+            }
+
+            var wMinorAxisStartX = wCountsPerTickX * wXScale * (wXOffset / (wCountsPerTickX * wXScale) - Math.floor(wXOffset / (wCountsPerTickX * wXScale)));
+            var wMinorAxisEndX = canvas.width + wXScale * wCountsPerTickX;
+            var wMinorAxisStartY = wCountsPerTickY * wYScale * (wYOffset / (wCountsPerTickY * wYScale) - Math.floor(wYOffset / (wCountsPerTickY * wYScale)));
+            var wMinorAxisEndY = canvas.height + wYScale * wCountsPerTickY;
+            //alert(wCountsPerTickY + "," + wMinorAxisStartX + "," + wMinorAxisEndX + "," + wIntervalSpacing);
+            // Store the current transformation matrix
+            //context.save();
+            // Use the identity matrix while clearing the canvas
+            context.setTransform(1, 0, 0, 1, 0, 0);
+            context.clearRect(0, 0, canvas.width, canvas.height);
+
+            context.fillStyle = "black";
+            context.fillRect(0, 0, canvas.width, canvas.height);
+
+            context.strokeStyle = '#AAFFAA';
+
+            context.fillStyle = "#AAFFAA";
+            context.font = "10px Comic Sans MS";
+            context.textAlign = "center";
+            context.beginPath();
+
+            for (var i = wMinorAxisStartY; i < wMinorAxisEndY ; i += wYScale * wCountsPerTickY) {
+                context.moveTo(wTickLengthYStart, i);
+                context.lineTo(wTickLengthYEnd, i);
+                context.fillText(Math.round(-(i - wYOffset) / wYScale), wTickLengthYEnd + wTickTextOffset, i);
+            }
+            for (var i = wMinorAxisStartX; i < wMinorAxisEndX; i += wXScale * wCountsPerTickX) {
+                context.moveTo(i, wTickLengthXStart);
+                context.lineTo(i, wTickLengthXEnd);
+                context.fillText(Math.round((i - wXOffset) / wXScale), i, wTickLengthXEnd + wTickTextOffset);
+            }
+
+            context.stroke();
+
+            context.strokeStyle = '#11EE11';
+            context.beginPath();
+            context.moveTo(0, wYOffset);
+            context.lineTo(canvas.width, wYOffset);
+            context.moveTo(wXOffset, 0);
+            context.lineTo(wXOffset, canvas.height);
+            context.stroke();
+
+            context.translate(wXOffset, wYOffset);
+            // Restore the transform
+            //context.restore();
+
+            context.strokeStyle = '#FF00FF';
+            context.beginPath();
+            context.moveTo(wXScale * gDataTable[0][gXSelection], -wYScale * gDataTable[0][gYSelection]);
+            for (var i = 1; i < gDataTable.length; i++) {
+                context.lineTo(wXScale * gDataTable[i][gXSelection], -wYScale * gDataTable[i][gYSelection]);
+            }
+            context.stroke();
+        }
+
+        function plot() {
+            var canvas = document.getElementById('myCanvas');
+            var context = canvas.getContext('2d');
+
+            context.setTransform(1, 0, 0, 1, 0, 0);
+            context.clearRect(0, 0, canvas.width, canvas.height);
+
+            context.fillStyle = "black";
+            context.fillRect(0, 0, canvas.width, canvas.height);
+
+            for (var j = 0; j < gAxisInformation.length; j++) {
+                if (true == gAxisInformation[j].mVisible) {
+                    context.setTransform(1, 0, 0, 1, 0, 0);
+                    plotAxis(canvas, gXAxisInformation, gAxisInformation[j]);
+                }
+            }
+
+            syncPage();
+
+           // alert("PlottEnd");
+        }
+
+        function plotAxis( iCanvas, iXAxisInfo, iYAxisInfo) {
+
+            var wXAxisInfo = CopyAxisGraphInformation(iXAxisInfo);
+            var wIsFullAxisLocked = gXAxisScaleLock && gYAxisScaleLock && gXAxisTranslationLock && gYAxisTranslationLock;
+
+            if (false == gXAxisScaleLock) {
+                wXAxisInfo.mScaleX = iYAxisInfo.mScaleX;
+            }
+            else {
+                iYAxisInfo.mScaleX = wXAxisInfo.mScaleX;
+            }
+
+            if (false == gYAxisScaleLock) {
+                wXAxisInfo.mScaleY = iYAxisInfo.mScaleY;
+            }
+            else {
+                iYAxisInfo.mScaleY = wXAxisInfo.mScaleY;
+            }
+
+            if (false == gXAxisTranslationLock) {
+                wXAxisInfo.mTranslationX = iYAxisInfo.mTranslationX;
+            }
+            else {
+                iYAxisInfo.mTranslationX = wXAxisInfo.mTranslationX;
+            }
+
+            if (false == gYAxisTranslationLock) {
+                wXAxisInfo.mTranslationY = iYAxisInfo.mTranslationY;
+            }
+            else {
+                iYAxisInfo.mTranslationY = wXAxisInfo.mTranslationY;
+            }
+
+            var canvas = document.getElementById('myCanvas');
+            var context = iCanvas.getContext('2d');
+
+            if (false) {
+                context.textAlign = "left";
+                context.fillStyle = "#FFFFFF";
+                context.font = "10px Comic Sans MS";
+                context.fillText(iYAxisInfo.mScaleX, iYAxisInfo.mIndex*50, 30);
+                context.fillText(iYAxisInfo.mScaleY, iYAxisInfo.mIndex * 50, 40);
+                context.fillText(iYAxisInfo.mTranslationX, iYAxisInfo.mIndex * 50, 50);
+                context.fillText(iYAxisInfo.mTranslationY, iYAxisInfo.mIndex * 50, 60);
+            }
+
+            var wYScale = calculateZoom(-iYAxisInfo.mScaleY);
+            var wXScale = calculateZoom( wXAxisInfo.mScaleX);
+
+            var wYOffset = calculatePan(iYAxisInfo.mTranslationY, canvas.height / 2);
+            var wXOffset = calculatePan(wXAxisInfo.mTranslationX, canvas.width / 2);
+
+            var wTickLengthXStart = -10 + iCanvas.height / 2;
+            var wTickLengthXEnd = 10 + iCanvas.height / 2;
+            var wTickLengthYStart = -10 + iCanvas.width / 2;
+            var wTickLengthYEnd = 10 + iCanvas.width / 2;
+            var wTickTextOffset = 10;
+
+            var wXAxisTickIntervals = 10;
+            var wYAxisTickIntervals = 10;
+
+            var wCountsPerTickX = 0.00001;
+            var wCounter = 1;
+            while ((iCanvas.width / 2) / (wCountsPerTickX * wXScale) > 10) {
+                if (wCounter % 2 == 0) {
+                    wCountsPerTickX *= 2;
+                }
+                else {
+                    wCountsPerTickX *= 5;
+                }
+
+                wCounter++;
+            }
+
+            var wCountsPerTickY = 0.00001;
+            var wCounter = 1;
+            while ((iCanvas.height / 2) / (wCountsPerTickY * wYScale) > 10) {
+                if (wCounter % 2 == 0) {
+                    wCountsPerTickY *= 2;
+                }
+                else {
+                    wCountsPerTickY *= 5;
+                }
+                wCounter++;
+            }
+
+            var wMinorAxisStartX = wCountsPerTickX * wXScale * (wXOffset / (wCountsPerTickX * wXScale) - Math.floor(wXOffset / (wCountsPerTickX * wXScale)));
+            var wMinorAxisEndX = iCanvas.width + wXScale * wCountsPerTickX;
+            var wMinorAxisStartY = wCountsPerTickY * wYScale * (wYOffset / (wCountsPerTickY * wYScale) - Math.floor(wYOffset / (wCountsPerTickY * wYScale)));
+            var wMinorAxisEndY = iCanvas.height + wYScale * wCountsPerTickY;
+
+            context.textAlign = "left";
+            context.fillStyle = iYAxisInfo.mColour;
+            context.font = "12px Comic Sans MS";
+
+            var wLegendText = iYAxisInfo.mName;
+            if (true == gMouseMovementOn) {
+                var wRelativeMousePositionX = gMousePosition.x;
+                var wRelativeMousePositionY = gMousePosition.y;
+
+                wRelativeMousePositionX -= wXOffset;
+                wRelativeMousePositionY -= wYOffset;
+
+                wRelativeMousePositionX /= wXScale;
+                wRelativeMousePositionY /= wYScale;
+
+                wRelativeMousePositionX = Math.round(wRelativeMousePositionX * 10000) / 10000;
+                wRelativeMousePositionY = Math.round(wRelativeMousePositionY * 10000) / 10000;
+
+                wLegendText += " (" + wRelativeMousePositionX + ", " + -wRelativeMousePositionY + ")";
+            }
+
+            context.fillText(wLegendText, 30, 30 + iYAxisInfo.mIndex * 15);
+
+            context.strokeStyle = iYAxisInfo.mColour;
+
+            context.fillStyle = iYAxisInfo.mColour;
+            context.font = "10px Comic Sans MS";
+            context.textAlign = "left";
+            context.beginPath();
+
+            for (var i = wMinorAxisStartY; i < wMinorAxisEndY ; i += wYScale * wCountsPerTickY) {
+                context.moveTo(wTickLengthYStart, i);
+                context.lineTo(wTickLengthYEnd, i);
+                var wTickText = -(i - wYOffset) / wYScale;
+                wTickText = Math.round(wTickText * 10000) / 10000;
+                context.fillText(wTickText, wTickLengthYEnd + wTickTextOffset, i + 5);
+            }
+
+            context.textAlign = "center";
+            for (var i = wMinorAxisStartX; i < wMinorAxisEndX; i += wXScale * wCountsPerTickX) {
+                context.moveTo(i, wTickLengthXStart);
+                context.lineTo(i, wTickLengthXEnd);
+                var wTickText = (i - wXOffset) / wXScale;
+                wTickText = Math.round(wTickText * 10000) / 10000;
+                context.fillText(wTickText, i, wTickLengthXEnd + wTickTextOffset + 5);
+            }
+
+            context.stroke();
+
+            context.strokeStyle = iYAxisInfo.mColour;
+            context.beginPath();
+            context.moveTo(0, wYOffset);
+            context.lineTo(canvas.width, wYOffset);
+            context.moveTo(wXOffset, 0);
+            context.lineTo(wXOffset, canvas.height);
+            context.stroke();
+
+            context.translate(wXOffset, wYOffset);
+            // Restore the transform
+            //context.restore();
+
+            context.strokeStyle = iYAxisInfo.mColour;
+            context.beginPath();
+            
+            var wStartPoint = 0;
+            while ((isNaN(Number(gDataTable[wStartPoint][wXAxisInfo.mIndex])) == true) || (isNaN(Number(gDataTable[wStartPoint][iYAxisInfo.mIndex])) == true)) {
+                ++wStartPoint;
+                if (wStartPoint >= gDataTable.length) {
+                    break;
+                }
+            }
+
+            if (wStartPoint < gDataTable.length) {
+                var wLastPlotX = wXScale * gDataTable[wStartPoint][wXAxisInfo.mIndex];
+                var wLastPlotY = -wYScale * gDataTable[wStartPoint][iYAxisInfo.mIndex];
+
+                ++wStartPoint;
+
+                context.moveTo(wLastPlotX, wLastPlotY);
+                for (var i = wStartPoint; i < gDataTable.length; i++) {
+                    var wNewPlotX = wXScale * gDataTable[i][wXAxisInfo.mIndex];
+                    var wNewPlotY = -wYScale * gDataTable[i][iYAxisInfo.mIndex];
+                    if ((Math.abs(wLastPlotX - wNewPlotX) > 1.0) || (Math.abs(wLastPlotY - wNewPlotY) > 1.0)) {
+                        wLastPlotX = wNewPlotX;
+                        wLastPlotY = wNewPlotY;
+                        context.lineTo(wLastPlotX, wLastPlotY);
+                    }
+                }
+                context.stroke();
+            }
+                
+        }
+
+        function makeTable() {
+            var table = document.createElement("table");
+
+            var row = table.insertRow(-1);
+            for (var j = 0; j < gAxisInformation.length; j++) {
+                var cell = row.insertCell(-1);
+                cell.innerHTML = gAxisInformation[j].mName;
+            }
+
+            for (var i = gTableRowMin; i < gDataTable.length && i < gTableRowMax; i++) {
+                var row = table.insertRow(-1);
+                for (var j = 0; j < gDataTable[i].length; j++) {
+                    var cell = row.insertCell(-1);
+                    cell.innerHTML = gDataTable[i][j];
+                }
+            }
+            var dvCSV = document.getElementById("dvCSV");
+            dvCSV.innerHTML = "";
+            dvCSV.appendChild(table);
+        }
+        function PanUP() {
+            updateAxisTransformation(0, 0, 0, 1);
+            plot();
+        }
+        function PanDOWN() {
+            updateAxisTransformation(0, 0, 0, -1);
+            plot();
+        }
+        function PanLEFT() {
+            updateAxisTransformation(0, 0, 1, 0);
+            plot();
+        }
+        function PanRIGHT() {
+            updateAxisTransformation(0, 0, -1, 0);
+            plot();
+        }
+        function ZoomInX() {
+            updateAxisTransformation(1, 0, 0, 0);
+            plot();
+        }
+        function ZoomOutX() {
+            alert("Plottint1");
+            updateAxisTransformation(-1, 0, 0, 0);
+            plot();
+        }
+        function ZoomInY() {
+            updateAxisTransformation(0, 1, 0, 0);
+            plot();
+        }
+        function ZoomOutY() {
+            updateAxisTransformation(0, -1, 0, 0);
+            plot();
+        }
+
+        function updateXSelection() {
+
+            wXSelection = document.getElementById("XAxisSelection").value;
+
+            for (var i = 0; i < gAxisInformation.length; i++) {
+                if (wXSelection == gAxisInformation[i].mName) {
+                    gXAxisInformation = CopyAxisGraphInformation(gAxisInformation[i]);
+                    break;
+                }
+            }
+            plot();
+        }
+
+        function updateAxisLock() {
+            
+            var wCheckboxXScale = document.getElementById("CheckBoxXScaleLock");
+            var wCheckboxYScale = document.getElementById("CheckBoxYScaleLock");
+            var wCheckboxXTranslation = document.getElementById("CheckBoxXTranslationLock");
+            var wCheckboxYTranslation = document.getElementById("CheckBoxYTranslationLock");
+
+            gXAxisScaleLock = wCheckboxXScale.checked;
+            gXAxisTranslationLock = wCheckboxXTranslation.checked;
+            gYAxisScaleLock = wCheckboxYScale.checked;
+            gYAxisTranslationLock = wCheckboxYTranslation.checked;
+            plot();
+        }
+
+        function updateYSelection() {
+            for (var i = 0; i < gAxisInformation.length; i++) {
+                var wCheckbox = document.getElementById("CheckBox" + gAxisInformation[i].mName);
+                gAxisInformation[i].mVisible = wCheckbox.checked;
+                //alert(gAxisInformation[i].mName + " = " + gAxisInformation[i].mVisible);
+            }
+            plot();
+        }
+
+        function updateYControlSelection() {
+
+            wYControlSelection = document.getElementById("YAxisControlSelection").options;
+
+            for (var i = 0; i < gAxisInformation.length; i++) {
+                if (wYControlSelection.options[0].value == "-1") {
+                    if (true == wYControlSelection.options[0].selected) {
+                        gAxisInformation[i].mControlled = true;
+                        gAllAxisControl = true;
+                        continue;
+                    }
+                    else {
+                        gAllAxisControl = false;
+                    }
+                }
+                gAxisInformation[i].mControlled = false;
+                for (var j = 0; j < wYControlSelection.options.length; j++) {
+                    if (wYControlSelection.options[j].value == gAxisInformation[i].mName) {
+                        gAxisInformation[i].mControlled = wYControlSelection.options[j].selected;
+                        continue;
+                    }
+                }
+                //  alert(gAxisInformation[i].mName + " Controlled = " + gAxisInformation[i].mControlled);
+            }
+        }
+        
+        function calculateZoom(iScale) {
+            return gInitialZoom * Math.pow(1.0 + gZoomPercentIncrease / 2, iScale);
+        }
+        
+        function calculatePan(iTranslation, iBase) {
+            return iTranslation * gPanSpeed + iBase;
+        }
+
+        function applyAxisTransformation(iAxisInfo, iXScale, iYScale, iXTranslation, iYTranslation) {
+            var wScale1 = calculateZoom(iAxisInfo.mScaleX);
+            iAxisInfo.mScaleX += iXScale;
+            var wScale2 = calculateZoom(iAxisInfo.mScaleX);
+            var wOffset1 = calculatePan(iAxisInfo.mTranslationX, 0);
+            var wOffset2 = wOffset1 * (wScale2 / wScale1);
+            iAxisInfo.mTranslationX = wOffset2 + iXTranslation;
+
+            wScale1 = calculateZoom(-iAxisInfo.mScaleY);
+            iAxisInfo.mScaleY += iYScale;
+            wScale2 = calculateZoom(-iAxisInfo.mScaleY);
+            wOffset1 = calculatePan(iAxisInfo.mTranslationY, 0);
+            wOffset2 = wOffset1 * (wScale2 / wScale1);
+            iAxisInfo.mTranslationY = wOffset2 + iYTranslation;
+        }
+
+        function updateAxisTransformation(iXScale, iYScale, iXTranslation, iYTranslation) {
+            
+           /* if ((true == gXAxisScaleLock) || (true == gAllAxisControl)) {
+                applyAxisTransformation(gXAxisInformation, iXScale, 0, 0, 0);
+            }
+            if ((true == gYAxisScaleLock) || (true == gAllAxisControl)) {
+                applyAxisTransformation(gXAxisInformation, 0, iYScale, 0, 0);
+            }
+
+            if ((true == gXAxisTranslationLock) || (true == gAllAxisControl)) {
+                applyAxisTransformation(gXAxisInformation, 0, 0, iXTranslation, 0);
+            }
+            if ((true == gYAxisTranslationLock) || (true == gAllAxisControl)) {
+                applyAxisTransformation(gXAxisInformation, 0, 0, 0, iYTranslation);
+            }*/
+
+            applyAxisTransformation(gXAxisInformation, iXScale, iYScale, iXTranslation, iYTranslation);
+
+            for (var i = 0; i < gAxisInformation.length; i++) {
+                if (true == gAxisInformation[i].mControlled) {
+                    applyAxisTransformation(gAxisInformation[i], iXScale, iYScale, iXTranslation, iYTranslation);
+                }
+            }
+        }
+
+        function syncPage() {
+
+            document.getElementById("XAxisSelection").value = gXAxisInformation.mName;
+
+            var wCheckboxXScale = document.getElementById("CheckBoxXScaleLock");
+            var wCheckboxXTranslation = document.getElementById("CheckBoxXTranslationLock");
+
+            var wCheckboxYScale = document.getElementById("CheckBoxYScaleLock");
+            var wCheckboxYTranslation = document.getElementById("CheckBoxYTranslationLock");
+
+            wCheckboxXScale.checked = gXAxisScaleLock;
+            wCheckboxXTranslation.checked = gXAxisTranslationLock;
+
+            wCheckboxYScale.checked = gYAxisScaleLock;
+            wCheckboxYTranslation.checked = gYAxisTranslationLock;
+
+            wYControlSelection = document.getElementById("YAxisControlSelection").options;
+
+            wYControlSelection = document.getElementById("YAxisControlSelection").options;
+            
+            for (var j = 0; j < wYControlSelection.options.length; j++) {
+                for (var i = 0; i < gAxisInformation.length; i++) {
+                    if (wYControlSelection.options[j].value == gAxisInformation[i].mName) {
+                        wYControlSelection.options[j].selected = gAxisInformation[i].mControlled;
+                        continue;
+                    }
+                }
+            }
+
+            if (wYControlSelection.options[0].value == "-1") {
+                wYControlSelection.options[0].selected = gAllAxisControl;
+            }
+
+            for (var i = 0; i < gAxisInformation.length; i++) {
+                var wCheckbox = document.getElementById("CheckBox" + gAxisInformation[i].mName);
+                wCheckbox.checked = gAxisInformation[i].mVisible;
+            }
+        }
+        function getRandomColor() {
+            /*
+            var letters = '0123456789ABCDEF'.split('');
+            var color = '#';
+            for (var i = 0; i < 6; i++) {
+                color += letters[Math.floor(Math.random() * 16)];
+            }*/
+            var color = '#000000';
+            while ((color == "#000000") || (color == "#0000FF"))
+            {
+                var color = '#';
+                for (var i = 0; i < 3; i++) {
+                    if (Math.random() > 0.5) {
+                        color += "FF";
+                    }
+                    else {
+                        color += "00";
+                    }
+                }
+            }
+            return color;
+        }
+
+    </script>
+    <input type="file" id="fileUpload" />
+    <input type="button" id="upload" value="Upload" onclick="Upload()" />
+    <hr />
+    <div id="GraphArea">
+        <input type="button" id="panUp" value="PanUp" onclick="PanUP()" />
+        <input type="button" id="panDown" value="PanDown" onclick="PanDOWN()" />
+        <input type="button" id="panLeft" value="PanLeft" onclick="PanLEFT()" />
+        <input type="button" id="panRight" value="PanRight" onclick="PanRIGHT()" />
+        <input type="button" id="ZoomInX" value="ZoomInX" onclick="ZoomInX()" />
+        <input type="button" id="ZoomOutX" value="ZoomOutX" onclick="ZoomOutX()" />
+        <input type="button" id="ZoomInY" value="ZoomInY" onclick="ZoomInY()" />
+        <input type="button" id="ZoomOutY" value="ZoomOutY" onclick="ZoomOutY()" />
+        <table style="width: 100%">
+            <tr>
+                <td>
+                    <canvas id="myCanvas" width="1000" height="600">
+                    </canvas>
+                </td>
+                <td>
+                    <table style="width: 100%">
+                        <tr>
+                            <td>
+                                <select id="XAxisSelection" onchange="updateXSelection()" />
+                                <option value="0">XAxisSelection</option>
+                                </select><br />
+                                <input type="checkbox" id="CheckBoxXScaleLock" onchange="updateAxisLock()"/>Lock X Scale<br />
+                                <input type="checkbox" id="CheckBoxYScaleLock" onchange="updateAxisLock()"/>Lock Y Scale<br />
+                                <input type="checkbox" id="CheckBoxXTranslationLock" onchange="updateAxisLock()" />Lock X Translation<br />
+                                <input type="checkbox" id="CheckBoxYTranslationLock" onchange="updateAxisLock()" />Lock Y Translation<br />
+                            </td>
+                        </tr>
+                        <tr>
+                            <td>
+                                <legend>Y Axis Selection</legend>
+                                <div id="YAxisSelection" onchange="updateYSelection()">
+                                </div>
+                                <br />
+                            </td>
+                        </tr>
+                    </table>
+                </td>
+                <td>
+                    <legend>Y Axis Control</legend>
+                    <select id="YAxisControlSelection" onchange="updateYControlSelection()" multiple size="5" />
+                    </select>
+                </td>
+            </tr>
+        </table>
+
+    </div>
+    <div id="dvCSV">
+    </div>
+</body>
+</html>
