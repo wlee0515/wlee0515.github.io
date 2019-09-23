@@ -1,0 +1,270 @@
+<html>
+<head>
+    <title>Integral</title>
+    <script id="shader-fs" type="x-shader/x-fragment">
+    precision mediump float;
+
+    varying vec4 vColor;
+    varying vec3 vLightWeighting;
+
+    void main(void) {
+    vec4 wColor;
+    wColor[0] = vColor[0]*vLightWeighting[0];
+    wColor[1] = vColor[1]*vLightWeighting[1];
+    wColor[2] = vColor[2]*vLightWeighting[2];
+    wColor[3] = vColor[3];
+    gl_FragColor = wColor;
+    }
+    </script>
+
+    <script id="shader-vs" type="x-shader/x-vertex">
+    attribute vec3 aVertexPosition;
+    attribute vec3 aVertexNormal;
+    attribute vec4 aVertexColor;
+
+    uniform mat4 uMVMatrix;
+    uniform mat4 uPMatrix;
+    uniform mat3 uNMatrix;
+
+    uniform vec3 uAmbientColor;
+
+    uniform vec3 uLightingDirection;
+    uniform vec3 uDirectionalColor;
+
+    varying vec3 vLightWeighting;
+    varying vec4 vColor;
+
+    void main(void) {
+    gl_Position = uPMatrix * uMVMatrix * vec4(aVertexPosition, 1.0);
+
+    vec3 transformedNormal = uNMatrix * aVertexNormal;
+    float directionalLightWeighting = max(dot(transformedNormal, uLightingDirection), 0.0);
+
+    vLightWeighting = uAmbientColor + uDirectionalColor * directionalLightWeighting;
+
+    vColor = aVertexColor;
+    }
+    </script>
+    <script src="./javascript/ViewPoint.js"></script>
+    <script>
+        var gGlobal = null;
+
+        function init() {
+
+            gGlobal = {
+                ViewPoint : new ViewPoint("id_div_OutputViewPort"),
+                SimulationTimeManagement : {
+                    DeltaTime : 25, //ms;
+                    LastIterationTime : 0,
+                    TimeBuffer : 0,
+                },
+                CameraPosition : {
+                    Latitude : 45.5017*Math.PI/180,
+                    Longitude : -73.5673*Math.PI/180,
+                    Altitude : 0.0,
+                    Roll : 0.0,
+                    Pitch : 0.0,
+                    Yaw : 0.0,
+                },
+                EarthModel : {
+                    Radius : 60000,
+                }
+            }
+
+            resize();
+            processTick();
+/*
+            var wCanvas = document.getElementById("OutputCanvas");
+            wCanvas.addEventListener("mousedown", canvasMouseDown, false);
+            wCanvas.addEventListener("mouseup", canvasMouseUp, false);
+            wCanvas.addEventListener("mousemove", canvasMouseMove, false);
+
+            wCanvas.addEventListener('contextmenu', function (e) {
+                e.preventDefault();
+            }, false);
+
+            initGL(wCanvas);
+
+
+            UpdateModelSelection();
+            UpdateSimModelSelection();
+*/
+
+        }
+
+        function resize() {
+/*
+            resizeGL(wCanvas);
+*/
+            if (null != gGlobal) {
+                gGlobal.ViewPoint.resize();
+            }
+        }
+
+        function processTick() {
+
+            window.requestAnimationFrame(processTick);
+
+            if (null == gGlobal) {
+                return;
+            }
+
+            var wTimeNow = new Date().getTime();
+            var wElapsed = wTimeNow - gGlobal.SimulationTimeManagement.LastIterationTime;
+
+            if (wElapsed < gGlobal.SimulationTimeManagement.DeltaTime) {
+                gGlobal.SimulationTimeManagement.TimeBuffer += wElapsed;
+            }
+
+            var wReDraw = false;
+            while (gGlobal.SimulationTimeManagement.TimeBuffer > 0) {
+                gGlobal.SimulationTimeManagement.TimeBuffer -= gGlobal.SimulationTimeManagement.DeltaTime;
+                processTime(gGlobal.SimulationTimeManagement.DeltaTime / 1000);
+                wReDraw = true;
+            }
+
+            if (true == wReDraw) {
+                renderWindow();
+            }
+
+            gGlobal.SimulationTimeManagement.LastIterationTime = wTimeNow;
+        }
+
+        
+        function processTime(iDt) {
+
+        }
+        
+        function renderWindow() {
+            if (null == gGlobal) {
+                return;
+            }
+            
+            //------------------ Test -------------------------
+
+            gGlobal.CameraPosition.Roll = parseFloat(document.getElementById("id_input_RollTest").value);
+            gGlobal.CameraPosition.Pitch = parseFloat(document.getElementById("id_input_pitchTest").value);
+            gGlobal.CameraPosition.Altitude = parseFloat(document.getElementById("id_input_AltTest").value);
+            gGlobal.CameraPosition.Longitude = parseFloat(document.getElementById("id_input_LonTest").value);
+                
+            //------------------ Test -------------------------
+
+            gGlobal.ViewPoint.drawArtificialHorizon(gGlobal.CameraPosition, new Date(Date.now()),  gGlobal.EarthModel.Radius)
+            
+            gGlobal.ViewPoint.render( null,drawForeground);
+        }
+
+        function drawBackground(iCanvasDOM) {
+
+            if (null == gGlobal) {
+                return;
+            }
+            return;
+        }
+        
+        function drawForeground(iCanvasDOM) {
+
+            var ctx = iCanvasDOM.getContext("2d");
+/*
+            // Create gradient
+            var grd = ctx.createLinearGradient(0, 0, 200, 0);
+            grd.addColorStop(0, "blue");
+            grd.addColorStop(1, "white");
+
+            // Fill with gradient
+            ctx.fillStyle = grd;
+            ctx.fillRect(30, 10, 150, 80);*/
+        }
+
+    </script>
+    <style>
+        body {
+            margin: 0px;
+            padding: 0px;
+            /*
+            overflow: hidden;
+            */
+            -webkit-touch-callout: none; /* iOS Safari */
+            -webkit-user-select: none; /* Safari */
+            -khtml-user-select: none; /* Konqueror HTML */
+            -moz-user-select: none; /* Firefox */
+            -ms-user-select: none; /* Internet Explorer/Edge */
+            user-select: none; /* Non-prefixed version, currently
+                                  supported by Chrome and Opera */
+        }
+
+        #id_splash_container {
+            position: fixed;
+            top: 0px;
+            left: 0px;
+            width: 100%;
+            height: 100%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        #id_div_config_upload {
+            background-color:white;
+            border: 1px solid blue;
+            width: 300px;
+            height: 300px;
+            padding: 10px;
+        }
+
+        #id_div_OutputViewPort {
+            background-color:pink;
+            width: 100vw;
+            height: 100vh;
+        }
+
+    </style>
+
+</head>
+<body onload="init()" onresize="resize()">
+<!--    <div id="id_div_OutputCanvas">
+            <div id="id_div_OutputCanvas1">
+        <img src="image/horizon2.jpg" id="id_canvas_canvas_bg_image">
+        <script>
+            function setHorizon(iPitch, iAltitude, iPlanetRadius) {
+
+                var wAlt = parseFloat(iAltitude);
+                var wPitch = parseFloat(iPitch);
+                var wRadius = parseFloat(iPlanetRadius);
+                var wFakeHorizon = document.getElementById("id_canvas_canvas_bg_image");
+
+                if (0 > wAlt) wAlt = 0;
+
+                var wHorizonAngle = Math.PI/2 - Math.asin(wRadius/(wRadius+wAlt));
+                var wSeenHorizonAngle = wHorizonAngle + wPitch;
+                var wFakeHorizonOffset = (wSeenHorizonAngle/(Math.PI))*(wFakeHorizon.height/4); 
+
+                //move reference to center of window
+                wFakeHorizonOffset -= wFakeHorizon.height/2;
+                
+//                if (wFakeHorizonOffset < -wFakeHorizon.height/4) wFakeHorizonOffset = -wFakeHorizon.height/4;   
+//                if (wFakeHorizonOffset > 0) wFakeHorizonOffset = 0;   
+                wFakeHorizon.style.top = wFakeHorizonOffset;
+            }
+        </script>
+        <canvas id="id_canvas_OutputCanvas"></canvas>
+    </div>
+-->
+    <div id="id_div_OutputViewPort"></div>
+    </div>
+    <div id="id_splash_container">
+    <div id="id_div_config_upload">
+        <span>Please Upload Configuration File</span>
+        <br>
+        <input type="file" id="id_input_fileUpload" />
+        <br>
+        <input type="button" id="id_input_Start" value="Start"/>
+
+        <br><span>Roll</span><input type="number" id="id_input_RollTest" step="0.01" value="0"/>
+        <br><span>Pitch</span><input type="number" id="id_input_pitchTest" step="0.01" value="0"/>
+        <br><span>Altitude</span><input type="number" id="id_input_AltTest" step="1000" value="0"/>
+        <br><span>Longitude</span><input type="number" id="id_input_LonTest" step="0.1" value="0"/>
+    </div>
+</div>
+</body>
+</html>
