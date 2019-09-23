@@ -119,8 +119,8 @@ function ViewPoint(iDiv_Id){
       
       // Sun Radial Glow gradient
       var wSunCenter = {
-        x : wScreenCenter.x + 1.25*wScreenRadius*wSunPositionSin,
-        y : wScreenCenter.x + 1.25*wScreenRadius*wSunPositionSin,
+        x : wScreenCenter.x + 2.0*wScreenRadius*wSunPositionSin,
+        y : wScreenCenter.x + 2.0*wScreenRadius*wSunPositionSin,
       }
       var wGradient = wCtx.createRadialGradient(wSunCenter.x, wSunCenter.y, 0, wSunCenter.x, wSunCenter.y, wScreenRadius);
       wGradient.addColorStop(0.0, "rgba( 255, 255, 255 , 1.0)");
