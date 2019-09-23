@@ -36,7 +36,7 @@ function ViewPoint(iDiv_Id){
     }
   }
 
-  this.drawArtificialHorizon = function(iCameraPosition, iTime, iPlanetRadius)  {
+  this.drawArtificialHorizon = function(iCameraPosition, iTime, iPlanetModel)  {
 
     var wCanvasDOM = this.mBackGroundCanvasDOM;
     var wHalfPi = Math.PI/2;
@@ -45,19 +45,35 @@ function ViewPoint(iDiv_Id){
     var wHour = iTime.getUTCHours();
     var wMinute = iTime.getUTCMinutes();
 
-    var wRadius = parseFloat(iPlanetRadius);
+    var wRadius = parseFloat(iPlanetModel.Radius);
+    var wInclination = parseFloat(iPlanetModel.Inclination);
+
+    var wLatitude = parseFloat(iCameraPosition.Latitude);
     var wLongitude = parseFloat(iCameraPosition.Longitude);
     var wAltitude = parseFloat(iCameraPosition.Altitude);
     var wRoll = parseFloat(iCameraPosition.Roll);
     var wPitch = parseFloat(iCameraPosition.Pitch);
+    var wYaw = parseFloat(iCameraPosition.Yaw);
 
-    
     var wEarthDateRotation = (wHour + wMinute/60) /24;
     var wSunAzimuthWRTUTC = wEarthDateRotation + Math.PI;
-    var wRelativeSunLocation = wSunAzimuthWRTUTC - wLongitude;
-    while(wRelativeSunLocation > Math.PI) wRelativeSunLocation -= 2*Math.PI;
-    while(wRelativeSunLocation < -Math.PI) wRelativeSunLocation += 2*Math.PI;
 
+    //Normalizing All Angles
+
+    while(wInclination > Math.PI) wInclination -= 2*Math.PI;
+    while(wInclination < -Math.PI) wInclination += 2*Math.PI;
+
+    while (wLatitude > wHalfPi) {
+      wLatitude = Math.PI - wLatitude;
+      wLongitude += Math.PI;
+    }
+    while (wLatitude < -wHalfPi) {
+      wLatitude = -Math.PI - wLatitude;
+      wLongitude += Math.PI;
+    }
+
+    while(wLongitude > Math.PI) wLongitude -= 2*Math.PI;
+    while(wLongitude < -Math.PI) wLongitude += 2*Math.PI;
 
     if (wAltitude < 0) wAltitude = 0;
     while(wPitch > Math.PI) wPitch -= 2*Math.PI;
@@ -106,8 +122,22 @@ function ViewPoint(iDiv_Id){
     wCtx.clearRect(-10, -10, wCanvasDOM.width + 20, wCanvasDOM.height + 20);
 
     // Draw Sky
-    var wSunPositionCos = Math.cos(wRelativeSunLocation);
-    var wSunPositionSin = Math.sin(wRelativeSunLocation);
+    
+    var wRelativeSunAzimuth = wSunAzimuthWRTUTC - wLongitude;
+    while(wRelativeSunAzimuth > Math.PI) wRelativeSunAzimuth -= 2*Math.PI;
+    while(wRelativeSunAzimuth < -Math.PI) wRelativeSunAzimuth += 2*Math.PI;
+
+    
+    var wRelativeSunElevation = -wInclination*Math.sin(wEarthDateRotation) - wLatitude;
+    while(wRelativeSunElevation > Math.PI) wRelativeSunElevation -= 2*Math.PI;
+    while(wRelativeSunElevation < -Math.PI) wRelativeSunElevation += 2*Math.PI;
+    
+    while(wRelativeSunAzimuth > Math.PI) wRelativeSunAzimuth -= 2*Math.PI;
+    while(wRelativeSunAzimuth < -Math.PI) wRelativeSunAzimuth += 2*Math.PI;
+
+
+    var wSunPositionCos = Math.cos(wRelativeSunAzimuth);
+    var wSunPositionSin = Math.sin(wRelativeSunAzimuth);
 
     var wMultitplier = wSunPositionCos + 0.1;
     if (wMultitplier < 0) wMultitplier = 0;
@@ -118,11 +148,12 @@ function ViewPoint(iDiv_Id){
     if (wSunPositionCos > 0) {
       
       // Sun Radial Glow gradient
-      var wSunCenter = {
-        x : wScreenCenter.x + 2.0*wScreenRadius*wSunPositionSin,
-        y : wScreenCenter.x + 2.0*wScreenRadius*wSunPositionSin,
+      var wSunCenterEarthAxis = {
+        x : wScreenCenter.x + 1.5*wScreenRadius*(wRelativeSunElevation / wHalfPi),
+        y : wScreenCenter.y + 1.5*wScreenRadius*(wRelativeSunAzimuth / wHalfPi),
       }
-      var wGradient = wCtx.createRadialGradient(wSunCenter.x, wSunCenter.y, 0, wSunCenter.x, wSunCenter.y, wScreenRadius);
+
+      var wGradient = wCtx.createRadialGradient(wSunCenterEarthAxis.x, wSunCenterEarthAxis.y, 0, wSunCenterEarthAxis.x, wSunCenterEarthAxis.y, wScreenRadius);
       wGradient.addColorStop(0.0, "rgba( 255, 255, 255 , 1.0)");
       wGradient.addColorStop(0.05, "rgba( 255, 255, 255 , 1.0)");
       wGradient.addColorStop(0.10, "rgba( 255, 255, 255 , 0.5)");

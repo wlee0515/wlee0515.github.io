@@ -68,6 +68,7 @@
                 },
                 EarthModel : {
                     Radius : 60000,
+                    Inclination : 66.5*Math.PI/180,
                 }
             }
 
@@ -146,10 +147,11 @@
             gGlobal.CameraPosition.Pitch = parseFloat(document.getElementById("id_input_pitchTest").value);
             gGlobal.CameraPosition.Altitude = parseFloat(document.getElementById("id_input_AltTest").value);
             gGlobal.CameraPosition.Longitude = parseFloat(document.getElementById("id_input_LonTest").value);
-                
+            gGlobal.CameraPosition.Latitude= parseFloat(document.getElementById("id_input_LatTest").value);
+
             //------------------ Test -------------------------
 
-            gGlobal.ViewPoint.drawArtificialHorizon(gGlobal.CameraPosition, new Date(Date.now()),  gGlobal.EarthModel.Radius)
+            gGlobal.ViewPoint.drawArtificialHorizon(gGlobal.CameraPosition, new Date(Date.now()),  gGlobal.EarthModel)
             
             gGlobal.ViewPoint.render( null,drawForeground);
         }
@@ -263,6 +265,7 @@
         <br><span>Roll</span><input type="number" id="id_input_RollTest" step="0.01" value="0"/>
         <br><span>Pitch</span><input type="number" id="id_input_pitchTest" step="0.01" value="0"/>
         <br><span>Altitude</span><input type="number" id="id_input_AltTest" step="1000" value="0"/>
+        <br><span>Latitude</span><input type="number" id="id_input_LatTest" step="0.1" value="0"/>
         <br><span>Longitude</span><input type="number" id="id_input_LonTest" step="0.1" value="0"/>
     </div>
 </div>
