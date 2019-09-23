@@ -162,7 +162,7 @@ function ViewPoint(iDiv_Id){
 
     
     // Radial Glow gradient
-    var wGradient = wCtx.createRadialGradient(wScreenCenter.x, wScreenCenter.y, 0, wGradientEnd.x, wScreenCenter.y, wScreenRadius);
+    var wGradient = wCtx.createRadialGradient(wScreenCenter.x, wScreenCenter.y, 0, wScreenCenter.x, wScreenCenter.y, wScreenRadius);
     wGradient.addColorStop(0.0, "rgba( 0, 0, 0 , 0.0)");
     wGradient.addColorStop(0.5, "rgba( 0, 0, 0 , 0.0)");
     wGradient.addColorStop(0.75, "rgba( 0, 0, 0 , 0.125)");
