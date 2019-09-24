@@ -123,21 +123,36 @@ function ViewPoint(iDiv_Id){
 
     // Draw Sky
     
-    var wRelativeSunAzimuth = wSunAzimuthWRTUTC - wLongitude;
-    while(wRelativeSunAzimuth > Math.PI) wRelativeSunAzimuth -= 2*Math.PI;
-    while(wRelativeSunAzimuth < -Math.PI) wRelativeSunAzimuth += 2*Math.PI;
+    // Calculate Relative Sun Position in North east Frame
+    var wRelativeSunAzimuthNE = wSunAzimuthWRTUTC + wLongitude;
+    while(wRelativeSunAzimuthNE > Math.PI) wRelativeSunAzimuthNE -= 2*Math.PI;
+    while(wRelativeSunAzimuthNE < -Math.PI) wRelativeSunAzimuthNE += 2*Math.PI;
 
+    var wRelativeSunElevationNE = -wInclination*Math.sin(wEarthDateRotation) - wLatitude;
+    while(wRelativeSunElevationNE > Math.PI) wRelativeSunElevationNE -= 2*Math.PI;
+    while(wRelativeSunElevationNE < -Math.PI) wRelativeSunElevationNE += 2*Math.PI;
     
-    var wRelativeSunElevation = -wInclination*Math.sin(wEarthDateRotation) - wLatitude;
-    while(wRelativeSunElevation > Math.PI) wRelativeSunElevation -= 2*Math.PI;
-    while(wRelativeSunElevation < -Math.PI) wRelativeSunElevation += 2*Math.PI;
-    
-    while(wRelativeSunAzimuth > Math.PI) wRelativeSunAzimuth -= 2*Math.PI;
-    while(wRelativeSunAzimuth < -Math.PI) wRelativeSunAzimuth += 2*Math.PI;
+    // Rotate to current heading
+    var wYawCos = Math.cos(wYaw);
+    var wYawSin = Math.sin(wYaw);
+
+    var wRelativeSunHeadingX = wRelativeSunElevationNE*wYawCos - wRelativeSunAzimuthNE*wYawSin;
+    var wRelativeSunHeadingY = wRelativeSunElevationNE*wYawSin + wRelativeSunAzimuthNE*wYawCos;
+
+    // Subtract the pitch
+    var wRelativeSunPitchX = (wHalfPi - wRelativeSunHeadingX) - wPitch;
+    var wRelativeSunPitchY = wRelativeSunHeadingY;
+
+    // Rotate for Roll
+    var wRollCos = Math.cos(-wRoll);
+    var wRollSin = Math.sin(-wRoll);
+    var wRelativeSunRollX = wRelativeSunPitchX*wRollCos - wRelativeSunPitchY*wRollSin;
+    var wRelativeSunRollY = wRelativeSunPitchX*wRollSin + wRelativeSunPitchY*wRollCos;
 
 
-    var wSunPositionCos = Math.cos(wRelativeSunAzimuth);
-    var wSunPositionSin = Math.sin(wRelativeSunAzimuth);
+    var wSunPositionCos = Math.cos(wRelativeSunAzimuthNE);
+    var wSunPositionSin = Math.sin(wRelativeSunAzimuthNE);
+
 
     var wMultitplier = wSunPositionCos + 0.1;
     if (wMultitplier < 0) wMultitplier = 0;
@@ -149,8 +164,8 @@ function ViewPoint(iDiv_Id){
       
       // Sun Radial Glow gradient
       var wSunCenterEarthAxis = {
-        x : wScreenCenter.x + 1.5*wScreenRadius*(wRelativeSunElevation / wHalfPi),
-        y : wScreenCenter.y + 1.5*wScreenRadius*(wRelativeSunAzimuth / wHalfPi),
+        x : wScreenCenter.x - 1.5*wScreenRadius*(wRelativeSunRollY / wHalfPi),
+        y : wScreenCenter.y - 1.5*wScreenRadius*(wRelativeSunRollX / wHalfPi),
       }
 
       var wGradient = wCtx.createRadialGradient(wSunCenterEarthAxis.x, wSunCenterEarthAxis.y, 0, wSunCenterEarthAxis.x, wSunCenterEarthAxis.y, wScreenRadius);

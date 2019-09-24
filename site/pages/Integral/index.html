@@ -68,7 +68,7 @@
                 },
                 EarthModel : {
                     Radius : 60000,
-                    Inclination : 66.5*Math.PI/180,
+                    Inclination : 0.0,//66.5*Math.PI/180,
                 }
             }
 
@@ -145,6 +145,7 @@
 
             gGlobal.CameraPosition.Roll = parseFloat(document.getElementById("id_input_RollTest").value);
             gGlobal.CameraPosition.Pitch = parseFloat(document.getElementById("id_input_pitchTest").value);
+            gGlobal.CameraPosition.Yaw= parseFloat(document.getElementById("id_input_YawTest").value);
             gGlobal.CameraPosition.Altitude = parseFloat(document.getElementById("id_input_AltTest").value);
             gGlobal.CameraPosition.Longitude = parseFloat(document.getElementById("id_input_LonTest").value);
             gGlobal.CameraPosition.Latitude= parseFloat(document.getElementById("id_input_LatTest").value);
@@ -207,7 +208,7 @@
         }
 
         #id_div_config_upload {
-            background-color:white;
+            background-color:rgba(255, 255, 255, 0.4);
             border: 1px solid blue;
             width: 300px;
             height: 300px;
@@ -264,6 +265,7 @@
 
         <br><span>Roll</span><input type="number" id="id_input_RollTest" step="0.01" value="0"/>
         <br><span>Pitch</span><input type="number" id="id_input_pitchTest" step="0.01" value="0"/>
+        <br><span>Yaw</span><input type="number" id="id_input_YawTest" step="0.01" value="0"/>
         <br><span>Altitude</span><input type="number" id="id_input_AltTest" step="1000" value="0"/>
         <br><span>Latitude</span><input type="number" id="id_input_LatTest" step="0.1" value="0"/>
         <br><span>Longitude</span><input type="number" id="id_input_LonTest" step="0.1" value="0"/>
