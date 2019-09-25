@@ -68,7 +68,7 @@
                 },
                 EarthModel : {
                     Radius : 60000,
-                    Inclination : 0.0,//66.5*Math.PI/180,
+                    Inclination : 66.5*Math.PI/180,
                 }
             }
 
@@ -149,10 +149,10 @@
             gGlobal.CameraPosition.Altitude = parseFloat(document.getElementById("id_input_AltTest").value);
             gGlobal.CameraPosition.Longitude = parseFloat(document.getElementById("id_input_LonTest").value);
             gGlobal.CameraPosition.Latitude= parseFloat(document.getElementById("id_input_LatTest").value);
-
+            var wTimeIncrease= parseFloat(document.getElementById("id_input_TimeTest").value);
             //------------------ Test -------------------------
 
-            gGlobal.ViewPoint.drawArtificialHorizon(gGlobal.CameraPosition, new Date(Date.now()),  gGlobal.EarthModel)
+            gGlobal.ViewPoint.drawArtificialHorizon(gGlobal.CameraPosition, new Date(Date.now() + wTimeIncrease*1000*60*60),  gGlobal.EarthModel)
             
             gGlobal.ViewPoint.render( null,drawForeground);
         }
@@ -168,7 +168,7 @@
         function drawForeground(iCanvasDOM) {
 
             var ctx = iCanvasDOM.getContext("2d");
-/*
+
             // Create gradient
             var grd = ctx.createLinearGradient(0, 0, 200, 0);
             grd.addColorStop(0, "blue");
@@ -176,7 +176,7 @@
 
             // Fill with gradient
             ctx.fillStyle = grd;
-            ctx.fillRect(30, 10, 150, 80);*/
+            ctx.fillRect(30, 10, 150, 80);
         }
 
     </script>
@@ -219,40 +219,14 @@
             background-color:pink;
             width: 100vw;
             height: 100vh;
+            width: 50vw;
+            height: 050vh;
         }
 
     </style>
 
 </head>
 <body onload="init()" onresize="resize()">
-<!--    <div id="id_div_OutputCanvas">
-            <div id="id_div_OutputCanvas1">
-        <img src="image/horizon2.jpg" id="id_canvas_canvas_bg_image">
-        <script>
-            function setHorizon(iPitch, iAltitude, iPlanetRadius) {
-
-                var wAlt = parseFloat(iAltitude);
-                var wPitch = parseFloat(iPitch);
-                var wRadius = parseFloat(iPlanetRadius);
-                var wFakeHorizon = document.getElementById("id_canvas_canvas_bg_image");
-
-                if (0 > wAlt) wAlt = 0;
-
-                var wHorizonAngle = Math.PI/2 - Math.asin(wRadius/(wRadius+wAlt));
-                var wSeenHorizonAngle = wHorizonAngle + wPitch;
-                var wFakeHorizonOffset = (wSeenHorizonAngle/(Math.PI))*(wFakeHorizon.height/4); 
-
-                //move reference to center of window
-                wFakeHorizonOffset -= wFakeHorizon.height/2;
-                
-//                if (wFakeHorizonOffset < -wFakeHorizon.height/4) wFakeHorizonOffset = -wFakeHorizon.height/4;   
-//                if (wFakeHorizonOffset > 0) wFakeHorizonOffset = 0;   
-                wFakeHorizon.style.top = wFakeHorizonOffset;
-            }
-        </script>
-        <canvas id="id_canvas_OutputCanvas"></canvas>
-    </div>
--->
     <div id="id_div_OutputViewPort"></div>
     </div>
     <div id="id_splash_container">
@@ -269,6 +243,7 @@
         <br><span>Altitude</span><input type="number" id="id_input_AltTest" step="1000" value="0"/>
         <br><span>Latitude</span><input type="number" id="id_input_LatTest" step="0.1" value="0"/>
         <br><span>Longitude</span><input type="number" id="id_input_LonTest" step="0.1" value="0"/>
+        <br><span>Time (hours)</span><input type="number" id="id_input_TimeTest" step="1" value="0"/>
     </div>
 </div>
 </body>

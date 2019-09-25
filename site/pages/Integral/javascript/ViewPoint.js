@@ -56,7 +56,7 @@ function ViewPoint(iDiv_Id) {
     var wYaw = parseFloat(iCameraPosition.Yaw);
 
     var wEarthDateRotation = (wHour + wMinute / 60) / 24;
-    var wSunAzimuthWRTUTC = wEarthDateRotation + Math.PI;
+    var wSunAzimuthWRTUTC = wEarthDateRotation*2*Math.PI + Math.PI;
 
     //Normalizing All Angles
 
