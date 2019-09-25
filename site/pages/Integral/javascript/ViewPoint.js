@@ -82,14 +82,19 @@ function ViewPoint(iDiv_Id) {
     while (wPitch > wHalfPi) {
       wPitch = Math.PI - wPitch;
       wRoll += Math.PI;
+      wYaw += Math.PI;
     }
     while (wPitch < -wHalfPi) {
       wPitch = -Math.PI - wPitch;
       wRoll += Math.PI;
+      wYaw += Math.PI;
     }
 
     while (wRoll > Math.PI) wRoll -= 2 * Math.PI;
     while (wRoll < -Math.PI) wRoll += 2 * Math.PI;
+    
+    while (wYaw > Math.PI) wYaw -= 2 * Math.PI;
+    while (wYaw < -Math.PI) wYaw += 2 * Math.PI;
 
 
     var wImageAngleSin = Math.sin(wRoll);
@@ -101,20 +106,6 @@ function ViewPoint(iDiv_Id) {
     }
 
     var wScreenRadius = Math.sqrt(wScreenCenter.x * wScreenCenter.x + wScreenCenter.y * wScreenCenter.y);
-
-    var wGradientStart = {
-      x: wScreenRadius * wImageAngleSin + wScreenCenter.x,
-      y: -wScreenRadius * wImageAngleCos + wScreenCenter.y,
-    }
-
-    var wGradientEnd = {
-      x: -wScreenRadius * wImageAngleSin + wScreenCenter.x,
-      y: +wScreenRadius * wImageAngleCos + wScreenCenter.y,
-    }
-
-    var wHorizonAngle = wHalfPi - Math.asin(wRadius / (wRadius + wAltitude));
-    var wScreenHorizonAngle = wHorizonAngle * Math.cos(wPitch) + wPitch;
-    var wArtificalHorizonRatio = 0.5 + wScreenHorizonAngle / (Math.PI);
 
     var wCtx = this.mBackGroundCanvasDOM.getContext("2d");
 
@@ -154,53 +145,68 @@ function ViewPoint(iDiv_Id) {
     var wSunPositionSin = Math.sin(wRelativeSunAzimuthNE);
 
 
-    var wMultitplier = wSunPositionCos + 0.1;
+    var wMultitplier = 0.5*(wSunPositionCos + 1.0);
     if (wMultitplier < 0) wMultitplier = 0;
 
     wCtx.fillStyle = "rgba( " + 10 + ", " + (wMultitplier * 150) + "," + (wMultitplier * 255) + ", 1.0)";
     wCtx.fillRect(-10, -10, wCanvasDOM.width + 20, wCanvasDOM.height + 20);
 
-    if (wSunPositionCos > 0) {
-
-      // Sun Radial Glow gradient
-      var wSunCenterEarthAxis = {
-        x: wScreenCenter.x - 1.5 * wScreenRadius * (wRelativeSunRollY / wHalfPi),
-        y: wScreenCenter.y - 1.5 * wScreenRadius * (wRelativeSunRollX / wHalfPi),
-      }
-
-      var wGradient = wCtx.createRadialGradient(wSunCenterEarthAxis.x, wSunCenterEarthAxis.y, 0, wSunCenterEarthAxis.x, wSunCenterEarthAxis.y, wScreenRadius);
-      wGradient.addColorStop(0.0, "rgba( 255, 255, 255 , 1.0)");
-      wGradient.addColorStop(0.05, "rgba( 255, 255, 255 , 1.0)");
-      wGradient.addColorStop(0.10, "rgba( 255, 255, 255 , 0.5)");
-      wGradient.addColorStop(0.75, "rgba( 255, 255, 255 , 0.0)");
-
-      // Fill with gradient
-      wCtx.fillStyle = wGradient;
-      wCtx.fillRect(-10, -10, wCanvasDOM.width + 20, wCanvasDOM.height + 20);
+    // Add Abs Check to the Angle
+    // Sun Radial Glow gradient
+    var wSunCenterEarthAxis = {
+      x: wScreenCenter.x - 1.5 * wScreenRadius * (wRelativeSunRollY / wHalfPi),
+      y: wScreenCenter.y - 1.5 * wScreenRadius * (wRelativeSunRollX / wHalfPi),
     }
 
+    var wGradient = wCtx.createRadialGradient(wSunCenterEarthAxis.x, wSunCenterEarthAxis.y, 0, wSunCenterEarthAxis.x, wSunCenterEarthAxis.y, wScreenRadius);
+    wGradient.addColorStop(0.0, "rgba( 255, 255, 255 , 1.0)");
+    wGradient.addColorStop(0.05, "rgba( 255, 255, 255 , 1.0)");
+    wGradient.addColorStop(0.10, "rgba( 255, 255, 255 , 0.5)");
+    wGradient.addColorStop(0.75, "rgba( 255, 255, 255 , 0.0)");
+
+    // Fill with gradient
+    wCtx.fillStyle = wGradient;
+    wCtx.fillRect(-10, -10, wCanvasDOM.width + 20, wCanvasDOM.height + 20);
+
     // Artificial Horizon
-    var wSkyShadeRatio = wScreenHorizonAngle / wHalfPi;
+    
+    var wGradientCurvatureRadius = 0.1*wRadius
+    var wGradientStart = {
+      x: -(wScreenRadius + wGradientCurvatureRadius) * wImageAngleSin + wScreenCenter.x,
+      y: (wScreenRadius + wGradientCurvatureRadius) * wImageAngleCos + wScreenCenter.y,
+    }
+
+    var wGradientEnd = {
+      x: wScreenRadius * wImageAngleSin + wScreenCenter.x,
+      y: -wScreenRadius * wImageAngleCos + wScreenCenter.y,
+    }
+
+    var wHorizonAngle = wHalfPi - Math.asin(wRadius / (wRadius + wAltitude));
+    var wScreenHorizonAngle = wHorizonAngle * Math.cos(wPitch) + wPitch;
+    var wArtificalHorizonRatio = 0.5 - wScreenHorizonAngle / (Math.PI);
+
+    var wSkyShadeRatio = 1 - wScreenHorizonAngle / wHalfPi;
     if (wSkyShadeRatio > 1.0) wSkyShadeRatio = 1.0;
     if (wSkyShadeRatio < 0.0) wSkyShadeRatio = 0.0;
 
     if (wArtificalHorizonRatio > 1.0) wArtificalHorizonRatio = 1.0;
 
-    var wGroundShadeRatio2 = 1 - wScreenHorizonAngle / -wHalfPi;
+    var wGroundShadeRatio2 = wScreenHorizonAngle / -wHalfPi;
     if (wGroundShadeRatio2 > 1.0) wGroundShadeRatio2 = 1.0;
     if (wGroundShadeRatio2 < 0.0) wGroundShadeRatio2 = 0.0;
 
     var wGroundShadeRatio = wArtificalHorizonRatio + 0.3 * (wGroundShadeRatio2 - wArtificalHorizonRatio);
 
     // Create Sky Ground gradient
-    var wGradient = wCtx.createLinearGradient(wGradientStart.x, wGradientStart.y, wGradientEnd.x, wGradientEnd.y);
-    wGradient.addColorStop(0.0, "rgba( 255, 255, 255 , 0.0)");
-    wGradient.addColorStop(wSkyShadeRatio, "rgba( 255, 255, 255 , 0.0)");
-    wGradient.addColorStop(wArtificalHorizonRatio, "rgba( 255, 255, 255 , 1.0)");
-    wGradient.addColorStop(wArtificalHorizonRatio, "rgba( 144, 106, 0 , 1.0)");
-    wGradient.addColorStop(wGroundShadeRatio, "rgba( 217, 159, 0 , 1.0)");
+    var wGradient = wCtx.createRadialGradient(wGradientStart.x, wGradientStart.y, wGradientCurvatureRadius, wGradientStart.x, wGradientStart.y, wGradientCurvatureRadius + 2*wScreenRadius);
+      
+    wGradient.addColorStop(0.0, "rgba( 255, 255, 255 , 1.0)");
     wGradient.addColorStop(wGroundShadeRatio2, "rgba( 255, 255, 255  , 1.0)");
-    wGradient.addColorStop(1.0, "rgba( 255, 255, 255 , 1.0)");
+    wGradient.addColorStop(wGroundShadeRatio, "rgba( 217, 159, 0 , 1.0)");
+    wGradient.addColorStop(wArtificalHorizonRatio, "rgba( 144, 106, 0 , 1.0)");
+    wGradient.addColorStop(wArtificalHorizonRatio, "rgba( 255, 255, 255 , 1.0)");
+    wGradient.addColorStop(wSkyShadeRatio, "rgba( 255, 255, 255 , 0.0)");
+    wGradient.addColorStop(1.0, "rgba( 255, 255, 255 , 0.0)");
 
     // Fill with gradient
     wCtx.fillStyle = wGradient;
