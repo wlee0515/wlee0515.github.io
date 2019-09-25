@@ -170,7 +170,7 @@ function ViewPoint(iDiv_Id) {
 
     // Artificial Horizon
     
-    var wGradientCurvatureRadius = 0.1*wRadius
+    var wGradientCurvatureRadius = 0.75*wRadius
     var wGradientStart = {
       x: -(wScreenRadius + wGradientCurvatureRadius) * wImageAngleSin + wScreenCenter.x,
       y: (wScreenRadius + wGradientCurvatureRadius) * wImageAngleCos + wScreenCenter.y,

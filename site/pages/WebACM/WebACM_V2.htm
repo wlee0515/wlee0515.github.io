@@ -1,0 +1,1716 @@
+<html>
+<head>
+    <title>Web ACM Display</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/4.7.0/css/font-awesome.min.css">
+    <script src="javascript/EarthModel.js"></script>
+    <script src="javascript/glMatrix_v0_9_5.js"></script>
+    <script src="javascript/glDrawFunctions.js"></script>
+    <script src="javascript/ModelLibrary.js"></script>
+    <script src="javascript/AnimationDirector.js"></script>
+    <script src="javascript/SimulationDirector.js"></script>
+    <script src="../Integral/javascript/ViewPoint.js"></script>
+
+    <script id="shader-fs" type="x-shader/x-fragment">
+    precision mediump float;
+
+    varying vec4 vColor;
+    varying vec3 vLightWeighting;
+
+    void main(void) {
+    vec4 wColor;
+    wColor[0] = vColor[0]*vLightWeighting[0];
+    wColor[1] = vColor[1]*vLightWeighting[1];
+    wColor[2] = vColor[2]*vLightWeighting[2];
+    wColor[3] = vColor[3];
+    gl_FragColor = wColor;
+    }
+    </script>
+
+    <script id="shader-vs" type="x-shader/x-vertex">
+    attribute vec3 aVertexPosition;
+    attribute vec3 aVertexNormal;
+    attribute vec4 aVertexColor;
+
+    uniform mat4 uMVMatrix;
+    uniform mat4 uPMatrix;
+    uniform mat3 uNMatrix;
+
+    uniform vec3 uAmbientColor;
+
+    uniform vec3 uLightingDirection;
+    uniform vec3 uDirectionalColor;
+
+    varying vec3 vLightWeighting;
+    varying vec4 vColor;
+
+    void main(void) {
+    gl_Position = uPMatrix * uMVMatrix * vec4(aVertexPosition, 1.0);
+
+    vec3 transformedNormal = uNMatrix * aVertexNormal;
+    float directionalLightWeighting = max(dot(transformedNormal, uLightingDirection), 0.0);
+
+    vLightWeighting = uAmbientColor + uDirectionalColor * directionalLightWeighting;
+
+    vColor = aVertexColor;
+    }
+    </script>
+    <script>
+
+        function RecorderFrame(iFrameTime, iPx, iPy, iPz, iVx, iVy, iVz, iAx, iAy, iAz, iRoll, iPitch, iYaw, iRollRate, iPitchRate, iYawRate, iRollRateDot, iPitchRateDot, iYawRateDot) {
+            this.FrameTime = iFrameTime;
+            this.Px = iPx;
+            this.Py = iPy;
+            this.Pz = iPz;
+
+            this.Vx = iVx;
+            this.Vy = iVy;
+            this.Vz = iVz;
+
+            this.Ax = iAx;
+            this.Ay = iAy;
+            this.Az = iAz;
+
+            this.Roll = iRoll;
+            this.Pitch = iPitch;
+            this.Yaw = iYaw;
+
+            this.RollRate = iRollRate;
+            this.PitchRate = iPitchRate;
+            this.YawRate = iYawRate;
+
+            this.RollRateDot = iRollRateDot;
+            this.PitchRateDot = iPitchRateDot;
+            this.YawRateDot = iYawRateDot;
+
+
+            this.setToSimulationModel = function (iSimulationModel) {
+
+                if ((null != this.Px) && (false == isNaN(this.Px))) {
+                    iSimulationModel.Position[0] = this.Px;
+                }
+                if ((null != this.Py) && (false == isNaN(this.Py))) {
+                    iSimulationModel.Position[1] = this.Py;
+                }
+                if ((null != this.Pz) && (false == isNaN(this.Pz))) {
+                    iSimulationModel.Position[2] = this.Pz;
+                }
+
+                if ((null != this.Vx) && (false == isNaN(this.Vx))) {
+                    iSimulationModel.Velocity[0] = this.Vx;
+                }
+                if ((null != this.Vy) && (false == isNaN(this.Vy))) {
+                    iSimulationModel.Velocity[1] = this.Vy;
+                }
+                if ((null != this.Vz) && (false == isNaN(this.Vz))) {
+                    iSimulationModel.Velocity[2] = this.Vz;
+                }
+
+
+                if ((null != this.Ax) && (false == isNaN(this.Ax))) {
+                    iSimulationModel.Acceleration[0] = this.Ax;
+                }
+                if ((null != this.Ay) && (false == isNaN(this.Ay))) {
+                    iSimulationModel.Acceleration[1] = this.Ay;
+                }
+                if ((null != this.Az) && (false == isNaN(this.Az))) {
+                    iSimulationModel.Acceleration[2] = this.Az;
+                }
+
+
+                if ((null != this.Roll) && (false == isNaN(this.Roll))) {
+                    iSimulationModel.AngularPosition[0] = this.Roll;
+                }
+                if ((null != this.Pitch) && (false == isNaN(this.Pitch))) {
+                    iSimulationModel.AngularPosition[1] = this.Pitch;
+                }
+                if ((null != this.Yaw) && (false == isNaN(this.Yaw))) {
+                    iSimulationModel.AngularPosition[2] = this.Yaw;
+                }
+
+                if ((null != this.RollRate) && (false == isNaN(this.RollRate))) {
+                    iSimulationModel.AngularVelocity[0] = this.RollRate;
+                }
+                if ((null != this.PitchRate) && (false == isNaN(this.PitchRate))) {
+                    iSimulationModel.AngularVelocity[1] = this.PitchRate;
+                }
+                if ((null != this.YawRate) && (false == isNaN(this.YawRate))) {
+                    iSimulationModel.AngularVelocity[2] = this.YawRate;
+                }
+
+                if ((null != this.RollRateDot) && (false == isNaN(this.RollRateDot))) {
+                    iSimulationModel.AngularAcceleration[0] = this.RollRateDot;
+                }
+                if ((null != this.PitchRateDot) && (false == isNaN(this.PitchRateDot))) {
+                    iSimulationModel.AngularAcceleration[1] = this.PitchRateDot;
+                }
+                if ((null != this.YawRateDot) && (false == isNaN(this.YawRateDot))) {
+                    iSimulationModel.AngularAcceleration[2] = this.YawRateDot;
+                }
+
+            }
+        }
+
+        function RecorderFileDirector() {
+
+            this.Index = 0;
+            this.Time = 0;
+            this.RecorderFrameArray = new Array();
+
+            this.addNewFrame = function (iFrameTime, iPx, iPy, iPz, iVx, iVy, iVz, iAx, iAy, iAz, iRoll, iPitch, iYaw, iRollRate, iPitchRate, iYawRate, iRollRateDot, iPitchRateDot, iYawRateDot) {
+                this.RecorderFrameArray.push(new RecorderFrame(iFrameTime, iPx, iPy, iPz, iVx, iVy, iVz, iAx, iAy, iAz, iRoll, iPitch, iYaw, iRollRate, iPitchRate, iYawRate, iRollRateDot, iPitchRateDot, iYawRateDot));
+            }
+
+            this.resetIndex = function () {
+                this.Index = 0;
+                this.Time = 0;
+            }
+
+            this.initialize = function (iSimulationModel) {
+                this.resetIndex();
+
+                if (this.Index < this.RecorderFrameArray.length) {
+                    this.Time = this.RecorderFrameArray[this.Index].FrameTime;
+                    this.RecorderFrameArray[this.Index].setToSimulationModel(iSimulationModel);
+                }
+
+            }
+
+            this.integrate = function (iDt) {
+                this.Time += iDt;
+            }
+
+            this.updateSimulation = function (iSimulationModel) {
+                if (this.Index < this.RecorderFrameArray.length) {
+
+                    for (var wi = this.Index + 1 ; wi < this.RecorderFrameArray.length; ++wi) {
+
+                        if (this.Time >= this.RecorderFrameArray[wi].FrameTime) {
+                            this.RecorderFrameArray[this.Index].setToSimulationModel(iSimulationModel);
+                            ++this.Index;
+                        }
+                        else {
+                            break;
+                        }
+                    }
+                }
+            }
+
+            this.isEndOfRecording = function () {
+                return this.Index >= this.RecorderFrameArray.length - 1;
+            }
+        }
+
+    </script>
+    <script>
+
+        // -------- Vector Objects -------------------
+
+		function ShiftVertices(iShiftVector , iVertexArray){
+	
+			if (0 != iShiftVector.length) {
+				var wNewVertexArray = new Array;
+					
+				for (var wi = 0; wi < iVertexArray.length; ++wi){
+					wNewVertexArray.push( iShiftVector[wi%iShiftVector.length] + iVertexArray[wi]);
+				}				
+				
+				return wNewVertexArray;
+			}
+			
+			return null;
+		}
+		
+		
+		function ScaleVertices(iScaleVector, iVertexArray){
+		
+			if (0 != iScaleVector.length) {
+				var wNewVertexArray = new Array;
+					
+				for (var wi = 0; wi < iVertexArray.length; ++wi){
+					wNewVertexArray.push( iScaleVector[wi%iScaleVector.length] * iVertexArray[wi]);
+				}				
+				
+				return wNewVertexArray;
+			}
+			
+			return null;
+		}
+		
+        function hemisphereVertex(iRadius, iColorStart, iColorEnd) {
+
+            var wVertexLocation = new Array();
+
+            var w2PI = 2 * Math.PI;
+
+            var wAngleInc = 0.5 * Math.PI / 10;
+            var wMaxAngLong = w2PI + 0.1 * wAngleInc;
+            var wMaxAngLat = 0.5 * Math.PI + 0.1 * wAngleInc;
+
+            for (var wi = 0; wi < wMaxAngLong  ; wi += wAngleInc) {
+                var wNewLocationArray = new Array();
+
+                for (var wj = 0; wj < wMaxAngLat  ; wj += wAngleInc) {
+                    var wNewLocation = new Array();
+
+                    wNewLocation.push(-Math.cos(wj) * Math.cos(wi))
+                    wNewLocation.push(-Math.cos(wj) * Math.sin(wi))
+                    wNewLocation.push(-Math.sin(wj))
+
+                    wNewLocationArray.push(wNewLocation);
+                }
+
+                wVertexLocation.push(wNewLocationArray);
+            }
+
+            var oVertexLocation = new Array();
+            var oVertexNormal = new Array();
+            var oVertexColor = new Array();
+
+
+            for (var wi = 0; wi < wVertexLocation.length  ; ++wi) {
+
+                for (var wj = 0; wj < wVertexLocation[wi].length  ; ++wj) {
+                    var wiP = (wi + 1) % wVertexLocation.length;
+                    var wjP = (wj + 1) % wVertexLocation[wi].length;
+                    var wColorWeight_wj = wj / wVertexLocation[wi].length;
+                    var wColorWeight_wjP = wjP / wVertexLocation[wi].length;
+
+                    var wConjugateColorWeight_wj = 1.0 - wColorWeight_wj;
+                    var wConjugateColorWeight_wjP = 1.0 - wColorWeight_wjP;
+
+                    oVertexLocation.push(iRadius * wVertexLocation[wi][wj][0]);
+                    oVertexLocation.push(iRadius * wVertexLocation[wi][wj][1]);
+                    oVertexLocation.push(iRadius * wVertexLocation[wi][wj][2]);
+
+                    oVertexNormal.push(-wVertexLocation[wi][wj][0]);
+                    oVertexNormal.push(-wVertexLocation[wi][wj][1]);
+                    oVertexNormal.push(-wVertexLocation[wi][wj][2]);
+
+                    oVertexColor.push(iColorStart[0] * wColorWeight_wj + iColorEnd[0] * wConjugateColorWeight_wj);
+                    oVertexColor.push(iColorStart[1] * wColorWeight_wj + iColorEnd[1] * wConjugateColorWeight_wj);
+                    oVertexColor.push(iColorStart[2] * wColorWeight_wj + iColorEnd[2] * wConjugateColorWeight_wj);
+                    oVertexColor.push(iColorStart[3] * wColorWeight_wj + iColorEnd[3] * wConjugateColorWeight_wj);
+
+
+                    oVertexLocation.push(iRadius * wVertexLocation[wiP][wj][0]);
+                    oVertexLocation.push(iRadius * wVertexLocation[wiP][wj][1]);
+                    oVertexLocation.push(iRadius * wVertexLocation[wiP][wj][2]);
+
+                    oVertexNormal.push(-wVertexLocation[wiP][wj][0]);
+                    oVertexNormal.push(-wVertexLocation[wiP][wj][1]);
+                    oVertexNormal.push(-wVertexLocation[wiP][wj][2]);
+
+                    oVertexColor.push(iColorStart[0] * wColorWeight_wj + iColorEnd[0] * wConjugateColorWeight_wj);
+                    oVertexColor.push(iColorStart[1] * wColorWeight_wj + iColorEnd[1] * wConjugateColorWeight_wj);
+                    oVertexColor.push(iColorStart[2] * wColorWeight_wj + iColorEnd[2] * wConjugateColorWeight_wj);
+                    oVertexColor.push(iColorStart[3] * wColorWeight_wj + iColorEnd[3] * wConjugateColorWeight_wj);
+
+
+                    oVertexLocation.push(iRadius * wVertexLocation[wi][wjP][0]);
+                    oVertexLocation.push(iRadius * wVertexLocation[wi][wjP][1]);
+                    oVertexLocation.push(iRadius * wVertexLocation[wi][wjP][2]);
+
+                    oVertexNormal.push(-wVertexLocation[wi][wjP][0]);
+                    oVertexNormal.push(-wVertexLocation[wi][wjP][1]);
+                    oVertexNormal.push(-wVertexLocation[wi][wjP][2]);
+
+                    oVertexColor.push(iColorStart[0] * wColorWeight_wjP + iColorEnd[0] * wConjugateColorWeight_wjP);
+                    oVertexColor.push(iColorStart[1] * wColorWeight_wjP + iColorEnd[1] * wConjugateColorWeight_wjP);
+                    oVertexColor.push(iColorStart[2] * wColorWeight_wjP + iColorEnd[2] * wConjugateColorWeight_wjP);
+                    oVertexColor.push(iColorStart[3] * wColorWeight_wjP + iColorEnd[3] * wConjugateColorWeight_wjP);
+
+
+                    oVertexLocation.push(iRadius * wVertexLocation[wiP][wjP][0]);
+                    oVertexLocation.push(iRadius * wVertexLocation[wiP][wjP][1]);
+                    oVertexLocation.push(iRadius * wVertexLocation[wiP][wjP][2]);
+
+                    oVertexNormal.push(-wVertexLocation[wiP][wjP][0]);
+                    oVertexNormal.push(-wVertexLocation[wiP][wjP][1]);
+                    oVertexNormal.push(-wVertexLocation[wiP][wjP][2]);
+
+                    oVertexColor.push(iColorStart[0] * wColorWeight_wjP + iColorEnd[0] * wConjugateColorWeight_wjP);
+                    oVertexColor.push(iColorStart[1] * wColorWeight_wjP + iColorEnd[1] * wConjugateColorWeight_wjP);
+                    oVertexColor.push(iColorStart[2] * wColorWeight_wjP + iColorEnd[2] * wConjugateColorWeight_wjP);
+                    oVertexColor.push(iColorStart[3] * wColorWeight_wjP + iColorEnd[3] * wConjugateColorWeight_wjP);
+                }
+            }
+
+            return {
+                vertices: oVertexLocation,
+                normals: oVertexNormal,
+                color: oVertexColor
+
+            }
+        }
+
+        function gridVertex(iX_Size, iY_Size, iX_SectionCount, iY_SectionCount) {
+
+            var wIncrement_X = iX_Size / iX_SectionCount;
+            var wIncrement_Y = iY_Size / iY_SectionCount;
+
+            var wMax_X = iX_Size + 0.01 * wIncrement_X;
+            var wMax_Y = iY_Size + 0.01 * wIncrement_Y;
+
+            var wStart_X = -iX_Size / 2;
+            var wStart_Y = -iY_Size / 2;
+
+
+            var wVertexArray = new Array();
+            for (var wi = 0; wi < wMax_X  ; wi += wIncrement_X) {
+                for (var wj = 0; wj < wMax_Y  ; wj += wIncrement_Y) {
+                    wVertexArray.push(wStart_X + wj);
+                    wVertexArray.push(wStart_Y);
+                    wVertexArray.push(0);
+
+                    wVertexArray.push(wStart_X + wj);
+                    wVertexArray.push(-wStart_Y);
+                    wVertexArray.push(0);
+
+                }
+            }
+
+
+            for (var wi = 0; wi < wMax_Y  ; wi += wIncrement_Y) {
+                for (var wj = 0; wj < wMax_X  ; wj += wIncrement_X) {
+                    wVertexArray.push(wStart_X);
+                    wVertexArray.push(wStart_Y + wj);
+                    wVertexArray.push(0);
+
+                    wVertexArray.push(-wStart_X);
+                    wVertexArray.push(wStart_Y + wj);
+                    wVertexArray.push(0);
+
+                }
+            }
+
+            return wVertexArray;
+        }
+
+    </script>
+
+    <script src="models/Aim9.txt"></script>
+    <script src="models/Apache.txt"></script>
+    <script src="models/f16.txt"></script>
+    <script src="models/mig29.txt"></script>
+    <script src="models/b17.txt"></script>
+    <script src="models/Tank.txt"></script>
+    <script src="definition/RunwayDefinition.txt"></script>
+    <script>
+
+        var gModelLibrary = new ModelLibrary();
+        var gAnimationDirector = new AnimationDirector();
+
+        loadModel("Aim9", getModel_Aim9());
+        loadModel("Apache", getModel_Apache());
+        loadModel("f16", getModel_f16());
+        loadModel("mig29", getModel_mig29());
+        loadModel("b17", getModel_b17());
+        loadModel("Tank", getModel_Tank());
+
+        var wAxis = new Model("Axis");
+        wAxis.addBuffer(DrawTypeEnum.LINES, [0.0, 0.0, 0.0, 1.0, 0.0, 0.0,
+                        0.0, 0.0, 0.0, 0.0, 1.0, 0.0,
+                        0.0, 0.0, 0.0, 0.0, 0.0, 1.0],
+
+                                             [1.0, 0.0, 0.0, 1.0, 0.0, 0.0,
+                        0.0, 1.0, 0.0, 0.0, 1.0, 0.0,
+                        0.0, 0.0, 1.0, 0.0, 0.0, 1.0],
+
+                       [1.0, 0.0, 0.0, 1.0, 1.0, 0.0, 0.0, 1.0,
+                        0.0, 1.0, 0.0, 1.0, 0.0, 1.0, 0.0, 1.0,
+                        0.0, 0.0, 1.0, 1.0, 0.0, 0.0, 1.0, 1.0
+                       ]);
+
+
+        gModelLibrary.addNewModel(wAxis);
+
+		
+        var wLineR = new Model("Line_R");
+        wLineR.addBuffer(DrawTypeEnum.LINES, [0.0, 0.0, 0.0, 1.0, 0.0, 0.0],
+                                             [1.0, 1.0, 1.0, 1.0, 1.0, 1.0],
+											 [100.0, 0.0, 0.0, 1.0, 100.0, 0.0, 0.0, 1.0 ]);
+
+
+        gModelLibrary.addNewModel(wLineR);
+		
+        var wLineG = new Model("Line_G");
+        wLineG.addBuffer(DrawTypeEnum.LINES, [0.0, 0.0, 0.0, 1.0, 0.0, 0.0],
+                                             [1.0, 1.0, 1.0, 1.0, 1.0, 1.0],
+											 [0.0, 100.0, 0.0, 1.0, 0.0, 100.0, 0.0, 1.0 ]);
+
+
+        gModelLibrary.addNewModel(wLineG);
+		
+        var wTracerModel = new Model("Tracer");
+        wTracerModel.addBuffer(DrawTypeEnum.LINES, [0.0, -5.0, 0.0, -2.0, -5.0, 0.0,
+                                                    0.0, 5.0, 0.0, -2.0, 5.0, 0.0, ],
+                                                   [0.0, 0.0, 1.0],
+                                                   [100.0, 0.0, 0.0, 1.0, 100.0, 0.0, 0.0, 1.0,
+                                                    0.0, 100.0, 0.0, 1.0, 0.0, 100.0, 0.0, 1.0,
+                                                   ]);
+
+        gModelLibrary.addNewModel(wTracerModel);
+
+        var wGrid = new Model("Grid");
+        wGrid.addBuffer(DrawTypeEnum.LINES, gridVertex(4000, 4000, 40, 40),
+                                                      [0.0, 0.0, 1.0],
+                                [0.9, 0.9, 0.9, 1.0]);
+
+        gModelLibrary.addNewModel(wGrid);
+
+        var wSkyDomeVertex = hemisphereVertex(3000, [0.0, 0.5, 1.0, 1], [1.0, 1.0, 1, 1]);
+        var wSkyDome = new Model("Sky")
+        wSkyDome.addBuffer(DrawTypeEnum.TRIANGLE_STRIP, wSkyDomeVertex.vertices, wSkyDomeVertex.normals, wSkyDomeVertex.color);
+        gModelLibrary.addNewModel(wSkyDome);
+
+        gAnimationDirector.FixedToCameraAnimationFrame_Modulated.addDrawDescription("G", wGrid, 0, 0, 0.0, 0, 0, 0);
+        gAnimationDirector.ModulatedRate_X = 100;
+        gAnimationDirector.ModulatedRate_Y = 100;
+        gAnimationDirector.ModulatedRate_Z = 100;
+
+        gAnimationDirector.StaticAnimationFrame.addDrawDescription("Axis", wAxis, 0, 0, 0.0, 0, 0, 0);
+
+        var wRunwayModel= new Model("Runway");
+        wRunwayModel.addBuffer(DrawTypeEnum.TRIANGLE_FAN, [0,0,0, 1.0,0.5,0, 1.0, -0.5,0, 0.0, -0.5,0, 0.0, 0.5,0, 1.0,0.5,0],
+                                                        [0.0, 0.0, 1.0],
+                                                        [0.5, 0.5, 0.5, 1.0]);
+
+        gModelLibrary.addNewModel(wRunwayModel);
+
+        var gRunwayManager = new RunwayManager();
+        
+        var wListOfRunways = getRunwayDefinition();
+
+        for (var wi = 0; wi < wListOfRunways.length; ++wi) {
+            var wNewRunway = wListOfRunways[wi];
+            gRunwayManager.addRunwayDiscription(wNewRunway.Id, wNewRunway.Latitude, wNewRunway.Longitude, wNewRunway.Elevation, wNewRunway.Bearing, wNewRunway.Length, wNewRunway.Width);
+        }
+
+        gRunwayManager.drawAnimationFrame(gAnimationDirector.StaticAnimationFrame, wRunwayModel);
+
+
+        var gDeltaTime = 50;
+        var gTimeBuffer = 0;
+        var gLastIterationTime = 0;
+
+        var gMouseHandler = {
+            mouseIsDownLeft: false,
+            mouseIsDownRight: false,
+
+            ShiftDown_L: false,
+            ShiftDown_R: false,
+
+            mouseDownLocation_X_L: 0,
+            mouseDownLocation_Y_L: 0,
+            mouseDownLocation_X_R: 0,
+            mouseDownLocation_Y_R: 0,
+
+            InitCameraRoll: 0.0,
+            InitCameraPitch: 0.0,
+            InitCameraYaw: 0.0,
+
+            InitCmaeraX: 0.0,
+            InitCmaeraY: 0.0,
+            InitCmaeraZ: 0.0
+        }
+
+        var gPlaybackHandler = {
+            Play: false,
+            GoToStart: false,
+            GoToEnd: false,
+            PlaySpeed:1.0
+        }
+
+        var gSimulationDirector = new SimulationDirector();
+        var gRecorderFileDirector = null;
+
+        //Test Code Start
+        
+        var wModelRef1 = gModelLibrary.findModel("f16_R");
+        var wTracerModelRef1 = gModelLibrary.findModel("Tracer");
+
+        var wSimModelRef = gSimulationDirector.addSimulationModel("Test", wModelRef1, wTracerModelRef1);
+
+        wSimModelRef.Position[0] = wNewRunway.Latitude;
+        wSimModelRef.Position[1] = wNewRunway.Longitude;
+        wSimModelRef.Position[2] = wNewRunway.Elevation;
+        wSimModelRef.Velocity[0] = 1.0;
+
+        setCameraTargetSelection("Test");
+
+        var gGlobal = null;
+
+        //Test Code End
+
+        function init() {
+
+            gGlobal = {
+                ViewPoint : new ViewPoint("div_OutputCanvas"),
+                SimulationTimeManagement : {
+                    DeltaTime : 25, //ms;
+                    LastIterationTime : 0,
+                    TimeBuffer : 0,
+                },
+                CameraPosition : {
+                    Latitude : 45.5017*Math.PI/180,
+                    Longitude : -73.5673*Math.PI/180,
+                    Altitude : 0.0,
+                    Roll : 0.0,
+                    Pitch : 0.0,
+                    Yaw : 0.0,
+                },
+                EarthModel : {
+                    Radius : 60000,
+                    Inclination : 66.5*Math.PI/180,
+                }
+            }
+
+            resize();
+
+            var wCanvas = document.getElementById("div_OutputCanvas");
+            wCanvas.addEventListener("mousedown", canvasMouseDown, false);
+            wCanvas.addEventListener("mouseup", canvasMouseUp, false);
+            wCanvas.addEventListener("mousemove", canvasMouseMove, false);
+
+            wCanvas.addEventListener('contextmenu', function (e) {
+                e.preventDefault();
+            }, false);
+
+            initGL(gGlobal.ViewPoint.mForeGroundCanvasDOM);
+
+
+            UpdateModelSelection();
+            UpdateSimModelSelection();
+
+            processTick();
+
+        }
+
+        function resize() {
+
+            if (null != gGlobal) {
+                gGlobal.ViewPoint.resize();
+                resizeGL(gGlobal.ViewPoint.mForeGroundCanvasDOM);
+            }
+
+            var wControl = document.getElementById("div_ConsolControl");
+
+            wControl.height = window.innerHeight;
+            wControl.width = window.innerWidth;
+
+
+        }
+
+        function processTick() {
+
+            window.requestAnimationFrame(processTick);
+
+            var wTimeNow = new Date().getTime();
+            if (gLastIterationTime != 0) {
+                var wElapsed = wTimeNow - gLastIterationTime;
+
+                if (wElapsed < gDeltaTime) {
+                    gTimeBuffer += wElapsed;
+                }
+
+                var wReDraw = false;
+                while (gTimeBuffer > 0) {
+                    gTimeBuffer -= gDeltaTime;
+                    processTime(gDeltaTime / 1000);
+                    wReDraw = true;
+                }
+                if (true == wReDraw) {
+                    drawCanvas();
+                }
+            }
+            gLastIterationTime = wTimeNow;
+        }
+
+        var wLastProgressBarValue = 0;
+        var wIsAtEndLastIt = false;
+        var wPlayBufferTimer = 0;
+        function processTime(iDt) {
+
+            if (null == gRecorderFileDirector) {
+                if ((true == gAnimationDirector.isPlaybackAtEnd()) && (true == wIsAtEndLastIt) && (true == gPlaybackHandler.Play)) {
+
+                    if (false != gPlaybackHandler.Play) {
+                        gSimulationDirector.integrate(iDt);
+
+                        var wNextRenderingFrame = gAnimationDirector.getNextRecordingFrame();
+                        if (null != wNextRenderingFrame) {
+                            gSimulationDirector.drawAnimationFrame(wNextRenderingFrame);
+                        }
+                    }
+                }
+            }
+
+            var wNewProgressBarValue = getProgrssBarValue("Progress_Bar");
+
+            if (wNewProgressBarValue != wLastProgressBarValue) {
+                gAnimationDirector.setPlaybackPercentage(parseFloat(wNewProgressBarValue));
+            }
+            else if (true == gPlaybackHandler.GoToStart) {
+                gAnimationDirector.setPlaybackToStart();
+                gPlaybackHandler.GoToStart = false;
+                gPlaybackHandler.Play = false;
+            }
+            else if (true == gPlaybackHandler.GoToEnd) {
+                gAnimationDirector.setPlaybackToEnd();
+                gPlaybackHandler.GoToEnd = false;
+                gPlaybackHandler.Play = false;
+            }
+            else if (true == gPlaybackHandler.Play) {
+
+                wPlayBufferTimer += gPlaybackHandler.PlaySpeed;
+
+                while (wPlayBufferTimer >= 1.0) {
+                    wPlayBufferTimer -= 1.0;
+                    gAnimationDirector.incrementPlaybackIndex();
+                }
+                if ((false == wIsAtEndLastIt) && (true == gAnimationDirector.isPlaybackAtEnd())) {
+                    gPlaybackHandler.Play = false;
+                }
+
+            }
+
+            wIsAtEndLastIt = gAnimationDirector.isPlaybackAtEnd();
+
+
+            
+            var wSimModelRef = gSimulationDirector.getModelAt(getGLCameraControl().TargetIndex);
+            if (null != wSimModelRef) {
+                gAnimationDirector.CameraFocusID = wSimModelRef.Id;
+            }
+
+            var wSimModelRef2 = gSimulationDirector.getModelAt(getGLCameraControl().TetherTargetIndex);
+            if ((null != wSimModelRef) && (true == getGLCameraControl().TetherTargetEnable)) {
+                gAnimationDirector.TetherCameraFocusID = wSimModelRef2.Id;
+            }
+            else {
+                gAnimationDirector.TetherCameraFocusID = "";
+            }
+
+            var wCameraPosition = gAnimationDirector.getPlaybackFrameCameraCenter();
+            var wClosestRunwayToCam = gRunwayManager.getClosestRunway(wCameraPosition.Latitude, wCameraPosition.Longitude);
+            if (null != wClosestRunwayToCam) {
+                gAnimationDirector.CameraTerrainElevation += 0.8 * (wClosestRunwayToCam.Elevation - gAnimationDirector.CameraTerrainElevation);
+            }
+
+            var wShowAllTracerCheckBox = document.getElementById("CheckBox_ShowAllTracer");
+			if (null != wShowAllTracerCheckBox)
+			{
+				gAnimationDirector.DrawAllIntegratedFrames = wShowAllTracerCheckBox.checked;
+			}
+
+            var wPercentage = gAnimationDirector.getPlaybackPercentage();
+            setProgrssBarValue("Progress_Bar", wPercentage);
+            wLastProgressBarValue = getProgrssBarValue("Progress_Bar");
+
+            var wReadOut = document.getElementById("Progress_ReadOut");
+            wReadOut.innerText = convertFrameToTimeString(gAnimationDirector.getPlaybackFrameNumber()+1) + "/" + convertFrameToTimeString(gAnimationDirector.getFrameCount()+1);
+
+
+            gGlobal.CameraPosition.Roll = getGLCameraControl().ViewPointRollOffset;
+            gGlobal.CameraPosition.Pitch = -getGLCameraControl().ViewPointPitchOffset;
+            gGlobal.CameraPosition.Yaw= -getGLCameraControl().ViewPointYawOffset;
+            gGlobal.CameraPosition.Altitude = 0;
+            gGlobal.CameraPosition.Longitude = wCameraPosition.Longitude;
+            gGlobal.CameraPosition.Latitude= wCameraPosition.Latitude;
+
+            gGlobal.ViewPoint.drawArtificialHorizon(gGlobal.CameraPosition, new Date(Date.now()),  gGlobal.EarthModel)
+            
+        }
+
+        function drawCanvas() {
+            drawGLAnimationDirectorScene(gAnimationDirector);
+        }
+
+        function canvasMouseDown(iEvent) {
+
+            if (null != iEvent) {
+
+                iEvent.preventDefault()
+                var wDom = document.getElementById("div_OutputCanvas");
+
+                x = iEvent.x - wDom.offsetLeft - document.body.scrollLeft;
+                y = iEvent.y - wDom.offsetTop - document.body.scrollTop;
+
+                switch (iEvent.which) {
+                    case 1:
+                        if (false == gMouseHandler.mouseIsDownLeft) {
+                            gMouseHandler.mouseIsDownLeft = true;
+                            gMouseHandler.ShiftDown_L = iEvent.shiftKey;
+
+                            gMouseHandler.mouseDownLocation_X_L = x;
+                            gMouseHandler.mouseDownLocation_Y_L = y;
+
+                            gMouseHandler.InitCameraPitch = getGLCameraControl().PitchOffset;
+                            gMouseHandler.InitCameraYaw = getGLCameraControl().YawOffset;
+
+                            gMouseHandler.InitCmaeraY = getGLCameraControl().YOffset;
+                            gMouseHandler.InitCmaeraZ = getGLCameraControl().ZOffset;
+                        }
+
+                        break;
+                    case 3:
+                        if (false == gMouseHandler.mouseIsDownRight) {
+                            gMouseHandler.mouseIsDownRight = true;
+                            gMouseHandler.ShiftDown_R = iEvent.shiftKey;
+
+                            gMouseHandler.mouseDownLocation_X_R = x;
+                            gMouseHandler.mouseDownLocation_Y_R = y;
+
+                            gMouseHandler.InitCameraRoll = getGLCameraControl().RollOffset;
+                            gMouseHandler.InitCmaeraX = getGLCameraControl().XOffset;
+                        }
+
+                        break;
+                }
+            }
+
+            canvasMouseMove(iEvent);
+        }
+
+        function canvasMouseUp(iEvent) {
+
+            if (true == gMouseHandler.mouseIsDownLeft) {
+                canvasMouseMove(iEvent);
+                gMouseHandler.mouseIsDownLeft = false;
+            }
+
+            if (true == gMouseHandler.mouseIsDownRight) {
+                canvasMouseMove(iEvent);
+                gMouseHandler.mouseIsDownRight = false;
+            }
+
+        }
+
+        function canvasMouseMove(iEvent) {
+
+            var wDom = document.getElementById("div_OutputCanvas");
+
+            x = iEvent.x - wDom.offsetLeft - document.body.scrollLeft;
+            y = iEvent.y - wDom.offsetTop - document.body.scrollTop;
+
+
+            if (true == gMouseHandler.mouseIsDownLeft) {
+
+                var wDX = x - gMouseHandler.mouseDownLocation_X_L;
+                var wDY = y - gMouseHandler.mouseDownLocation_Y_L;
+
+                if ((wDX * wDX + wDY * wDY) > 100) {
+
+                    if (true == gMouseHandler.ShiftDown_L) {
+                        getGLCameraControl().YOffset = gMouseHandler.InitCmaeraY - 0.05 * wDX;
+                        getGLCameraControl().ZOffset = gMouseHandler.InitCmaeraZ - 0.05 * wDY;
+
+                    }
+                    else {
+                        var dPitch = Math.atan(wDY / getGLCameraControl().XOffset);
+                        var dYaw = Math.atan(-wDX / getGLCameraControl().XOffset);
+
+                        getGLCameraControl().PitchOffset = gMouseHandler.InitCameraPitch + 0.5 * dPitch;
+                        getGLCameraControl().YawOffset = gMouseHandler.InitCameraYaw + 0.5 * dYaw;
+
+                    }
+                }
+
+            }
+
+            if (true == gMouseHandler.mouseIsDownRight) {
+
+                var wDX = x - gMouseHandler.mouseDownLocation_X_R;
+                var wDY = y - gMouseHandler.mouseDownLocation_Y_R;
+                /*
+                if (true == gMouseHandler.ShiftDown_R) {
+                  var dRoll = Math.atan(wDX / getGLCameraControl().XOffset);
+        
+                  getGLCameraControl().RollOffset = gMouseHandler.InitCameraRoll + 0.5 * dRoll;
+                }
+                else */{
+
+                    getGLCameraControl().XOffset = gMouseHandler.InitCmaeraX - 0.1 * wDY;
+                }
+
+            }
+
+
+
+        }
+
+        function deleteModel(iSimModelId) {
+            gAnimationDirector.deleteDescription(iSimModelId);
+            gSimulationDirector.deleteSimulationModel(iSimModelId);
+        }
+
+        function deleteModelCallback() {
+            
+            var wSimModelSelection = document.getElementById("EntitySelection");
+
+            if (0 != wSimModelSelection.options.length)
+            {
+
+                var wModelID = wSimModelSelection.options[wSimModelSelection.selectedIndex].text;
+                deleteModel(wModelID);
+                UpdateSimModelSelection();
+            }
+        }
+
+        function setCameraTargetSelection(iSimModelId) {
+            getGLCameraControl().TargetIndex = gSimulationDirector.getModelIndex(iSimModelId) + 1000 * gSimulationDirector.ModelList.length;
+        }
+
+        function setCameraTetherSelection(iSimModelId) {
+            getGLCameraControl().TetherTargetIndex = gSimulationDirector.getModelIndex(iSimModelId) + 1000 * gSimulationDirector.ModelList.length;
+        }
+
+        function convertFrameToTimeString(iFrameCount) {
+            var wTotalTime_s = iFrameCount * gDeltaTime / 1000;
+            var wTotalTime_m = wTotalTime_s / 60;
+            var wTotalTime_h = wTotalTime_m / 60;
+
+            var wHour = Math.floor(wTotalTime_h);
+            wHour = 0;
+            var wMinute = Math.floor(wTotalTime_m - wHour * 60);
+            var wSecond = Math.floor(wTotalTime_s - wMinute * 60);
+
+            var wS = "000" + wSecond;
+            wS = wS.substr(wS.length - 2);
+
+            var wM = "000" + wMinute;
+            wM = wM.substr(wM.length - 2);
+
+            var wH = "000" + wHour;
+            wH = wH.substr(wH.length - 2);
+
+            return /*wH + ":" +*/ wM + ":" + wS;
+        }
+
+        var gRecordingCounter = 0;
+        function animateRecorderDirector(iModelName, iRecorderDirector) {
+
+            gRecordingCounter++;
+            var wModelName = iModelName;
+            var wSimModelRef = gSimulationDirector.getModelAt(0);
+
+            var wModelSelection = document.getElementById("FileUploadModelSelection");
+
+            if (0 != wModelSelection.options.length) {
+                var wVisualModelName = wModelSelection.options[wModelSelection.selectedIndex].text;
+                if (wVisualModelName != "") {
+
+                    var wNewModelName = gRecordingCounter;
+                    wNewModelName += "_" + wVisualModelName;
+                    wNewModelName += "_" + wModelName;
+
+                    wModelName = wNewModelName;
+
+                    var wTModelRef = gModelLibrary.findModel(wVisualModelName);
+
+                    if (null != wTModelRef) {
+                        var wTracer = gModelLibrary.findModel("Tracer");
+                        wSimModelRef = gSimulationDirector.addSimulationModel(wModelName, wTModelRef, wTracer);
+                    }
+                }
+            }
+
+
+            gAnimationDirector.setRecordingFrameToStart();
+
+            if (null != gRecorderFileDirector) {
+
+                iRecorderDirector.initialize(wSimModelRef);
+
+                var wDeltaTime = gDeltaTime / 1000;
+
+                var wDrawBufferTime = 0;
+                while (false == gRecorderFileDirector.isEndOfRecording()) {
+                    iRecorderDirector.integrate(wDeltaTime);
+                    iRecorderDirector.updateSimulation(wSimModelRef);
+
+                    gSimulationDirector.integrate_Specific(wDeltaTime, wModelName);
+
+                    var wNextRenderingFrame = gAnimationDirector.getNextRecordingFrame();
+                    if (null != wNextRenderingFrame) {
+                        gSimulationDirector.drawAnimationFrame_Specific(wNextRenderingFrame, wModelName);
+                    }
+                }
+            }
+            setCameraTargetSelection(wModelName);
+            UpdateSimModelSelection();
+        }
+
+        function loadModel(iModelName, iStringArray) {
+
+            var wNewModel_Red = new Model(iModelName + "_R");
+            var wNewModel_Green = new Model(iModelName + "_G");
+            var wNewModel_Blue = new Model(iModelName + "_B");
+            var wVerticeList = null;
+            var wNomalVector = null;
+
+            var rows = iStringArray;
+
+            for (var i = 0; i < rows.length; i++) {
+
+                var wCurrentLine = rows[i];
+                var cells = wCurrentLine.split(" ");
+
+                if ('#' == cells[0]) {
+                    continue;
+                }
+                else if ('P' == cells[0]) {
+                    for (var j = 0; j < cells.length - 1; ++j) {
+                        cells[j] = cells[j + 1];
+                    }
+
+                    cells.length = cells.length - 1;
+
+                    wNomalVector
+
+                    if (null != wVerticeList) {
+                        wNewModel_Red.addBuffer(DrawTypeEnum.TRIANGLE_FAN, wVerticeList, wNomalVector, [1.0, 0.0, 0.0, 1.0]);
+                        wNewModel_Green.addBuffer(DrawTypeEnum.TRIANGLE_FAN, wVerticeList, wNomalVector, [0.0, 1.0, 0.0, 1.0]);
+                        wNewModel_Blue.addBuffer(DrawTypeEnum.TRIANGLE_FAN, wVerticeList, wNomalVector, [0.0, 0.0, 1.0, 1.0]);
+                    }
+                    wVerticeList = new Array();
+                    wNomalVector = new Array();
+
+                    wNomalVector.push(-parseFloat(cells[1]));
+                    wNomalVector.push(-parseFloat(cells[0]));
+                    wNomalVector.push(-parseFloat(cells[2]));
+
+                    continue;
+                }
+
+
+                if (null != wVerticeList) {
+
+                    wVerticeList.push(-parseFloat(cells[1]));
+                    wVerticeList.push(-parseFloat(cells[0]));
+                    wVerticeList.push(-parseFloat(cells[2]));
+                }
+            }
+
+            if (null != wVerticeList) {
+
+                wNewModel_Red.addBuffer(DrawTypeEnum.TRIANGLE_FAN, wVerticeList, wNomalVector, [1.0, 0.0, 0.0, 1.0]);
+                wNewModel_Green.addBuffer(DrawTypeEnum.TRIANGLE_FAN, wVerticeList, wNomalVector, [0.0, 1.0, 0.0, 1.0]);
+                wNewModel_Blue.addBuffer(DrawTypeEnum.TRIANGLE_FAN, wVerticeList, wNomalVector, [0.0, 0.0, 1.0, 1.0]);
+            }
+
+            gModelLibrary.addNewModel(wNewModel_Red);
+            gModelLibrary.addNewModel(wNewModel_Green);
+            gModelLibrary.addNewModel(wNewModel_Blue);
+
+        }
+
+
+        function load_file_mdl(iFileName, iFileString) {
+
+            var wModelName = iFileName.split("\\").pop();
+            var rows = iFileString.split("\n");
+
+            loadModel(wModelName, rows);
+
+        }
+
+        function load_file_csv(iFileName, iFileString) {
+
+            var wModelSelection = document.getElementById("FileUploadModelSelection");
+            gRecorderFileDirector = new RecorderFileDirector();
+
+            var rows = iFileString.split("\n");
+
+            for (var i = 1; i < rows.length - 1; i++) {
+
+                var wCurrentLine = rows[i];
+                var cells = wCurrentLine.split(",");
+
+                var Iteration = parseFloat(cells[0]);
+                var Latitude = parseFloat(cells[1]);
+                var Longitude = parseFloat(cells[2]);
+                var Altitude = parseFloat(cells[3]);
+                var VelX = parseFloat(cells[4]);
+                var VelY = parseFloat(cells[5]);
+                var VelZ = parseFloat(cells[6]);
+                var AccelX = parseFloat(cells[7]);
+                var AccelY = parseFloat(cells[8]);
+                var AccelZ = parseFloat(cells[9]);
+                var Phi = parseFloat(cells[10]);
+                var Theta = parseFloat(cells[11]);
+                var Psi = parseFloat(cells[12]);
+                var PhiDot = parseFloat(cells[13]);
+                var ThetaDot = parseFloat(cells[14]);
+                var PsiDot = parseFloat(cells[15]);
+
+                gRecorderFileDirector.addNewFrame(Iteration, Latitude, Longitude, Altitude, VelX, VelY, VelZ, AccelX, AccelY, AccelZ, Phi, Theta, Psi, PhiDot, ThetaDot, PsiDot, null, null, null);
+            }
+
+
+            var wModelName = iFileName.split("\\").pop();
+            animateRecorderDirector(wModelName, gRecorderFileDirector);
+        }
+
+        function load_file_bin(iFileName, iFileBufferArray) {
+
+
+            var wStart = 0; var wEnd = 16;
+            var wHUInt = new Uint32Array(iFileBufferArray.slice(wStart, wEnd));
+
+            wStart = wEnd; wEnd += 24;
+            var wHFloat = new Float64Array(iFileBufferArray.slice(wStart, wEnd));
+
+            wStart = wEnd; wEnd += 128;
+            var wHCharSet1 = new Uint8Array(iFileBufferArray.slice(wStart, wEnd));
+            var wHString1 = String.fromCharCode.apply(null, wHCharSet1).split('\0')[0];
+
+            wStart = wEnd; wEnd += 16;
+            var wHCharSet2 = new Uint8Array(iFileBufferArray.slice(wStart, wEnd));
+            var wHString2 = String.fromCharCode.apply(null, wHCharSet2).split('\0')[0];
+
+            var HeaderObj = {
+                
+                mSizeOfHeader: wHUInt[0],           // uint32   < Number of Bytes for the header
+                mSizeOfData: wHUInt[1],             // uint32   < Total of Number of Bytes per data set
+                mNumParameters: wHUInt[2],          // uint32   < Number of recorded parameters
+                mSchedulingPeriod: wHFloat[0],      // float64  < Scheduling Period of recording
+                mGroundOffset: wHFloat[1],          // float64  < Ground offset of Recording Entity 
+                mScenarioTime: wHFloat[2],          // float64  < Recording start at Scenario Time
+                mEntitySpecimen: wHString1,         // chars128 < Recorded Entity Speciman
+                mEntityName: wHString2              // chars16   < Recorded Entity Name (10 characters)
+            }
+
+            var wParameterArray = null;
+            if (null != HeaderObj.mNumParameters) {
+                if (0 <= HeaderObj.mNumParameters) {
+
+                    wParameterArray = new Array();
+
+                    for (var wi = 0; wi < HeaderObj.mNumParameters; ++wi) {
+
+                        wStart = wEnd; wEnd += 8;
+                        var wPUInt = new Uint32Array(iFileBufferArray.slice(wStart, wEnd));
+                        
+
+                        wStart = wEnd; wEnd += 32;
+                        var wPCharSet2 = new Uint8Array(iFileBufferArray.slice(wStart, wEnd));
+                        var wPString2 = String.fromCharCode.apply(null, wPCharSet2).split('\0')[0];
+                        var wPName = wPString2.replace(' ', '');
+                        var wPName = wPString2.replace('\n', '');
+
+                        var wPCharSet1 = new Uint8Array(iFileBufferArray.slice(wStart, wEnd));
+
+                        var wNewParameter = {
+                            mBytes: wPUInt[0],       //uint32  < Number of Bytes per parameter
+                            mId: wPUInt[1],          //uint32  < Parameter Id
+                            mName: wPString2,        //chars32 < Parameter Name
+                            mMemberName: wPName      //chars32 < Parameter Name
+                        }
+                        wParameterArray.push(wNewParameter);
+                    }
+                }
+            }
+
+            if ((null == wParameterArray)&&(0 == wParameterArray.length)) {
+                alert("Unable to Load Parameters From Record file");
+                return;
+            }
+
+            if (HeaderObj.mSizeOfHeader != wEnd) {
+                alert("Size of Header is in correct actual size is " + wEnd);
+                return;
+            }
+
+            var wRecordData = new Array();
+            while (wEnd + HeaderObj.mSizeOfData < iFileBufferArray.byteLength) {
+
+                wStart = wEnd; wEnd += HeaderObj.mSizeOfData;
+                var wDataSetArray = iFileBufferArray.slice(wStart, wEnd);
+
+                var wString = "{";
+                
+                for (var wi = 0; wi < wParameterArray.length; ++wi) {
+
+                    var wFloatData = null;
+
+                    wStart = wEnd; wEnd += wParameterArray[wi].mBytes;
+                    if (4 == wParameterArray[wi].mBytes) {
+                        wFloatData = new Float32Array(iFileBufferArray.slice(wStart, wEnd));
+                    }
+                    else if (8 == wParameterArray[wi].mBytes) {
+                        wFloatData = new Float64Array(iFileBufferArray.slice(wStart, wEnd));
+                    }
+
+                    if (0 != wi) {
+                        wString += ",";
+                    }
+
+                    wString += '"' + wParameterArray[wi].mMemberName + '":' + wFloatData[0];
+                }
+
+                wString += "}";
+
+                var wNewObj = JSON.parse(wString);
+
+                if (null != wNewObj) {
+                    wRecordData.push(wNewObj);
+                }
+                
+            }
+
+            if (0 != wRecordData.length) {
+
+				var wAltitudeOffset = 0;
+                var wModelSelection = document.getElementById("FileUploadModelSelection");
+
+				if (0 != wModelSelection.options.length) {
+					var wVisualModelName = wModelSelection.options[wModelSelection.selectedIndex].text;
+					if (wVisualModelName != "") {
+	
+						var wTModelRef = gModelLibrary.findModel(wVisualModelName);
+	
+						if (null != wTModelRef) {
+							wAltitudeOffset = wTModelRef.BoundingBoxTop[2] - HeaderObj.mGroundOffset;
+
+						}
+					}
+				}
+
+			
+                gRecorderFileDirector = new RecorderFileDirector();
+
+                for (var i = 0; i < wRecordData.length; ++i) {
+
+                    var Iteration = wRecordData[i].Iteration;
+                    var Latitude  = wRecordData[i].Latitude;
+                    var Longitude = wRecordData[i].Longitude;
+                    var Altitude = wRecordData[i].Altitude;
+                    var VelX = wRecordData[i].VelX;
+                    var VelY = wRecordData[i].VelY;
+                    var VelZ = wRecordData[i].VelZ;
+                    var AccelX = wRecordData[i].AccelX;
+                    var AccelY = wRecordData[i].AccelY;
+                    var AccelZ = wRecordData[i].AccelZ;
+                    var Phi = wRecordData[i].Phi;
+                    var Theta = wRecordData[i].Theta;
+                    var Psi = wRecordData[i].Psi;
+                    var PhiDot = wRecordData[i].PhiDot;
+                    var ThetaDot = wRecordData[i].ThetaDot;
+                    var PsiDot = wRecordData[i].PsiDot;
+
+                    gRecorderFileDirector.addNewFrame(Iteration, Latitude, Longitude, Altitude + wAltitudeOffset, VelX, VelY, VelZ, AccelX, AccelY, AccelZ, Phi, Theta, Psi, PhiDot, ThetaDot, PsiDot, null, null, null);
+                }
+
+
+                var wModelName = HeaderObj.mEntityName;
+
+                animateRecorderDirector(wModelName, gRecorderFileDirector);
+            }
+        }
+
+        function LoadFile(iFile) {
+
+            if (typeof (FileReader) != "undefined") {
+
+                var regexMdl = /^([a-zA-Z0-9\s_\\.\-:])+(.mdl)$/;
+                var regexCSV = /^([a-zA-Z0-9\s_\\.\-:])+(.csv)$/;
+                var regexBIN = /^([a-zA-Z0-9\s_\\.\-:])+(.bin)$/;
+
+                if (regexMdl.test(iFile.value.toLowerCase())) {
+
+                    var reader = new FileReader();
+                    reader.onload = function (e) {
+
+                        load_file_mdl(iFile.value, e.target.result);
+                    }
+                    reader.readAsText(iFile.files[0]);
+                }
+                else if (regexCSV.test(iFile.value.toLowerCase())) {
+
+                    var reader = new FileReader();
+                    reader.onload = function (e) {
+
+                        load_file_csv(iFile.value, e.target.result);
+                    }
+                    reader.readAsText(iFile.files[0]);
+                }
+                else if (regexBIN.test(iFile.value.toLowerCase())) {
+
+                    var reader = new FileReader();
+                    reader.onload = function (e) {
+
+                        load_file_bin(iFile.value, e.target.result);
+                    }
+                    reader.readAsArrayBuffer(iFile.files[0]);
+                }
+                else {
+                    alert("Please upload a valid  file.");
+                }
+            }
+            else {
+                alert("This browser does not support HTML5.");
+            }
+        }
+
+        function UpdateModelSelection() {
+
+            var wModelList = gModelLibrary.getModelNameList();
+            var wModelSelection = document.getElementById("FileUploadModelSelection");
+
+            var wNewMenu = "";
+
+            for (var wi = 0; wi < wModelList.length; ++wi) {
+                wNewMenu += "<option value='" + wModelList[wi] + "'>" + wModelList[wi] + "</option>";
+            }
+
+
+            wModelSelection.innerHTML = wNewMenu;
+        }
+
+        function UpdateSimModelSelection() {
+
+            var wSelectedModelID = gSimulationDirector.getModelAt(getGLCameraControl().TargetIndex).Id;
+            var wSelectedModelIndex = 0;
+
+            var wSelectedTetherModelID = gSimulationDirector.getModelAt(getGLCameraControl().TargetIndex).Id;
+            var wSelectedTetherModelIndex = 0;
+
+
+            var wIdList = gSimulationDirector.getSimulationModelIdList();
+
+            var wNewMenu = "";
+
+            for (var wi = 0; wi < wIdList.length; ++wi) {
+                wNewMenu += "<option value='" + wIdList[wi] + "'>" + wIdList[wi] + "</option>";
+
+                if (wSelectedModelID == wIdList[wi]) {
+                    wSelectedModelIndex = wi;
+                }
+
+                if (wSelectedTetherModelID == wIdList[wi]) {
+                    wSelectedTetherModelIndex = wi;
+                }
+            }
+
+            var wSimModelSelection = document.getElementById("EntitySelection");
+            wSimModelSelection.innerHTML = wNewMenu;
+            wSimModelSelection.selectedIndex = wSelectedModelIndex;
+
+            var wSimModelTetherSelection = document.getElementById("TetherEntitySelection");
+            wSimModelTetherSelection.innerHTML = wNewMenu;
+         //   wSimModelTetherSelection.selectedIndex = wSelectedModelIndex;
+        }
+
+        function Upload() {
+            var fileUpload = document.getElementById("fileUpload");
+            LoadFile(fileUpload);
+        }
+
+        function camera_conntrol(iType) {
+
+            switch (iType) {
+                case "P_L":
+                    getGLCameraControl().YOffset -= 1;
+                    break;
+                case "P_R":
+                    getGLCameraControl().YOffset += 1;
+                    break;
+                case "P_U":
+                    getGLCameraControl().ZOffset -= 1;
+                    break;
+                case "P_D":
+                    getGLCameraControl().ZOffset += 1;
+                    break;
+
+                case "R_L":
+                    getGLCameraControl().YawOffset += 5 * Math.PI / 180;
+                    break;
+                case "R_R":
+                    getGLCameraControl().YawOffset -= 5 * Math.PI / 180;
+                    break;
+                case "R_U":
+                    getGLCameraControl().PitchOffset -= 5 * Math.PI / 180;
+                    break;
+                case "R_D":
+                    getGLCameraControl().PitchOffset += 5 * Math.PI / 180;
+                    break;
+
+                case "Z_I":
+                    getGLCameraControl().XOffset *= 0.8;
+                    if (-1.0 <     getGLCameraControl().XOffset)     getGLCameraControl().XOffset = -1.0;
+                    break;
+                case "Z_O":
+                    getGLCameraControl().XOffset *= 1.2;
+                    if (-100.0 >     getGLCameraControl().XOffset)     getGLCameraControl().XOffset = -100.0;
+                    break;
+
+                case "T_B":
+                    getGLCameraControl().TargetIndex--;
+                    if (0 >=     getGLCameraControl().TargetIndex) getGLCameraControl.TargetIndex = 0;
+                    break;
+                case "T_N":
+                    getGLCameraControl.TargetIndex++;
+                    break;
+
+                case "T2_B":
+                    getGLCameraControl.TetherTargetIndex--;
+                    if (0 >= getGLCameraControl.TetherTargetIndex) getGLCameraControl.TetherTargetIndex = 0;
+                    break;
+                case "T2_N":
+                    getGLCameraControl.TetherTargetIndex++;
+                    break;
+                case "T2_Enable":
+                    getGLCameraControl.TetherTargetEnable = !getGLCameraControl.TetherTargetEnable;
+                    break;
+
+                case "Reset_Pan":
+                    getGLCameraControl.YOffset = gInitialCameraControl.YOffset;
+                    getGLCameraControl.ZOffset = gInitialCameraControl.ZOffset;
+                    break;
+
+                case "Reset_Rotate":
+                    getGLCameraControl.YawOffset = gInitialCameraControl.YawOffset;
+                    getGLCameraControl.PitchOffset = gInitialCameraControl.PitchOffset;
+                    break;
+
+                case "Reset_Zoom":
+                    getGLCameraControl.XOffset = gInitialCameraControl.XOffset;
+                    break;
+                case "Reset_Target":
+                    getGLCameraControl.TargetIndex = gInitialCameraControl.TargetIndex;
+                    getGLCameraControl.TetherTargetIndex = gInitialCameraControl.TetherTargetIndex;
+                    getGLCameraControl.TetherTargetEnable = gInitialCameraControl.TetherTargetEnable;
+                    break;
+
+            }
+        }
+
+
+        function collapseDiv(iDivId, iButton) {
+
+            var wButton = document.getElementById(iButton);
+
+            if (null != wButton) {
+                var iDivId = document.getElementById(iDivId);
+
+                if (null != iDivId) {
+
+                    if ("-" == wButton.value) {
+                        iDivId.style.display = "none";
+                        wButton.value = "+";
+                    }
+                    else if ("+" == wButton.value) {
+                        iDivId.style.display = "inline-block";
+                        wButton.value = "-";
+                    }
+                }
+            }
+        }
+
+        function processProgrssBarClick(iEvent) {
+            iEvent.preventDefault();
+            var wDom = this;
+
+            var progress = wDom.getElementsByClassName("Progress");
+            x = iEvent.x - wDom.offsetLeft - wDom.offsetParent.offsetLeft - document.body.scrollLeft;
+            y = iEvent.y - wDom.offsetTop - wDom.offsetParent.offsetTop - document.body.scrollTop;
+
+            var wPercentage = 100 * x / wDom.clientWidth;
+
+            setProgrssBarValue(wDom.id, wPercentage);
+            wDom.mouseIsDown = true;
+
+        }
+
+        function processProgrssBarClickOver(iEvent) {
+            iEvent.preventDefault();
+            processProgrssBarMove(iEvent);
+            var wDom = this;
+            wDom.mouseIsDown = false;
+
+        }
+
+        function processProgrssBarMove(iEvent) {
+
+            iEvent.preventDefault();
+            if (true == this.mouseIsDown) {
+                var wDom = this;
+
+                var progress = wDom.getElementsByClassName("Progress");
+                x = iEvent.x - wDom.offsetLeft - wDom.offsetParent.offsetLeft - document.body.scrollLeft;
+                y = iEvent.y - wDom.offsetTop - wDom.offsetParent.offsetTop - document.body.scrollTop;
+
+                var wPercentage = 100 * x / wDom.clientWidth;
+
+                setProgrssBarValue(wDom.id, wPercentage);
+            }
+        }
+
+
+        function registerProgressBar(iDOM_id) {
+            var wDOM = document.getElementById(iDOM_id);
+            if (null != wDOM) {
+                wDOM.addEventListener("mousedown", processProgrssBarClick.bind(wDOM));
+                wDOM.addEventListener("mousedown", processProgrssBarClick.bind(wDOM));
+                wDOM.addEventListener("mouseup", processProgrssBarClickOver.bind(wDOM));
+                wDOM.addEventListener("mouseleave", processProgrssBarClickOver.bind(wDOM));
+                wDOM.addEventListener("mousemove", processProgrssBarMove.bind(wDOM));
+
+                wDOM.addEventListener('contextmenu', function (e) {
+                    e.preventDefault();
+                }, false);
+            }
+        }
+
+        function getProgrssBarValue(iDOM_id) {
+            var wDOM = document.getElementById(iDOM_id);
+            if (null != wDOM) {
+                var progress = wDOM.getElementsByClassName("Progress");
+                if (0 != progress.length) {
+                    return progress[0].style.width.split("%")[0];
+                }
+            }
+        }
+
+        function setProgrssBarValue(iDOM_id, iValue) {
+            var wValue = iValue;
+            if (100 < wValue) wValue = 100;
+            if (0 > wValue) wValue = 0;
+
+            var wDOM = document.getElementById(iDOM_id);
+            if (null != wDOM) {
+                var progress = wDOM.getElementsByClassName("Progress");
+                if (0 != progress.length) {
+                    progress[0].style.width = wValue + "%";
+                }
+            }
+        }
+
+        function playback_Control(iType) {
+
+            switch (iType) {
+                case "PLAY":
+                    gPlaybackHandler.Play = true;
+                    break;
+                case "PAUSE":
+                    gPlaybackHandler.Play = false;
+                    break;
+                case "GOTOSTART":
+                    gPlaybackHandler.GoToStart = true;
+                    break;
+                case "GOTOEND":
+                    gPlaybackHandler.GoToEnd = true;
+                    break;
+
+                case "PLAYSPEED":
+                    gPlaybackHandler.PlaySpeed *= 2.0;
+                    if (gPlaybackHandler.PlaySpeed > 12) {
+                        gPlaybackHandler.PlaySpeed = 0.25;
+                    }
+
+                    var wPlayBackSpeedDOM = document.getElementById("PlayBackSpeed");
+                    wPlayBackSpeedDOM.innerText = "x" + gPlaybackHandler.PlaySpeed;
+                    break;
+            }
+        }
+
+
+    </script>
+    <style>
+        body
+        {
+            margin: 0px;
+            padding: 0px;
+            overflow: hidden;
+            -webkit-touch-callout: none; /* iOS Safari */
+            -webkit-user-select: none; /* Safari */
+            -khtml-user-select: none; /* Konqueror HTML */
+            -moz-user-select: none; /* Firefox */
+            -ms-user-select: none; /* Internet Explorer/Edge */
+            user-select: none; /* Non-prefixed version, currently
+                                  supported by Chrome and Opera */
+        }
+
+        #div_OutputCanvas
+        {
+            width: 100vw;
+            height: 100vh;
+        }
+
+        #div_ConsolControl
+        {
+            position: fixed;
+            top: 0;
+            left: 0;
+            z-index: 100;
+            background-color: rgba(255,255,255,0.5);
+            width: auto;
+            padding: 5px;
+        }
+
+
+        #OutputCanvas
+        {
+            border: 1px solid blue;
+        }
+
+        #Camera_Control, #FIle_Control, Entity_Control
+        {
+            width: inherit;
+        }
+
+        #CameraControlForm
+        {
+            width: 100%;
+            height: calc(100vh - 175px);
+            overflow-y: scroll;
+        }
+
+        .CameraButton
+        {
+            height: 50px;
+            width: 80px;
+            margin: 5px;
+        }
+
+        #Playback_Control
+        {
+            position: fixed;
+            height: 20px;
+            bottom: 0;
+            width: 80%;
+            margin: 0 0 0 -40%;
+            left: 50%;
+            display: block;
+            overflow-x: visible;
+            white-space: nowrap;
+            padding: 5px;
+        }
+
+        .Playback_Button
+        {
+            height: 20px;
+            width: 30px;
+            float:left;
+        }
+
+        #PlayBackSpeed
+        {
+            width : 50px;
+        }
+
+        #Progress_Bar
+        {
+            border: 0.1px solid black;
+            background-color: white;
+            width: calc(100% - 270px);
+            height: 20px;
+            float:left;
+        }
+
+        #Progress_ReadOut
+        {
+            padding:5px;
+        }
+
+        .collapseButton
+        {
+            height: 25px;
+            width: 25px;
+            text-align: center;
+        }
+    </style>
+
+</head>
+<body onload="init()" onresize="resize()">
+    <div id="div_OutputCanvas">
+        <!--
+        <canvas id="OutputCanvas"></canvas>
+        <img src="image/horizon.jpg" id="OutpuCanvasBackgroundImage" style="position:fixed;top:0;left:0;z-index:-10;">
+
+        -->
+    </div>
+    <div id="div_ConsolControl">
+        <div id="FIle_Control">
+            <input type="file" id="fileUpload" />
+            <select id="FileUploadModelSelection"></select>
+            <button onclick="Upload()" >Upload</button>
+        </div>
+        <div id="Entity_Control">
+            <select id="EntitySelection" onchange="setCameraTargetSelection(this.options[this.selectedIndex].text);"></select>
+            <button onclick="deleteModelCallback()">Delete</button>
+            <br />
+            <select id="TetherEntitySelection" onchange="setCameraTetherSelection(this.options[this.selectedIndex].text);"></select>
+            <button onclick="camera_conntrol('T2_Enable')">Tether</button>
+            <br />
+			<span>Show Entire Tracer</span><input type="checkbox" id="CheckBox_ShowAllTracer">
+        </div>
+        <div id="Camera_Control">
+            <h4>
+                <input type="button" value="-" class="collapseButton" onclick="collapseDiv('CameraControlForm', this.id)" id="CameraControlFormButton" />
+                Camera Control
+            </h4>
+            <div id="CameraControlForm">
+                <!--
+                <h4>Pan</h4>
+                <input type="button" class="CameraButton" value="Up" onclick="camera_conntrol('P_U')" />
+                <input type="button" class="CameraButton" value="Down" onclick="camera_conntrol('P_D')" />
+                <br />
+                <input type="button" class="CameraButton" value="Left" onclick="camera_conntrol('P_L')" />
+                <input type="button" class="CameraButton" value="Right" onclick="camera_conntrol('P_R')" />
+                <br />
+                -->
+                <h4>Rotate</h4>
+                <input type="button" class="CameraButton" value="Up" onclick="camera_conntrol('R_U')" />
+                <input type="button" class="CameraButton" value="Down" onclick="camera_conntrol('R_D')" />
+                <br>
+                <input type="button" class="CameraButton" value="Left" onclick="camera_conntrol('R_L')" />
+                <input type="button" class="CameraButton" value="Right" onclick="camera_conntrol('R_R')" />
+                <br>
+                <h4>Zoom</h4>
+                <input type="button" class="CameraButton" value="In" onclick="camera_conntrol('Z_I')" />
+                <input type="button" class="CameraButton" value="Out" onclick="camera_conntrol('Z_O')" />
+                <br />
+                <h4>Target Selection</h4>
+                <input type="button" class="CameraButton" value="Prev" onclick="camera_conntrol('T_B')" />
+                <input type="button" class="CameraButton" value="Next" onclick="camera_conntrol('T_N')" />
+                <br />
+                <h4>Second Target Selection</h4>
+                <input type="button" class="CameraButton" value="Prev" onclick="camera_conntrol('T2_B')" />
+                <input type="button" class="CameraButton" value="Next" onclick="camera_conntrol('T2_N')" />
+                <br />
+                <input type="button" class="CameraButton" value="Tether" onclick="camera_conntrol('T2_Enable')" />
+                <br />
+                <h4>Reset</h4>
+                <input type="button" class="CameraButton" value="Rotation" onclick="camera_conntrol('Reset_Rotate')">
+                <input type="button" class="CameraButton" value="Zoom" onclick="camera_conntrol('Reset_Zoom')" />
+                <br />
+                <!--
+                <input type="button" class="CameraButton" value="Pan" onclick="camera_conntrol('Reset_Pan')" />
+                <input type="button" class="CameraButton" value="Rotation" onclick="camera_conntrol('Reset_Rotate')">
+                <br />
+                <input type="button" class="CameraButton" value="Zoom" onclick="camera_conntrol('Reset_Zoom')" />
+                <input type="button" class="CameraButton" value="Target" onclick="camera_conntrol('Reset_Target')" />
+                -->
+            </div>
+             <script>collapseDiv('CameraControlForm', 'CameraControlFormButton')</script>
+        </div>
+
+        <div id="Playback_Control">
+            <button class="Playback_Button" onclick="playback_Control('GOTOSTART')"><i class="fa fa-fast-backward"></i></button>
+            <button class="Playback_Button" onclick="playback_Control('PLAY')"><i class="fa fa-play"></i></button>
+            <button class="Playback_Button" onclick="playback_Control('PAUSE')"><i class="fa fa-pause"></i></button>
+            <button class="Playback_Button" onclick="playback_Control('GOTOEND')"><i class="fa fa-fast-forward"></i></button>
+            <button class="Playback_Button" onclick="playback_Control('PLAYSPEED')" id="PlayBackSpeed">x1</button>
+            <div id="Progress_Bar" border="1">
+                <script>registerProgressBar("Progress_Bar")</script>
+                <div class="Progress" style="width: 0%; height: inherit; background-color: blue" border="1">
+                </div>
+            </div>
+            <span id="Progress_ReadOut"></span>
+        </div>
+    </div>
+
+</body>
+</html>
