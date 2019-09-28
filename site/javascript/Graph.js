@@ -228,7 +228,7 @@ function GraphLineGroup() {
   }
 }
 
-function Graph(iCanvasDOM) {
+function Graph(iCanvasDOM, iShowHitCanvas) {
 
   this.mTransformation = {
     translationX : iCanvasDOM.width / 2,
@@ -241,7 +241,7 @@ function Graph(iCanvasDOM) {
   this.mSelectedObject = [];
 
   this.mMainCanvasDOM = iCanvasDOM;
-  this.mHitCanvas = new HitCanvas(iCanvasDOM, true);
+  this.mHitCanvas = new HitCanvas(iCanvasDOM, iShowHitCanvas);
 
   this.mVerticalAxis = [];
   this.mHorizontalAxis = [];
@@ -255,6 +255,8 @@ function Graph(iCanvasDOM) {
   this.mNewLineCallback = null;
   this.mRemoveLineCallback = null;
   this.mOnChangeCallback = null;
+  
+  this.mLineClickCallback = null;
 
   this.setNewVerticalAxisCallback = function (iCallback) {
     this.mNewVerticalAxisCallback = iCallback;
@@ -282,6 +284,10 @@ function Graph(iCanvasDOM) {
 
   this.setOnChangeCallback = function (iCallback) {
     this.mOnChangeCallback = iCallback;
+  }
+
+  this.setLineClickCallback = function (iCallback) {
+    this.mLineClickCallback = iCallback;
   }
 
   this.getVerticalAxisList = function () {
@@ -926,6 +932,7 @@ function Graph(iCanvasDOM) {
             var wYOffset = wYAxisRef.mOffset;
 
             wCtx.strokeStyle = wLine.mColor;
+            wCtx.lineWidth = 2;
             drawPolyLineXYArray(iCanvasDOM, wXData.mData, wLine.mData,
               wXScale, -wYScale,
               wXScale * wXOffset, wYScale * wYOffset);
@@ -954,7 +961,7 @@ function Graph(iCanvasDOM) {
             wCtx.arc(0, 0, 10, 0, 2 * Math.PI);
             wCtx.stroke();
 
-            wCtx.fillRect(-wDomWidth / 2, wAxis.mPosition, wDomWidth, wMajorLength);
+            wCtx.fillRect(-wDomWidth / 2, wAxis.mPosition - 0.5* wMajorLength, wDomWidth, 2*wMajorLength);
 
 
             return ["axis", "horizontal", key];
@@ -970,9 +977,64 @@ function Graph(iCanvasDOM) {
 
           this.mHitCanvas.draw(function (iCanvasDOM) {
             var wCtx = iCanvasDOM.getContext("2d");
-            wCtx.fillRect(wAxis.mPosition, -wDomHeight / 2, wMajorLength, wDomHeight);
+            wCtx.fillRect(wAxis.mPosition - 0.5*wMajorLength, -wDomHeight / 2, 2*wMajorLength, wDomHeight);
             return ["axis", "vertical", key];
           }.bind(this));
+        }
+      }
+    }
+
+    
+    for (key1 in this.mGraphLineGroup) {
+      var wGroupRef = this.mGraphLineGroup[key1];
+
+      if (null != wGroupRef) {
+        for (key2 in wGroupRef.mGraphLine) {
+
+          if (key2 == eLineGroupAttributeName.DataIndexLineName) {
+            continue;
+          }
+          if (key2 == wGroupRef.mXAxisDataIndex) {
+            continue;
+          }
+
+          var wLine = wGroupRef.mGraphLine[key2];
+          if (null != wLine) {
+
+            var wXAxisRef = this.mHorizontalAxis[wLine.mXAxisIndex];
+            var wYAxisRef = this.mVerticalAxis[wLine.mYAxisIndex];
+
+            if ((null == wXAxisRef) || (null == wYAxisRef)) {
+              continue;
+            }
+
+            var wXData = wGroupRef.mGraphLine[wGroupRef.mXAxisDataIndex];
+
+            if (null == wXData) {
+              continue;
+            }
+
+            if ((false == wGroupRef.mVisible) || (false == wYAxisRef.mVisible)
+              || (false == wXData.mVisible) || (false == wLine.mVisible)) {
+              continue;
+            }
+
+            var wXScale = Math.pow(2, wXAxisRef.mZoom);
+            var wXOffset = wXAxisRef.mOffset;
+            var wYScale = Math.pow(2, wYAxisRef.mZoom);
+            var wYOffset = wYAxisRef.mOffset;
+
+            this.mHitCanvas.draw(function (iCanvasDOM) {
+              var wCtx = iCanvasDOM.getContext("2d");
+              wCtx.lineWidth = 10;
+              drawPolyLineXYArray(iCanvasDOM, wXData.mData, wLine.mData,
+                wXScale, -wYScale,
+                wXScale * wXOffset, wYScale * wYOffset);
+
+              return ["line", key1, key2];
+            }.bind(this));
+
+          }
         }
       }
     }
@@ -1013,6 +1075,16 @@ function Graph(iCanvasDOM) {
         this.mouseHandler.mousedownX = this.mouseHandler.mouseX;
         this.mouseHandler.mousedownY = this.mouseHandler.mouseY;
         this.mouseHandler.mousedownHitObject = iHitObjId;
+        
+        if ("line" == iHitObjId[0]) {
+          if (null != this.mLineClickCallback){
+            var wLine = this.getGraphLine (iHitObjId[2],iHitObjId[1]);
+
+            if (null != wLine){
+              this.mLineClickCallback(this, iHitObjId[1],iHitObjId[2]);
+            }
+          }
+        }
         return;
       }
       else if ("wheel" == iEvent.type) {

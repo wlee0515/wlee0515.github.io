@@ -27,17 +27,11 @@
     function init() {
 
       var wCanvas = document.getElementById(gCanvasDOMId);
-      gGraph = new Graph(wCanvas);
-      /*
-            gGraph.setNewVerticalAxisCallback(updateControls);
-            gGraph.setRemoveVerticalAxisCallback(updateControls);
-            gGraph.setNewHorizontalAxisCallback(updateControls);
-            gGraph.setRemoveHorizontalAxisCallback(updateControls);
-            gGraph.setNewLineCallback(updateControls);
-            gGraph.setRemoveLineCallback(updateControls);
-      */
-      gGraph.setOnChangeCallback(updateControls);
+      gGraph = new Graph(wCanvas, false);
 
+      gGraph.setOnChangeCallback(updateControls);
+      gGraph.setLineClickCallback(lineClick);
+  
       gGraph.addHorizontalAxis();
       gGraph.addVerticalAxis();
 
@@ -49,8 +43,39 @@
       resizeCanvas(wCanvas);
       updateDisplay(false);
     }
+    
+    function lineClick(iGraph, iLineGroupIndex, iLineIndex) {
+      
+      var wGroupSelector = document.getElementById(gGroupSelectorId);
+      var wLineSelector = document.getElementById(gLineSelectorId);
 
+      if ((null != wGroupSelector) && (null != wLineSelector)){
+        
+        wGroupSelector.value = iLineGroupIndex;
+        selectorLineGroupUpdate(wGroupSelector, gLineSelectorId);
+
+        wLineSelector.value = iLineIndex;
+        selectorLineUpdate(wGroupSelector.id, wLineSelector);
+      }
+      // alert(iLineGroupIndex + iLineIndex)
+    }
+
+    gLastRefreshTime = 0;
+    gInQueue = false;
     function updateDisplay() {
+/*
+      var wTimeSinceLastUpdate = Date.now() - gLastRefreshTime;
+      if (wTimeSinceLastUpdate < 100) {     
+        if (false == gInQueue) {
+          setTimeout(updateDisplay, 10);
+          gInQueue = true;
+        }
+        return;
+      }
+
+      gLastRefreshTime = Date.now();
+      gInQueue = false;
+*/
       var wCanvas = document.getElementById(gCanvasDOMId);
       if (null != wCanvas) {
         clearCanvas(wCanvas);
