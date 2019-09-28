@@ -1026,7 +1026,7 @@ function Graph(iCanvasDOM, iShowHitCanvas) {
 
             this.mHitCanvas.draw(function (iCanvasDOM) {
               var wCtx = iCanvasDOM.getContext("2d");
-              wCtx.lineWidth = 10;
+              wCtx.lineWidth = 6;
               drawPolyLineXYArray(iCanvasDOM, wXData.mData, wLine.mData,
                 wXScale, -wYScale,
                 wXScale * wXOffset, wYScale * wYOffset);
