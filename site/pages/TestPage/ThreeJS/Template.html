@@ -1,0 +1,147 @@
+<!DOCTYPE HTML>
+<html>
+  <head>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
+    <title>Terrain Server Database Viewer</title>
+    <style>
+      body {
+        margin: 0px;
+        padding: 0px;
+      }
+
+			#id_WindowDiv {
+				width: 100vw;
+				height: 100vh;
+  			position: relative;
+			}
+
+			#id_CanvasContainer {
+				width: 50vw;
+				height: 50vh;
+				
+  			margin: 0;
+  			position: absolute;
+  			top: 50%;
+  			left: 50%;
+  			transform: translate(-50%, -50%);
+			}
+    </style>
+    <script src="../Api/TileServer.js"></script>
+    <script src="./javascript/three.js"></script>
+    <script>
+			
+			var gGlobal = {
+				mScene : null,
+				mCamera : null,
+				mRenderer : null,
+				mDrawSurfaceId : "id_OutputCanvas",
+				mSceneObject : {},
+				mSceneLight : {}
+			};
+		
+			function setupScene() {
+				{
+					
+					gGlobal.mSceneLight["Ambient"] = new THREE.AmbientLight( 0x404040 ); // soft white light
+					gGlobal.mScene.add( gGlobal.mSceneLight.Ambient );
+					
+					gGlobal.mSceneLight["Hemisphere"] = new THREE.HemisphereLight( 0xffffbb, 0x080820, 1 ); // soft white light
+					gGlobal.mScene.add( gGlobal.mSceneLight.Hemisphere );
+					
+					// White directional light at half intensity shining from the top.
+					gGlobal.mSceneLight["Directional"] = new THREE.DirectionalLight( 0xffffff, 0.5 ); 
+					gGlobal.mScene.add( gGlobal.mSceneLight.Directional );
+				}
+				{
+					var wGeometry =  new THREE.BoxGeometry( 1, 1, 1 );	
+					//var wMaterial = new THREE.MeshBasicMaterial( { color: 0x00ff00 } );
+					var wMaterial =  new THREE.MeshLambertMaterial( { color: 0x00ff00 });
+					var wCube =  new THREE.Mesh( wGeometry, wMaterial );
+					gGlobal.mSceneObject["Cube"] = {
+						mGeometry: wGeometry,
+						mMaterial : wMaterial,
+						mMesh : wCube
+					}
+					gGlobal.mScene.add(gGlobal.mSceneObject.Cube.mMesh);
+				}
+
+			}
+
+			function processTime(iDt) {
+
+				gGlobal.mSceneObject.Cube.mMesh.rotation.x += 0.01;
+				gGlobal.mSceneObject.Cube.mMesh.rotation.y += 0.01;
+/*
+				line.rotation.x += 0.01;
+				line.rotation.y += 0.01;
+
+				mesh.rotation.x += 0.01;
+				mesh.rotation.y += 0.01;
+				//wBufferAt.setXYZ(2,2,2,3);
+				//wBufferAt.needsUpdate = true;*/
+
+			}
+
+			function animate() {
+
+				gGlobal.mRenderer.render(gGlobal.mScene, gGlobal.mCamera);
+				
+				requestAnimationFrame(animate);
+			}
+
+			function resize() {
+
+				if (null != gGlobal.mRenderer) {
+					var wWidth = window.innerWidth;
+					var wHeight = window.innerHeight;
+					var wCanvasDOM = document.getElementById(gGlobal.mDrawSurfaceId);
+					if (null != wCanvasDOM) {
+					  wWidth = wCanvasDOM.width = wCanvasDOM.parentNode.clientWidth - 2;
+					  wHeight = wCanvasDOM.height = wCanvasDOM.parentNode.clientHeight - 2;
+					}
+					gGlobal.mRenderer.setSize(wWidth, wHeight);
+	
+					if (null != gGlobal.mCamera) {
+						gGlobal.mCamera.aspect = wWidth / wHeight;
+						gGlobal.mCamera.updateProjectionMatrix();
+					}
+				}
+			}
+
+      function init() {
+				gGlobal.mScene = new THREE.Scene();
+				gGlobal.mCamera = new THREE.PerspectiveCamera( 75, window.innerWidth / window.innerHeight, 0.1, 1000 );
+				gGlobal.mCamera.position.set( 0, 0, 20 );
+				gGlobal.mCamera.lookAt( 0, 0, 0 );
+
+				var wCanvasDOM = document.getElementById(gGlobal.mDrawSurfaceId);
+				if (null != wCanvasDOM) {
+					gGlobal.mRenderer = new THREE.WebGLRenderer({antialias: true, canvas:  wCanvasDOM});
+				}
+				else {
+					gGlobal.mRenderer = new THREE.WebGLRenderer();
+					document.body.appendChild( gGlobal.mRenderer.domElement );
+				}
+				gGlobal.mRenderer.setPixelRatio( window.devicePixelRatio );
+
+				resize();
+
+				setupScene();
+
+				var wTimeStep = 25;
+				setInterval(function(){ processTime(wTimeStep/1000);}, wTimeStep);
+				
+				animate();
+      }
+
+
+    </script>
+  </head>
+  <body onload="init()" onresize="resize()">
+		<div id="id_WindowDiv">
+  		<div id="id_CanvasContainer">
+    		<canvas id="id_OutputCanvas"></canvas>
+			</div>
+		</div>
+  </body>
+</html>      
