@@ -36,12 +36,32 @@
 				mRenderer : null,
 				mDrawSurfaceId : "id_OutputCanvas",
 				mSceneObject : {},
-				mSceneLight : {}
+				mSceneLight : {},
+				mSceneLines : {}
 			};
 		
+			function addSceneObj(iId, iGeometry, iMaterial, iMesh ) {
+				gGlobal.mSceneObject[iId] = {
+						mGeometry: iGeometry,
+						mMaterial : iMaterial,
+						mMesh : iMesh
+					}
+					gGlobal.mScene.add(gGlobal.mSceneObject[iId].mMesh);
+			}
+
+			function addSceneLine(iId, iGeometry, iLineSegment) {
+				gGlobal.mSceneLines[iId] = {
+						mGeometry: iGeometry,
+						mLineSegment : iLineSegment
+					}
+					gGlobal.mScene.add(gGlobal.mSceneLines[iId].mLineSegment);
+			}
+
+
+
 			function setupScene() {
+				// Lighting
 				{
-					
 					gGlobal.mSceneLight["Ambient"] = new THREE.AmbientLight( 0x404040 ); // soft white light
 					gGlobal.mScene.add( gGlobal.mSceneLight.Ambient );
 					
@@ -57,28 +77,30 @@
 					//var wMaterial = new THREE.MeshBasicMaterial( { color: 0x00ff00 } );
 					var wMaterial =  new THREE.MeshLambertMaterial( { color: 0x00ff00 });
 					var wCube =  new THREE.Mesh( wGeometry, wMaterial );
-					gGlobal.mSceneObject["Cube"] = {
-						mGeometry: wGeometry,
-						mMaterial : wMaterial,
-						mMesh : wCube
-					}
-					gGlobal.mScene.add(gGlobal.mSceneObject.Cube.mMesh);
+					addSceneObj("Cube", wGeometry, wMaterial, wCube);
 				}
 
+				{
+					var geometry = new THREE.SphereBufferGeometry( 100, 100, 100 );
+
+					var wireframe = new THREE.WireframeGeometry( geometry );
+
+					var line = new THREE.LineSegments( wireframe );
+					line.material.depthTest = false;
+					line.material.opacity = 0.25;
+					line.material.transparent = true;
+
+					addSceneLine("Wire", wireframe, line);
+				}
 			}
 
 			function processTime(iDt) {
 
 				gGlobal.mSceneObject.Cube.mMesh.rotation.x += 0.01;
 				gGlobal.mSceneObject.Cube.mMesh.rotation.y += 0.01;
-/*
-				line.rotation.x += 0.01;
-				line.rotation.y += 0.01;
 
-				mesh.rotation.x += 0.01;
-				mesh.rotation.y += 0.01;
-				//wBufferAt.setXYZ(2,2,2,3);
-				//wBufferAt.needsUpdate = true;*/
+				gGlobal.mSceneLines.Wire.mLineSegment.rotation.x += 0.01;
+				gGlobal.mSceneLines.Wire.mLineSegment.rotation.y += 0.01;
 
 			}
 
