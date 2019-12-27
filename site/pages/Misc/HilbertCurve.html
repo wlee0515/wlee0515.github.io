@@ -7,6 +7,10 @@
     var gGlobal = {
       InputOrderId : "id_InputOrder",
       OutputCanvasId : "id_OutputGraphCanvas",
+      OutputTextId : "id_OutputText",
+      CurveMap : null,
+      CurveMapProcessRange : 1000,
+      CurveMapCurrentIndex : 0,
     }
     
     // Color Conversion
@@ -121,50 +125,92 @@
 
       var wCurveOrder = parseInt(wInputOrderDom.value);
       
-      var wCurveMap = computeCurveMap(wCurveOrder);
+      gGlobal.CurveMap = createCurveMapObject(wCurveOrder);
+      gGlobal.CurveMapCurrentIndex = 0;
+
+
       var iCtx = wOutputCanvasDom.getContext('2d');
 
-      iCtx.clearRect(0,0,500,500);
-      plotCurveMap(wCurveMap, iCtx, 0, 0, 500, 500);
+      iCtx.clearRect(0,0,wOutputCanvasDom.clientWidth,wOutputCanvasDom.clientHeight);
+
+      var wOutputTextDom = document.getElementById(gGlobal.OutputTextId);
+      if (null == wOutputTextDom) {
+        alert("Unable to find Output Text Display for Curve");
+        return;
+      }
+
+      wOutputTextDom.innerText = printCurveMapData(gGlobal.CurveMap);
+
     }
 
-    function computeCurveMap(iOrder) {
+    function createCurveMapObject(iOrder) {
+      
       var wNumberOfDataPerAxis =  Math.pow(2, iOrder);
       var wNumberOfData =  wNumberOfDataPerAxis*wNumberOfDataPerAxis;
       var wDtoX =  new Int32Array(wNumberOfData);
-      var wDtoY =  new Int32Array(wNumberOfData);
-      var wXYToD =  new Int32Array(wNumberOfData);
-      
-      for (var wi = 0; wi < wNumberOfData; ++wi) {
-        var wXY = d2xy(wNumberOfDataPerAxis, wi);
-        wDtoX[wi] = wXY.x;
-        wDtoY[wi] = wXY.y;
-        
-        var wIndex = wXY.y* wNumberOfDataPerAxis + wXY.x;
-        if (wIndex < wNumberOfData);
-        wXYToD[wIndex] = wi;
-      }
+      var wDtoY = new Int32Array(wNumberOfData);
+      var wXYToD = new Int32Array(wNumberOfData);
 
       var wCurveMap = {
-        Order : iOrder,
-        NumberOfDataPerAxis : wNumberOfDataPerAxis,
-        NumberOfData : wNumberOfData,
-        DtoX : wDtoX,
-        DtoY : wDtoY,
-        XYToD : wXYToD,
+        Order: iOrder,
+        NumberOfDataPerAxis: wNumberOfDataPerAxis,
+        NumberOfData: wNumberOfData,
+        DtoX: wDtoX,
+        DtoY: wDtoY,
+        XYToD: wXYToD,
       };
 
       return wCurveMap;
     }
+    function computeCurveMap(iOrder) {
+      var wCurveMap = createCurveMapObject(iOrder);
+      return computeCurveMapInterval(iOrder, null, 0, wCurveMap.NumberOfData);
+    }
     
+    
+    function computeCurveMapInterval(iOrder, iCurveMap, iStart, iEnd) {
+
+      var wCurveMap = null;
+      
+      if (null != iCurveMap) {
+        if (iOrder == iCurveMap.Order) {
+          wCurveMap = iCurveMap;
+        }
+      }
+
+      if (null == wCurveMap){
+        wCurveMap = createCurveMapObject(iOrder);
+      }
+
+      for (var wi = iStart; (wi < iEnd) && (wi < wCurveMap.NumberOfData); ++wi) {
+        var wXY = d2xy(wCurveMap.NumberOfDataPerAxis, wi);
+        wCurveMap.DtoX[wi] = wXY.x;
+        wCurveMap.DtoY[wi] = wXY.y;
+        
+        var wIndex = wXY.y* wCurveMap.NumberOfDataPerAxis + wXY.x;
+        if (wIndex < wCurveMap.NumberOfData) {
+          wCurveMap.XYToD[wIndex] = wi;
+        }
+      }
+
+      return wCurveMap;
+    }
+
     function plotCurveMap(iCurveMap, iCanvasContext, iXStart, iYStart, iWidth, iHeight) {
+      plotCurveMapRange(iCurveMap, iCanvasContext, iXStart, iYStart, iWidth, iHeight, 0, iCurveMap.NumberOfData);
+    }
+
+    function plotCurveMapInterval(iCurveMap, iCanvasContext, iXStart, iYStart, iWidth, iHeight, iStart, iEnd) {
       var wCellCount = iCurveMap.NumberOfDataPerAxis;
       var wWidthDelta = iWidth/(wCellCount);
       var wHeightDelta = iHeight/(wCellCount);
       var wXStart = iXStart + 0.5*wWidthDelta;
       var wYStart = iYStart + 0.5*wHeightDelta;
       
-      for (var wi = 0; wi < iCurveMap.NumberOfData - 1; ++wi) {
+      var wStart = iStart -1;
+      if (wStart < 0) wStart = 0;
+
+      for (var wi = wStart; (wi < iEnd-1) && (wi < iCurveMap.NumberOfData - 1); ++wi) {
         var wXLineStart = iCurveMap.DtoX[wi]*wWidthDelta + wXStart;
         var wYLineStart = iCurveMap.DtoY[wi]*wHeightDelta + wYStart;
         var wXLocation = iCurveMap.DtoX[wi+1]*wWidthDelta + wXStart;
@@ -178,226 +224,38 @@
         iCanvasContext.stroke();        
       }
     }
+    
+    function printCurveMapData(iCurveMap) {
+      var wOutputString = "";
 
-    function computeNewCurve() {
-      for (var i = 0; i < wDataSize; ++i) {
-        var wData = document.getElementById("Data" + i);
-        if (null != wData) {
-          wCurveDataArray[i] = wData.value - 1;
-          if (wCurveDataArray[i] >= wDataSize) {
-            wCurveDataArray[i] = wDataSize - 1;
-          }
-          if (wCurveDataArray[i] < 0) {
-            wCurveDataArray[i] = 0;
-          }
+      wOutputString += "Hilbert Curve Information \n";
+      wOutputString += "Curve Order : " + iCurveMap.Order +" \n";
+      wOutputString += "Side Dimension : " + iCurveMap.NumberOfDataPerAxis +" \n";
+      wOutputString += "Total Cell Count : " + iCurveMap.NumberOfData +" \n";
 
-          wData.value = wCurveDataArray[i] + 1;
-        }
-      }
-      var wCurveOrder = document.getElementById("ModOrder");
-      var numberOfData = 4;
-
-      if (null != wCurveOrder) {
-        var Vallue = wCurveOrder.value;
-        numberOfData = Math.pow(2, Math.floor(wCurveOrder.value));
-        numberOfData *= numberOfData;
-      }
-      wModDataSize = numberOfData;
-
-      for (var i = 0; i < wModDataSize; ++i) {
-        if(i >= wModCurveDataArray.length) {
-          wModCurveDataArray.push(0);
-        }
-
-        wModCurveDataArray[i] = -1;
-      }
-
-
-      var wIndexScale = ((wDataSize -1) / (wModDataSize - 1));
-      var wAccumulator = 0;
-      var wOldIndex = 0;
-      var wNewIndex = -1;
-      var wCounter = 0;
-      for (var i = 0; i < wDataSize; ++i) {
-        wNewIndex = Math.floor(((1/wIndexScale) * i) + 0.5);
-
-        if(wNewIndex != wOldIndex)
-        {
-          wModCurveDataArray[wOldIndex] = wAccumulator / wCounter;
-          wCounter = 0;
-          wAccumulator = 0;
-        }
-
-        wAccumulator += Math.floor(((1 / wIndexScale) * wCurveDataArray[i]) + 0.5);
-        wCounter += 1;
-        wOldIndex = wNewIndex;
-      }
-
-      wModCurveDataArray[wOldIndex] = wAccumulator / wCounter;
-
-      var strine = "";
-      for (var i = 1; i < wModDataSize-1; ++i) {
-        
-        if (-1 == wModCurveDataArray[i]) {
-        
-          
-          var j = 0;
-          for ( j = i; j < wModDataSize && wModCurveDataArray[j] == -1 ; ++j) {
-          }
-
-          var upper = j;
-
-          for (j = i; j != 0 && wModCurveDataArray[j] == -1 ; --j) {
-          }
-
-          var lower = j;
-
-          wModCurveDataArray[i] = ((wModCurveDataArray[upper] - wModCurveDataArray[lower]) / (upper - lower)) * (i - lower) + wModCurveDataArray[lower];
-          wModCurveDataArray[i] = Math.floor(wModCurveDataArray[i] + 0.5);
-
-      //    alert(wModCurveDataArray[i] + " = " + upper + "," + lower + "," +  i)
-
-        }
-
-        strine += "," + wModCurveDataArray[i];
-      }
-
-    //  alert(strine);
-      for (var i = 0; i < wModDataSize; ++i) {
-        if (wModCurveDataArray[i] >= wModDataSize) {
-          wModCurveDataArray[i] = wModDataSize - 1;
-        }
-        if (wModCurveDataArray[i] < 0) {
-          wModCurveDataArray[i] = 0;
-        }
-      }
-
-      plot();
-
-      
-      var strign = "";
-      for (var i = 0; i < 8; ++i) {
-        for (var j = 0; j < 8; ++j) {
-          strign += "," +  xy2d(8, i, j);
-        }
-        
-        strign += "\n";
-      }
-      alert(strign);
+      return wOutputString;
     }
 
-    function plot()
-    {
-      plotLine();
-      plotGraph();
+    function renderCurveMap() {
 
-    }
+      if (null != gGlobal.CurveMap) {
+        if(gGlobal.CurveMapCurrentIndex < gGlobal.CurveMap.NumberOfData) {
+          var wNextIndex = gGlobal.CurveMapCurrentIndex + gGlobal.CurveMapProcessRange;
+          gGlobal.CurveMap = computeCurveMapInterval(gGlobal.CurveMap.Order, gGlobal.CurveMap, gGlobal.CurveMapCurrentIndex, wNextIndex);
 
-    function plotLine()
-    {
-      var canvas = document.getElementById('LineCanvas');
-      var context = canvas.getContext('2d');
+          var wOutputCanvasDom = document.getElementById(gGlobal.OutputCanvasId);
+          if (null != wOutputCanvasDom) {
+            var iCtx = wOutputCanvasDom.getContext('2d');
+            plotCurveMapInterval(gGlobal.CurveMap, iCtx, 0, 0, wOutputCanvasDom.clientWidth, wOutputCanvasDom.clientHeight, gGlobal.CurveMapCurrentIndex, wNextIndex);
 
-      context.setTransform(1, 0, 0, 1, 0, 0);
-      context.clearRect(0, 0, canvas.width, canvas.height);
-      
-      context.strokeStyle = "lightgreen";
-      DrawGridLines(context, 0, 0, canvas.width, canvas.height, wDataSize - 1, wDataSize - 1);
-      context.stroke();
+          }
 
-      context.strokeStyle = "lightblue";
-      DrawGridLines(context, 0, 0, canvas.width, canvas.height, wModDataSize - 1, wModDataSize - 1);
-      context.stroke();
-
-      var wOriginalLineData = new Array(wDataSize);
-
-      for (var i = 0; i < wDataSize; ++i) {
-        wOriginalLineData[i] = new Array(2);
-        wOriginalLineData[i][0] = i;
-        wOriginalLineData[i][1] = wCurveDataArray[i];
-      }
-
-      context.strokeStyle = "darkgreen";
-      DrawLineData(context, 0, 0, canvas.width / (wDataSize - 1), canvas.height / (wDataSize - 1), wOriginalLineData);
-      context.stroke();
-
-      var wModLineData = new Array(wModDataSize);
-
-      for (var i = 0; i < wModDataSize; ++i) {
-        wModLineData[i] = new Array(2);
-        wModLineData[i][0] = i;
-        wModLineData[i][1] = wModCurveDataArray[i];
-      }
-
-
-      context.strokeStyle = "darkblue";
-      DrawLineData(context, 0, 0, canvas.width / (wModDataSize - 1), canvas.height / (wModDataSize - 1), wModLineData);
-      context.stroke();
-    }
-
-    function plotGraph()
-    { 
-      var canvas = document.getElementById('GraphCanvas');
-      var context = canvas.getContext('2d');
-
-      context.setTransform(1, 0, 0, 1, 0, 0);
-      context.clearRect(0, 0, canvas.width, canvas.height);
-
-      context.strokeStyle = "lightgreen";
-      DrawGridLines(context, 0, 0, canvas.width, canvas.height, Math.sqrt(wDataSize), Math.sqrt(wDataSize));
-      context.stroke();
-
-      context.strokeStyle = "lightblue";
-      DrawGridLines(context, 0, 0, canvas.width, canvas.height, Math.sqrt(wModDataSize), Math.sqrt(wModDataSize));
-      context.stroke();
-
-
-      var wOriginalLineData = new Array(wDataSize);
-
-      context.strokeStyle = "darkgreen";
-
-      var wString = "";
-      for (var i = 0; i < wDataSize; ++i) {
-        wOriginalLineData[i] = new Array(2);
-        var wXYCo0 = d2xy(Math.sqrt(wDataSize), i);
-        wOriginalLineData[i][0] = wXYCo0.x;
-        wOriginalLineData[i][1] = wXYCo0.y;
-
-        if (1 <= wCurveDataArray[i]) {
-          var wXYCo1 = d2xy(Math.sqrt(wDataSize), wCurveDataArray[i]);
-
-          var wLineData = [[wXYCo0.x, wXYCo0.y], [wXYCo1.x, wXYCo1.y]];
-          DrawLineData(context, canvas.width / Math.sqrt(wDataSize) / 2, canvas.height / Math.sqrt(wDataSize) / 2, canvas.width / Math.sqrt(wDataSize), canvas.height / Math.sqrt(wDataSize), wLineData);
-          context.stroke();
+          gGlobal.CurveMapCurrentIndex = wNextIndex;
         }
       }
-
-      DrawLineData(context, canvas.width / Math.sqrt(wDataSize) / 2, canvas.height / Math.sqrt(wDataSize) / 2, canvas.width / Math.sqrt(wDataSize), canvas.height / Math.sqrt(wDataSize), wOriginalLineData);
-      context.stroke();
-
-
-      context.strokeStyle = "darkblue";
-
-      var wModLineData = new Array(wModDataSize);
-
-      for (var i = 0; i < wModDataSize; ++i) {
-        wModLineData[i] = new Array(2);
-        var wXYCo0 = d2xy(Math.sqrt(wModDataSize), i);
-        wModLineData[i][0] = wXYCo0.x;
-        wModLineData[i][1] = wXYCo0.y;
-
-        if (1 <= wModCurveDataArray[i]) {
-          var wXYCo1 = d2xy(Math.sqrt(wModDataSize), wModCurveDataArray[i]);
-
-          var wLineData = [[wXYCo0.x, wXYCo0.y], [wXYCo1.x, wXYCo1.y]];
-          DrawLineData(context, canvas.width / Math.sqrt(wModDataSize) / 2, canvas.height / Math.sqrt(wModDataSize) / 2, canvas.width / Math.sqrt(wModDataSize), canvas.height / Math.sqrt(wModDataSize), wLineData);
-          context.stroke();
-        }
-      }
-
-      DrawLineData(context, canvas.width / Math.sqrt(wModDataSize)/2, canvas.height / Math.sqrt(wModDataSize) / 2, canvas.width / Math.sqrt(wModDataSize), canvas.height / Math.sqrt(wModDataSize), wModLineData);
-      context.stroke();
+      window.requestAnimationFrame(renderCurveMap);    
     }
+
     /*
     //convert (x,y) to d
     int xy2d (int n, int x, int y) {
@@ -526,6 +384,7 @@
 
     function Init() {
       updateCurveData();
+      renderCurveMap();
     }
 
   </script>
@@ -535,7 +394,7 @@
     <canvas id="id_OutputGraphCanvas" width="500" height="500" style="border:1px solid #000000;"></canvas>
   </div>
   <div name ="CurveOrderControl">
-    <input type="number" id="id_InputOrder" min="1" max="10" value="1" onchange="updateCurveData()">
+    <input type="number" id="id_InputOrder" min="1" max="30" value="1" onchange="updateCurveData()">
     <div id="id_OutputText"></div>
   </div>
 </BODY>
