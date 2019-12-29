@@ -1,113 +1,21 @@
 <HTML>
 <HEAD>
-<META NAME="GENERATOR" Content="Microsoft Visual Studio">
-<TITLE>Hilbert Curve Test</TITLE>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
+  <TITLE>Hilbert Curve Demonstration</TITLE>
+  <script type="text/javascript" src="../../global/frame.js"></script>  
+  <link rel="stylesheet" href="../../css/theme_01.css" />
+
+  <script src="../../javascript/Color.js"></script>
+  <script src="../../javascript/HilbertCurve.js"></script>
   <script>
 
     var gGlobal = {
       InputOrderId : "id_InputOrder",
       OutputCanvasId : "id_OutputGraphCanvas",
       OutputTextId : "id_OutputText",
-      CurveMap : null,
+      CurveMap : HilbertCurve.CurveMap.computeCurveMap(1),
       CurveMapProcessRange : 1000,
       CurveMapCurrentIndex : 0,
-    }
-    
-    // Color Conversion
-    var colorMapping = {
-      color: function (iR, iG, iB, iAlpha) {
-        
-        return {
-          r: iR,
-          g: iG,
-          b: iB,
-          a: iAlpha
-        };
-      },
-
-      getColorString : function (iColor) {
-        return 'rgba(' + iColor.r + ',' + iColor.g + ','+  iColor.b + ','+ iColor.a + ')';
-      },
-
-      mapValueToColorScale: function (iRatio) {
-
-        var wRatio = iRatio;
-
-        if (wRatio > 1) {
-          wRatio = 1;
-        }
-        else if (wRatio < 0) {
-          wRatio = 0;
-        }
-
-        wColorIndex = Math.floor(wRatio * 1785 + 0.5);
-        if (wColorIndex <= 255) {
-          return this.color(wColorIndex, 0, 0, 255);
-        }
-        if (wColorIndex <= 2 * 255) {
-          return this.color(255, wColorIndex - 255, 0, 255);
-        }
-        if (wColorIndex <= 3 * 255) {
-          return this.color(3 * 255 - wColorIndex, 255, 0, 255);
-        }
-        if (wColorIndex <= 4 * 255) {
-          return this.color(0, 255, wColorIndex - 3 * 255, 255);
-        }
-        if (wColorIndex <= 5 * 255) {
-          return this.color(0, 5 * 255 - wColorIndex, 255, 255);
-        }
-        if (wColorIndex <= 6 * 255) {
-          return this.color(wColorIndex - 5 * 255, 0, 255, 255);
-        }
-        if (wColorIndex <= 7 * 255) {
-          return this.color(255, wColorIndex - 6 * 255, 255, 255);
-        }
-
-        return this.color(255, 255, 255, 255);
-      },
-
-
-      mapColorScaleToValue: function (iRGB, iValueMax, iValueMin) {
-        wColorIndex = 0
-        if ((iRGB.g == 0) && (iRGB.b == 0)) {
-          wColorIndex = iRGB.r;
-        }
-        else if ((iRGB.r == 255) && (iRGB.b == 0)) {
-          wColorIndex = iRGB.g + 255;
-        }
-        else if ((iRGB.g == 255) && (iRGB.b == 0)) {
-          wColorIndex = 3 * 255 - iRGB.r;
-        }
-        else if ((iRGB.r == 0) && (iRGB.g == 255)) {
-          wColorIndex = iRGB.b + 3 * 255;
-        }
-        else if ((iRGB.r == 0) && (iRGB.b == 255)) {
-          wColorIndex = 5 * 255 - iRGB.g;
-        }
-        else if ((iRGB.g == 0) && (iRGB.b == 255)) {
-          wColorIndex = iRGB.r + 5 * 255;
-        }
-        else if ((iRGB.r == 255) && (iRGB.b == 255)) {
-          wColorIndex = iRGB.g + 6 * 255;
-        }
-
-        return parseInt((wColorIndex / 1785) * (iValueMax - iValueMin) + iValueMin + 0.5);
-
-      },
-
-
-      mapValueToBinaryColorRGB: function (iValue) {
-        wNewValue = iValue + 32768;
-        wR = parseInt(wNewValue % 255);
-        wTemp = parseInt(wNewValue / 255);
-        wG = parseInt(wTemp % 255);
-        wB = parseInt(wTemp / 255);
-        return this.color(wR, wG, wB, 255);
-      },
-
-      mapBinaryColorRGBToValue: function (iRGB) {
-        return iRGB.b * 255 * 255 + iRGB.g * 255 + iRGB.r - 32768
-      }
     }
 
     function updateCurveData() {
@@ -125,7 +33,7 @@
 
       var wCurveOrder = parseInt(wInputOrderDom.value);
       
-      gGlobal.CurveMap = createCurveMapObject(wCurveOrder);
+      gGlobal.CurveMap = HilbertCurve.CurveMap.createCurveMapObject(wCurveOrder);
       gGlobal.CurveMapCurrentIndex = 0;
 
 
@@ -143,59 +51,6 @@
 
     }
 
-    function createCurveMapObject(iOrder) {
-      
-      var wNumberOfDataPerAxis =  Math.pow(2, iOrder);
-      var wNumberOfData =  wNumberOfDataPerAxis*wNumberOfDataPerAxis;
-      var wDtoX =  new Int32Array(wNumberOfData);
-      var wDtoY = new Int32Array(wNumberOfData);
-      var wXYToD = new Int32Array(wNumberOfData);
-
-      var wCurveMap = {
-        Order: iOrder,
-        NumberOfDataPerAxis: wNumberOfDataPerAxis,
-        NumberOfData: wNumberOfData,
-        DtoX: wDtoX,
-        DtoY: wDtoY,
-        XYToD: wXYToD,
-      };
-
-      return wCurveMap;
-    }
-    function computeCurveMap(iOrder) {
-      var wCurveMap = createCurveMapObject(iOrder);
-      return computeCurveMapInterval(iOrder, null, 0, wCurveMap.NumberOfData);
-    }
-    
-    
-    function computeCurveMapInterval(iOrder, iCurveMap, iStart, iEnd) {
-
-      var wCurveMap = null;
-      
-      if (null != iCurveMap) {
-        if (iOrder == iCurveMap.Order) {
-          wCurveMap = iCurveMap;
-        }
-      }
-
-      if (null == wCurveMap){
-        wCurveMap = createCurveMapObject(iOrder);
-      }
-
-      for (var wi = iStart; (wi < iEnd) && (wi < wCurveMap.NumberOfData); ++wi) {
-        var wXY = d2xy(wCurveMap.NumberOfDataPerAxis, wi);
-        wCurveMap.DtoX[wi] = wXY.x;
-        wCurveMap.DtoY[wi] = wXY.y;
-        
-        var wIndex = wXY.y* wCurveMap.NumberOfDataPerAxis + wXY.x;
-        if (wIndex < wCurveMap.NumberOfData) {
-          wCurveMap.XYToD[wIndex] = wi;
-        }
-      }
-
-      return wCurveMap;
-    }
-
     function plotCurveMap(iCurveMap, iCanvasContext, iXStart, iYStart, iWidth, iHeight) {
       plotCurveMapRange(iCurveMap, iCanvasContext, iXStart, iYStart, iWidth, iHeight, 0, iCurveMap.NumberOfData);
     }
@@ -210,14 +65,16 @@
       var wStart = iStart -1;
       if (wStart < 0) wStart = 0;
 
+      var wColor = new Color(0,0,0,0);
+
       for (var wi = wStart; (wi < iEnd-1) && (wi < iCurveMap.NumberOfData - 1); ++wi) {
         var wXLineStart = iCurveMap.DtoX[wi]*wWidthDelta + wXStart;
         var wYLineStart = iCurveMap.DtoY[wi]*wHeightDelta + wYStart;
         var wXLocation = iCurveMap.DtoX[wi+1]*wWidthDelta + wXStart;
         var wYLocation = iCurveMap.DtoY[wi+1]*wHeightDelta + wYStart;
       
-        var wColor = colorMapping.mapValueToColorScale(wi/iCurveMap.NumberOfData);
-        iCanvasContext.strokeStyle = colorMapping.getColorString(wColor);
+        wColor.mapValueToColorScale(wi/iCurveMap.NumberOfData);
+        iCanvasContext.strokeStyle = wColor.getRGBAString();
         iCanvasContext.beginPath();
         iCanvasContext.moveTo(wXLineStart, wYLineStart);
         iCanvasContext.lineTo(wXLocation, wYLocation);
@@ -241,7 +98,7 @@
       if (null != gGlobal.CurveMap) {
         if(gGlobal.CurveMapCurrentIndex < gGlobal.CurveMap.NumberOfData) {
           var wNextIndex = gGlobal.CurveMapCurrentIndex + gGlobal.CurveMapProcessRange;
-          gGlobal.CurveMap = computeCurveMapInterval(gGlobal.CurveMap.Order, gGlobal.CurveMap, gGlobal.CurveMapCurrentIndex, wNextIndex);
+          gGlobal.CurveMap = HilbertCurve.CurveMap.computeCurveMapInterval(gGlobal.CurveMap.Order, gGlobal.CurveMap, gGlobal.CurveMapCurrentIndex, wNextIndex);
 
           var wOutputCanvasDom = document.getElementById(gGlobal.OutputCanvasId);
           if (null != wOutputCanvasDom) {
@@ -256,146 +113,51 @@
       window.requestAnimationFrame(renderCurveMap);    
     }
 
-    /*
-    //convert (x,y) to d
-    int xy2d (int n, int x, int y) {
-    int rx, ry, s, d=0;
-    for (s=n/2; s>0; s/=2) {
-      rx = (x & s) > 0;
-      ry = (y & s) > 0;
-      d += s * s * ((3 * rx) ^ ry);
-      rot(s, &x, &y, rx, ry);
-    }
-    return d;
-    }
-    */
-    function xy2d(iSize, iX, iY)
-    {
-      var wRx, wRy, wS, wd = 0, wX = iX,wY = iY;
-
-      for(var wS = Math.floor(iSize /2); wS > 0; wS = Math.floor(wS/2)  )
-      {
-        if (Math.abs(wX) % (2 * wS) >= wS) {
-          wRx = 1;
-        }
-        else {
-          wRx = 0;
-        }
-
-        if (Math.abs(wY) % (2 * wS) >= (wS - 1)) {
-          wRy = 1;
-        }
-        else {
-          wRy = 0;
-        }
-
-        wd += wS * wS * Math.abs(3 * wRx - wRy);
-
-        var wRot = rot(wS, wX, wY, wRx, wRy);
-        wX = wRot.x;
-        wY = wRot.y;
-      }
-      return wd;
-    }
-    /*
-    //convert d to (x,y)
-    void d2xy(int n, int d, int *x, int *y) {
-      int rx, ry, s, t=d;
-      *x = *y = 0;
-      for (s=1; s<n; s*=2) {
-        rx = 1 & (t/2);
-        ry = 1 & (t ^ rx);
-        rot(s, x, y, rx, ry);
-        *x += s * rx;
-        *y += s * ry;
-        t /= 4;
-      }
-    }
-    */
-    function d2xy (iSize, iD)
-    {
-      var wRx, wRy, wT = iD, wX =0; wY = 0;
-
-      for(var wS = 1; wS < iSize; wS*= 2)
-      {
-        wRx = 0;
-        if ((Math.floor(wT / 2) % 2) == 1)
-        {
-          wRx = 1;
-        }
-
-        wRy = 0;
-
-        if ((wT % 2) != wRx) {
-          wRy = 1;
-        }
-
-        var wRot = rot(wS, wX, wY, wRx, wRy);
-
-        wX = wRot.x + wRx*wS;
-        wY = wRot.y + wRy*wS;
-        wT = Math.floor(wT/4);
-        }
-
-      return {
-      x : wX,
-      y : wY
-    }
-
-    }
-    /*
-    //rotate/flip a quadrant appropriately
-    void rot(int n, int *x, int *y, int rx, int ry) {
-      if (ry == 0) {
-        if (rx == 1) {
-          *x = n-1 - *x;
-          *y = n-1 - *y;
-        }
-
-        //Swap x and y
-        int t  = *x;
-        *x = *y;
-        *y = t;
-      }
-    }
-    */
-    function rot(iSize, iX, iY, iRx, iRy)
-    {
-      var wx = iX, wy = iY;
-
-      if(iRy == 0)
-      {
-        if(iRx == 1)
-        {
-          wx = iSize - 1 - wx;
-          wy = iSize - 1 - wy;
-        }
-
-        var t = wx;
-        wx = wy;
-        wy = t;
-      }
-
-      return {
-        x : wx,
-        y : wy
-      }
-    }
-
     function Init() {
+      Resize();
+    }
+
+    function Resize() {
+      var wCanvas = document.getElementById(gGlobal.OutputCanvasId);
+      var wSize = wCanvas.parentElement.clientWidth;
+
+      wCanvas.height = wSize - 2;
+      wCanvas.width = wSize - 2;
+      
       updateCurveData();
       renderCurveMap();
     }
 
   </script>
+  <style>
+
+    #CurveDisplay
+    {
+        width : 90%;
+        margin-top: 30px;
+        margin-bottom: 30px;
+        padding-left: 20;
+    }
+
+    canvas
+    {
+        border: 1px solid blue;
+        background-color: white;
+    }
+
+  </style>
 </HEAD>
-<BODY onload="Init()">
-  <div id="CurveDisplay">
-    <canvas id="id_OutputGraphCanvas" width="500" height="500" style="border:1px solid #000000;"></canvas>
-  </div>
-  <div name ="CurveOrderControl">
-    <input type="number" id="id_InputOrder" min="1" max="30" value="1" onchange="updateCurveData()">
-    <div id="id_OutputText"></div>
+<BODY onload="Init()" onresize ="Resize()">
+  <div id="main-content-div">
+    <h1>Hilbert Curve Demonstration</h1>
+    <p>This demonstration plots the Hilbert Curve from order 1 to order 14.</p>
+    <div name ="CurveOrderControl">
+      <input type="number" id="id_InputOrder" min="1" max="14" value="1" onchange="updateCurveData()">
+      <div id="id_OutputText"></div>
+    </div>
+    <div id="CurveDisplay">
+      <canvas id="id_OutputGraphCanvas" width="500" height="500" style="border:1px solid #000000;"></canvas>
+    </div>
   </div>
 </BODY>
 </HTML>
