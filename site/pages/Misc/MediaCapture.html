@@ -16,6 +16,7 @@
       OutputCameraVideoId : "id_OutputCameraVideo",
       CurrentCameraStream : null,
       OutputCanvasId : "id_OutputCanvas",
+      InternalVideoDOM : null
       }
 
     function getStream(iConstraints) {
@@ -136,19 +137,36 @@
       }
 
     }
+
     
+    function changeCurrentStream_Internal(iNewStream) {
+
+      var wCameraDOM = gGlobal.InternalVideoDOM;
+      if (null == wCameraDOM) {
+        var wNewVideo = createLiveVideoDOM();
+        gGlobal.InternalVideoDOM = wNewVideo;
+        wCameraDOM = wNewVideo;
+      }
+
+      if (null != wCameraDOM) {
+        setVideoDOMStream(wCameraDOM, iNewStream);
+      }
+
+    }
+
     function updateStream() {
 
       var wCameraSelector = document.getElementById(gGlobal.InputCameraSelectId);
       if (null != wCameraSelector) {
         var wCameraFacing = wCameraSelector.options[wCameraSelector.selectedIndex].value;
-        getDeviceStreamByFacingMode(wCameraFacing).then(changeCurrentStream).catch(handleError);
+        getDeviceStreamByFacingMode(wCameraFacing).then(changeCurrentStream_Internal).catch(handleError);
       }
     }
     
     function renderCanvas() {
 
-      var wCameraDOM = document.getElementById(gGlobal.OutputCameraVideoId);
+      var wCameraDOM =  gGlobal.InternalVideoDOM;
+      //var wCameraDOM = document.getElementById(gGlobal.OutputCameraVideoId);
       var wCanvasDOM = document.getElementById(gGlobal.OutputCanvasId);
       if((null != wCameraDOM) && (null != wCanvasDOM)) {
         var wHeight = wCameraDOM.clientHeight;
