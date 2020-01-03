@@ -4,7 +4,7 @@ window.addEventListener("load", function(event) {
 	var wInput = document.createElement("input");
 
 	wInput.type = "image";
-	wInput.src = "../../../site/icons/icon-home-white.svg";
+	wInput.src = "https://wlee0515.github.io/favicon.ico";
 	wInput.style.width = "75%";
 	wInput.style.height = "75%";
 	wInput.style.position = "relative";
@@ -12,11 +12,11 @@ window.addEventListener("load", function(event) {
 	
 	
 	var wDiv= document.createElement("div");
-	wDiv.style.borderRadius= "50%";
-	wDiv.style.width = "74px";
+//	wDiv.style.borderRadius= "50%";
+	wDiv.style.width = "75px";
 	wDiv.style.height = "75px";
-	wDiv.style.background = "black";
-	wDiv.style.border = "5px solid orange";
+//	wDiv.style.background = "black";
+//	wDiv.style.border = "5px solid orange";
 	wDiv.style.position = "fixed";
 	wDiv.style.right = "10px";
 	wDiv.style.bottom = "10px";
