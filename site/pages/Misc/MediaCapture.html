@@ -26,6 +26,10 @@
       }
     }
 
+    function getStream(iConstraints) {
+      return navigator.mediaDevices.getUserMedia(iConstraints);
+    }
+
     function getDeviceList() {
       return navigator.mediaDevices.enumerateDevices();
     }
@@ -68,13 +72,12 @@
       for (var wi = 0; wi < wDeviceInfoList_video.length; ++wi) {
 
         const constraints = {
-//          audio: { deviceId : { exact: wDeviceInfoList_audio[wi].Id }},
-//          video: { deviceId : {exact: wDeviceInfoList_video[wi].Id} }
-            video: { undefined }
+          audio: { deviceId : { exact: wDeviceInfoList_audio[wi].Id }},
+          video: { deviceId : {exact: wDeviceInfoList_video[wi].Id} }
         };
 
         alert(JSON.stringify(constraints,null, 2))
-        navigator.mediaDevices.getUserMedia(constraints).then(processStream).catch(handleError);
+        getStream(constraints).then(processStream).catch(handleError);
       }
 
       alert(JSON.stringify(wDeviceInfoList_audio,null, 2))
@@ -83,6 +86,7 @@
 
     function processStream(iStream) {
 
+      video: { undefined }
       var wVideoDom = document.getElementById(gGlobal.OutputVideoId);
       if (null != wVideoDom) {
         var wNewVideo = document.createElement('video');
@@ -94,8 +98,8 @@
       }
     }
 
-    function handleError(params) {
-      
+    function handleError(iError) {
+      alert(iError);
     }
     function renderCanvas() {
 
@@ -104,7 +108,12 @@
 
     function Init() {
       stopStreams();
-      getDeviceList().then(loadDevices);
+      
+      const constraints = {
+          audio: {},
+          video: {}
+      };
+      getStream(constraints).then(getDeviceList).then(loadDevices).catch(handleError);;
 
       Resize();
       renderCanvas();
