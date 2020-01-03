@@ -42,7 +42,7 @@
 
       const constraints = {
         audio: false,
-        video: { facingMode: iDirection }
+        video: { /*facingMode: iDirection */}
       };
 
       return getStream(constraints);
@@ -53,7 +53,6 @@
       wNewVideo.autoplay = true;
       wNewVideo.setAttribute("muted",null);
       wNewVideo.setAttribute("playsinline",null);    
-      wNewVideo.play();  
       return wNewVideo;
     }
 
@@ -170,7 +169,8 @@
       var wCameraDOM = document.getElementById(gGlobal.OutputCameraVideoId);
       var wCanvasDOM = document.getElementById(gGlobal.OutputCanvasId);
       if((null != wCameraDOM) && (null != wCanvasDOM)) {
-        var wHeight = wCameraDOM.videoHeight;
+        if(0 != wCameraDOM.videoWidth) {
+          var wHeight = wCameraDOM.videoHeight;
         var wWidth = wCameraDOM.videoWidth;
         
         wCanvasDOM.height = wHeight;
@@ -178,15 +178,27 @@
         
         var wCtx = wCanvasDOM.getContext('2d');
 	      wCtx.drawImage(wCameraDOM, 0, 0, wWidth, wHeight);
-      /*
-        var wImageData = wCtx.getImageData(0, 0, wWidth, wHeight);
+      
+        var wImageData = wCtx.getImageData(0, 0, wWidth,wHeight);
         var wData = wImageData.data;
         
-        for (var wi = 0; wi < wWidth; ++wi) {
-          for (var wj = 0; wj < wHeight; ++wj) {
-            if (wi > wWidth/2) {
+        for (var wi = 0; wi < wHeight; ++wi) {
+          for (var wj = 0; wj < wWidth; ++wj) {
+            var wInvert = false;
 
-              var wIndex = wi* wHeight + wj;
+            if (wj > wWidth/2) {
+              if(wi > wHeight/2) {
+                wInvert = true;
+              }
+            }
+            else {
+              if (wi < wHeight/2) {
+                wInvert = true;
+              }
+            }
+            if (true == wInvert) {
+
+              var wIndex = (wi* wWidth + wj)*4;
               wData[wIndex]     = 255 - wData[wIndex];     // red
               wData[wIndex + 1] = 255 - wData[wIndex + 1]; // green
               wData[wIndex + 2] = 255 - wData[wIndex + 2]; // blue
@@ -194,7 +206,9 @@
           }
         }
         wCtx.putImageData(wImageData, 0, 0);
-        */
+
+        }
+        
       }
 
       window.requestAnimationFrame(renderCanvas);
@@ -242,14 +256,22 @@
       /* The video is position fixed to the viewpoint to prevent it from falling off screen */
       /* The dimensions of the video needs to be greater than 2px */
       /* The opacity of the video may be set to 0 to be invisible on screen */
-      width: 2px;
-      height: 2px;
+      width: 50px;
+      height: 50px;
       position: fixed;
       top: 0px;
       left: 0px;
       overflow: hidden;
       opacity: 0.0;
     }
+
+    #id_OutputCanvas{
+      position: fixed;
+      top: 0px;
+      left: 0px;
+      z-index: -1000;
+    }
+
   </style>
   
 </HEAD>
