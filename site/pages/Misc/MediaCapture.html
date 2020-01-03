@@ -178,7 +178,7 @@
         
         var wCtx = wCanvasDOM.getContext('2d');
 	      wCtx.drawImage(wCameraDOM, 0, 0, wWidth, wHeight);
-      
+      /*
         var wImageData = wCtx.getImageData(0, 0, wWidth, wHeight);
         var wData = wImageData.data;
         
@@ -194,7 +194,7 @@
           }
         }
         wCtx.putImageData(wImageData, 0, 0);
-        
+        */
       }
 
       window.requestAnimationFrame(renderCanvas);
@@ -256,8 +256,8 @@
 <BODY onload="Init()" onresize ="Resize()">
   <div id="main-content-div">
     <select id="id_camera_selection" onchange="updateStream()">
-      <option value="user">Front Camera</option>
-      <option value="environment"  selected="selected">Back Camera</option>
+      <option value="user" selected="selected">Front Camera</option>
+      <option value="environment">Back Camera</option>
     </select>
     <div id="id_video_div">
     </div>
