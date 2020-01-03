@@ -56,10 +56,9 @@
 
     function setVideoDOMStream(iVideoDOM, iNewStream) {
       if (null != iVideoDOM) {
-        if (null != gGlobal.CurrentCameraStream) {
-          gGlobal.CurrentCameraStream.getTracks().forEach(track => {track.stop();});
+        if (null != iVideoDOM.srcObject) {
+          iVideoDOM.srcObject.getTracks().forEach(track => {track.stop();});
         }
-        gGlobal.CurrentCameraStream = iNewStream;
         iVideoDOM.srcObject = iNewStream;
       }
     }
@@ -132,7 +131,7 @@
       }
 
       if (null != wCameraDOM) {
-        setVideoDOMStream(wNewVideo, iNewStream);
+        setVideoDOMStream(wCameraDOM, iNewStream);
       }
 
     }
