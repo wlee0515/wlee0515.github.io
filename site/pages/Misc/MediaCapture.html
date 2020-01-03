@@ -178,7 +178,7 @@
         
         var wCtx = wCanvasDOM.getContext('2d');
 	      wCtx.drawImage(wCameraDOM, 0, 0, wWidth, wHeight);
-      /*
+      
         var wImageData = wCtx.getImageData(0, 0, wWidth, wHeight);
         var wData = wImageData.data;
         
@@ -193,8 +193,8 @@
             }
           }
         }
-        wCtx.putImageData(wImageData, 0, 0, wWidth, wHeight);
-        */
+        wCtx.putImageData(wImageData, 0, 0);
+        
       }
 
       window.requestAnimationFrame(renderCanvas);
