@@ -170,8 +170,8 @@
       //var wCameraDOM = document.getElementById(gGlobal.OutputCameraVideoId);
       var wCanvasDOM = document.getElementById(gGlobal.OutputCanvasId);
       if((null != wCameraDOM) && (null != wCanvasDOM)) {
-        var wHeight = 512;
-        var wWidth = 512;
+        var wHeight = wCameraDOM.videoWidth;
+        var wWidth = wCameraDOM.videoHeight;
         
         wCanvasDOM.height = wHeight;
         wCanvasDOM.width = wWidth;
