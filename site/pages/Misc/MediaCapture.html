@@ -68,15 +68,17 @@
       for (var wi = 0; wi < wDeviceInfoList_video.length; ++wi) {
 
         const constraints = {
-//          audio: { exact: wDeviceInfoList_audio[wi] },
-          video: { exact: wDeviceInfoList_video[wi].deviceId }
+//          audio: { deviceId : { exact: wDeviceInfoList_audio[wi].Id }},
+//          video: { deviceId : {exact: wDeviceInfoList_video[wi].Id} }
+            video: { undefined }
         };
 
+        alert(JSON.stringify(constraints,null, 2))
         navigator.mediaDevices.getUserMedia(constraints).then(processStream).catch(handleError);
       }
 
-      alert(JSON.stringify(wDeviceInfoList_audio))
-      alert(JSON.stringify(wDeviceInfoList_video))
+      alert(JSON.stringify(wDeviceInfoList_audio,null, 2))
+      alert(JSON.stringify(wDeviceInfoList_video,null, 2))
     }
 
     function processStream(iStream) {
