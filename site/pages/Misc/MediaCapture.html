@@ -179,6 +179,21 @@
         var wCtx = wCanvasDOM.getContext('2d');
 	      wCtx.drawImage(wCameraDOM, 0, 0, wWidth, wHeight);
       
+        var wImageData = wCtx.getImageData(0, 0, wWidth, wHeight);
+        var wData = wImageData.data;
+        
+        for (var wi = 0; wi < wWidth; ++wi) {
+          for (var wj = 0; wj < wHeight; ++wj) {
+            if (wi > wWidth/2) {
+
+              var wIndex = wi* wHeight + wj;
+              data[wIndex]     = 255 - data[wIndex];     // red
+              data[wIndex + 1] = 255 - data[wIndex + 1]; // green
+              data[wIndex + 2] = 255 - data[wIndex + 2]; // blue
+            }
+          }
+        }
+        wCtx.putImageData(wImageData, 0, 0, wWidth, wHeight);
       }
 
       window.requestAnimationFrame(renderCanvas);
@@ -201,15 +216,6 @@
     }
 
     function Resize() {
-      /*
-      var wCanvas = document.getElementById(gGlobal.OutputCanvasId);
-      var wSize = wCanvas.parentElement.clientWidth;
-
-      wCanvas.height = wSize - 2;
-      wCanvas.width = wSize - 2;
-      
-      updateCurveData();
-      */
     }
 
   </script>
@@ -230,6 +236,11 @@
     }
 
     #id_video_div {
+      /* Video DOM for the camera screen must be visible for the stream to be updated in safari */
+      /* If hidden from user, the canvas will not be able to capture the camera picture */
+      /* The video is position fixed to the viewpoint to prevent it from falling off screen */
+      /* The dimensions of the video needs to be greater than 2px */
+      /* The opacity of the video may be set to 0 to be invisible on screen */
       width: 2px;
       height: 2px;
       position: fixed;
@@ -254,111 +265,6 @@
     </div>
     <div id="id_TextOut_div">
     </div>
-    
-
-
-  <!--
-  <div class="select">
-    <label for="audioSource">Audio source: </label><select id="audioSource"></select>
-  </div>
-
-  <div class="select">
-    <label for="videoSource">Video source: </label><select id="videoSource"></select>
-  </div>
-
-  <video autoplay muted playsinline></video>
-  
-
-  <script>
-  
-var videoElement = document.querySelector('video');
-var audioSelect = document.querySelector('select#audioSource');
-var videoSelect = document.querySelector('select#videoSource');
-
-audioSelect.onchange = getStream;
-videoSelect.onchange = getStream;
-
-getStream().then(getDevices).then(gotDevices);
-
-function getDevices() {
-  // AFAICT in Safari this only gets default devices until gUM is called :/
-  return navigator.mediaDevices.enumerateDevices();
-}
-
-function gotDevices(deviceInfos) {
-  window.deviceInfos = deviceInfos; // make available to console
-  console.log('Available input and output devices:', deviceInfos);
-  for (const deviceInfo of deviceInfos) {
-    const option = document.createElement('option');
-    option.value = deviceInfo.deviceId;
-    if (deviceInfo.kind === 'audioinput') {
-      option.text = deviceInfo.label || `Microphone ${audioSelect.length + 1}`;
-      audioSelect.appendChild(option);
-    } else if (deviceInfo.kind === 'videoinput') {
-      option.text = deviceInfo.label || `Camera ${videoSelect.length + 1}`;
-      videoSelect.appendChild(option);
-    }
-  }
-}
-
-function getStream() {
-  if (window.stream) {
-    window.stream.getTracks().forEach(track => {
-      track.stop();
-    });
-  }
-  const audioSource = audioSelect.value;
-  const videoSource = videoSelect.value;
-  const constraints = {
-    audio: {deviceId: audioSource ? {exact: audioSource} : undefined},
-    video: {deviceId: videoSource ? {exact: videoSource} : undefined}
-  };
-  return navigator.mediaDevices.getUserMedia(constraints).
-    then(gotStream).catch(handleError);
-}
-
-function gotStream(stream) {
-  window.stream = stream; // make stream available to console
-  audioSelect.selectedIndex = [...audioSelect.options].
-    findIndex(option => option.text === stream.getAudioTracks()[0].label);
-  videoSelect.selectedIndex = [...videoSelect.options].
-    findIndex(option => option.text === stream.getVideoTracks()[0].label);
-  videoElement.srcObject = stream;
-}
-
-function handleError(error) {
-  console.error('Error: ', error);
-}
-
-  </script>
-  <video id="video" width="640" height="480" autoplay></video>
-  <button id="snap">Snap Photo</button>
-  <canvas id="canvas" width="640" height="480"></canvas>
-  <script>
-  // Grab elements, create settings, etc.
-var video = document.getElementById('video');
-
-// Get access to the camera!
-if(navigator.mediaDevices && navigator.mediaDevices.getUserMedia) {
-    // Not adding `{ audio: true }` since we only want video now
-    navigator.mediaDevices.getUserMedia({ video: true }).then(function(stream) {
-        //video.src = window.URL.createObjectURL(stream);
-        video.srcObject = stream;
-        video.play();
-    });
-}
-var canvas = document.getElementById('canvas');
-var context = canvas.getContext('2d');
-var video = document.getElementById('video');
-
-// Trigger photo take
-document.getElementById("snap").addEventListener("click", function() {
-	context.drawImage(video, 0, 0, 640, 480);
-});
-
-
-  </script>
--->
   </div>
 </BODY>
 </HTML>
