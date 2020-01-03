@@ -76,6 +76,8 @@
         var wNewVideo = document.createElement('video');
         wNewVideo.srcObject = iStream;
         wNewVideo.autoplay = true;
+        wNewVideo.setAttribute("muted",null);
+        wNewVideo.setAttribute("playsinline",null);
         wVideoDom.append(wNewVideo);
       }
     }
