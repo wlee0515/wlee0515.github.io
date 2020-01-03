@@ -36,9 +36,12 @@ video {
   </div>
 
   <video autoplay muted playsinline></video>
+  <div id="id_textout"></div>
 
   <script>
   
+var wTextOut = document.getElementById("id_textout");
+ 
 var videoElement = document.querySelector('video');
 var audioSelect = document.querySelector('select#audioSource');
 var videoSelect = document.querySelector('select#videoSource');
@@ -51,12 +54,16 @@ getStream().then(getDevices).then(gotDevices);
 function getDevices() {
   // AFAICT in Safari this only gets default devices until gUM is called :/
   
+  wTextOut.innerText += "Called getDevices() \n";
   return navigator.mediaDevices.enumerateDevices();
 }
 
 function gotDevices(deviceInfos) {
-
-  alert(JSON.stringify(deviceInfos,null, 3));
+  wTextOut.innerText += "Called gotDevices() \n";
+  wTextOut.innerText += "Device Info : \n";
+  wTextOut.innerText += JSON.stringify(deviceInfos,null, 3);
+  wTextOut.innerText += "\n";
+  
   window.deviceInfos = deviceInfos; // make available to console
   console.log('Available input and output devices:', deviceInfos);
   for (const deviceInfo of deviceInfos) {
@@ -73,6 +80,8 @@ function gotDevices(deviceInfos) {
 }
 
 function getStream() {
+
+  wTextOut.innerText += "Called getStream() \n";
   if (window.stream) {
     window.stream.getTracks().forEach(track => {
       track.stop();
@@ -85,12 +94,20 @@ function getStream() {
     video: {deviceId: videoSource ? {exact: videoSource} : undefined}
   };
   
-  alert(JSON.stringify(constraints,null, 3));
+  wTextOut.innerText += "Constraint : \n";
+  wTextOut.innerText += JSON.stringify(constraints,null, 3);
+  wTextOut.innerText += "\n";
+  
   return navigator.mediaDevices.getUserMedia(constraints).
     then(gotStream).catch(handleError);
 }
 
 function gotStream(stream) {
+  wTextOut.innerText += "Called gotStream() \n";
+  wTextOut.innerText += "Stram Object \n";
+  wTextOut.innerText += JSON.stringify(stream,null, 3);
+  wTextOut.innerText += "\n";
+  
   window.stream = stream; // make stream available to console
   audioSelect.selectedIndex = [...audioSelect.options].
     findIndex(option => option.text === stream.getAudioTracks()[0].label);
@@ -100,6 +117,11 @@ function gotStream(stream) {
 }
 
 function handleError(error) {
+  wTextOut.innerText += "Called handleError() \n";
+  wTextOut.innerText += "Error : \n";
+  wTextOut.innerText += JSON.stringify(error,null, 3);
+  wTextOut.innerText += "\n";
+  
   console.error('Error: ', error);
 }
 
