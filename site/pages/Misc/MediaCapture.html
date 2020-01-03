@@ -16,7 +16,7 @@
       OutputCameraVideoId : "id_OutputCameraVideo",
       CurrentCameraStream : null,
       OutputCanvasId : "id_OutputCanvas",
-      InternalVideoDOM : null
+      InternalCanvasDOM : null
       }
 
     function getStream(iConstraints) {
@@ -42,7 +42,7 @@
 
       const constraints = {
         audio: false,
-        video: { facingMode: iDirection}
+        video: { facingMode: {exact: iDirection}}
       };
 
       return getStream(constraints);
@@ -138,22 +138,6 @@
 
     }
 
-    
-    function changeCurrentStream_Internal(iNewStream) {
-
-      var wCameraDOM = gGlobal.InternalVideoDOM;
-      if (null == wCameraDOM) {
-        var wNewVideo = createLiveVideoDOM();
-        gGlobal.InternalVideoDOM = wNewVideo;
-        wCameraDOM = wNewVideo;
-      }
-
-      if (null != wCameraDOM) {
-        setVideoDOMStream(wCameraDOM, iNewStream);
-      }
-
-    }
-
     function updateStream() {
 
       var wCameraSelector = document.getElementById(gGlobal.InputCameraSelectId);
@@ -162,51 +146,95 @@
         getDeviceStreamByFacingMode(wCameraFacing).then(changeCurrentStream).catch(handleError);
       }
     }
-    
+
+    function putVideoInCanvas(iVideoDOM, iCanvasDOM) {
+      if((null != iVideoDOM) && (null != iCanvasDOM)) {
+        var wVideoHeight = iVideoDOM.videoHeight;
+        var wVideoWidth = iVideoDOM.videoWidth;
+        iCanvasDOM.height = wVideoHeight;
+        iCanvasDOM.width = wVideoWidth;
+
+        var wCtx = iCanvasDOM.getContext('2d');
+	      wCtx.drawImage(iVideoDOM, 0, 0, wVideoWidth, wVideoHeight);
+      }  
+    }
+
+    function applyCanvasFilter_InvertChecker(iCanvasDOM) {
+      
+      var wCtx = iCanvasDOM.getContext('2d');	  
+      var wImageDataWidth = iCanvasDOM.width;
+      var wImageDataHeight = iCanvasDOM.height;
+
+      var wImageData = wCtx.getImageData(0, 0, wImageDataWidth,wImageDataHeight);
+      var wData = wImageData.data;
+
+      for (var wi = 0; wi < wImageDataHeight; ++wi) {
+        for (var wj = 0; wj < wImageDataWidth; ++wj) {
+          var wInvert = false;
+
+          if (wj > wImageDataWidth / 2) {
+            if (wi > wImageDataHeight / 2) {
+              wInvert = true;
+            }
+          }
+          else {
+            if (wi < wImageDataHeight / 2) {
+              wInvert = true;
+            }
+          }
+          if (true == wInvert) {
+
+            var wIndex = (wi * wImageDataWidth + wj) * 4;
+            wData[wIndex] = 255 - wData[wIndex];     // red
+            wData[wIndex + 1] = 255 - wData[wIndex + 1]; // green
+            wData[wIndex + 2] = 255 - wData[wIndex + 2]; // blue
+          }
+        }
+      }
+      wCtx.putImageData(wImageData, 0, 0);
+    }
+
+    function stretchAndCenterCanvas(iSourceCanvasDOM, iDestinationCanvasDOM) {
+      var wDestWidth = iDestinationCanvasDOM.width;
+      var wDestHeight = iDestinationCanvasDOM.height;
+
+      var wSrcHeight = iSourceCanvasDOM.height;
+      var wSrcWidth = iSourceCanvasDOM.width;
+      var wSrcTop = 0;
+      var wSrcLeft = 0;
+
+      var wScale = wDestHeight/wSrcHeight;
+      if (wScale*wSrcWidth < wDestWidth) {
+        wScale = wDestWidth/wSrcWidth;
+      }
+      wSrcHeight *= wScale;
+      wSrcWidth *= wScale;
+      wSrcTop = - (wSrcHeight - wDestHeight)/2;
+      wSrcLeft = - (wSrcWidth - wDestWidth)/2;
+
+      var wCtx = iDestinationCanvasDOM.getContext('2d');
+	    wCtx.drawImage(iSourceCanvasDOM, wSrcLeft, wSrcTop, wSrcWidth, wSrcHeight);
+      
+    }
+
     function renderCanvas() {
+
+      var wTempCanvasDOM = gGlobal.InternalCanvasDOM;
+      if (null == wTempCanvasDOM) {
+        wTempCanvasDOM = document.createElement('canvas');
+      }
 
       //var wCameraDOM =  gGlobal.InternalVideoDOM;
       var wCameraDOM = document.getElementById(gGlobal.OutputCameraVideoId);
+
       var wCanvasDOM = document.getElementById(gGlobal.OutputCanvasId);
       if((null != wCameraDOM) && (null != wCanvasDOM)) {
         if(0 != wCameraDOM.videoWidth) {
-          var wHeight = wCameraDOM.videoHeight;
-        var wWidth = wCameraDOM.videoWidth;
-        
-        wCanvasDOM.height = wHeight;
-        wCanvasDOM.width = wWidth;
-        
-        var wCtx = wCanvasDOM.getContext('2d');
-	      wCtx.drawImage(wCameraDOM, 0, 0, wWidth, wHeight);
-      
-        var wImageData = wCtx.getImageData(0, 0, wWidth,wHeight);
-        var wData = wImageData.data;
-        
-        for (var wi = 0; wi < wHeight; ++wi) {
-          for (var wj = 0; wj < wWidth; ++wj) {
-            var wInvert = false;
-
-            if (wj > wWidth/2) {
-              if(wi > wHeight/2) {
-                wInvert = true;
-              }
-            }
-            else {
-              if (wi < wHeight/2) {
-                wInvert = true;
-              }
-            }
-            if (true == wInvert) {
-
-              var wIndex = (wi* wWidth + wj)*4;
-              wData[wIndex]     = 255 - wData[wIndex];     // red
-              wData[wIndex + 1] = 255 - wData[wIndex + 1]; // green
-              wData[wIndex + 2] = 255 - wData[wIndex + 2]; // blue
-            }
-          }
-        }
-        wCtx.putImageData(wImageData, 0, 0);
-
+          
+          putVideoInCanvas(wCameraDOM, wTempCanvasDOM);
+          applyCanvasFilter_InvertChecker(wTempCanvasDOM);
+          stretchAndCenterCanvas(wTempCanvasDOM, wCanvasDOM);
+          
         }
         
       }
@@ -218,6 +246,7 @@
       updateStream();
       renderCanvas();
 
+      Resize();
       /*
       
       const constraints = {
@@ -231,6 +260,11 @@
     }
 
     function Resize() {
+      var wCanvasDOM = document.getElementById(gGlobal.OutputCanvasId);
+      if(null != wCanvasDOM) {
+        wCanvasDOM.height = wCanvasDOM.parentNode.clientHeight;
+        wCanvasDOM.width = wCanvasDOM.parentNode.clientWidth;
+      }
     }
 
   </script>
@@ -265,11 +299,14 @@
       opacity: 0.0;
     }
 
-    #id_OutputCanvas{
+    #id_canavas_div{
       position: fixed;
       top: 0px;
       left: 0px;
       z-index: -1000;
+      width: 100vw;
+      height: 100vh;
+      overflow: hidden;
     }
 
   </style>
