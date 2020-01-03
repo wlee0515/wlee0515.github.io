@@ -49,7 +49,7 @@
       for (var wi = 0; wi < wDeviceInfoList_video.length; ++wi) {
 
         const constraints = {
-          audio: { exact: wDeviceInfoList_audio[wi] },
+//          audio: { exact: wDeviceInfoList_audio[wi] },
           video: { exact: wDeviceInfoList_video[wi] }
         };
 
@@ -67,6 +67,8 @@
         var wNewVideo = document.createElement('video');
         wNewVideo.srcObject = iStream;
         wNewVideo.autoplay = true;
+        wNewVideo.muted = true;
+        wNewVideo.playsinline = true;
         wVideoDom.append(wNewVideo);
       }
     }
