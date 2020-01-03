@@ -15,7 +15,10 @@
       InputCameraCount : 0,
       InputAudioIdPrefix : "id_InputAudio_",
       OutputVideoId : "id_video_div",
-      OutputTextId : "id_TextOut_div"
+      OutputTextId : "id_TextOut_div",
+      InputCameraSelectId : "id_camera_selection",
+      OutputCameraVideoId : "id_OutputCameraVideo",
+      CurrentCameraStream : null
     }
 
     function  stopStreams() {
@@ -106,7 +109,54 @@
       window.requestAnimationFrame(renderCanvas);    
     }
 
+    function changeCurrentStream(iNewStream) {
+      if (null != gGlobal.CurrentCameraStream) {
+        gGlobal.CurrentCameraStram.getTracks().forEach(track => {track.stop();});
+      }
+
+      var wCameraDOM = document.getElementById(gGlobal.OutputCameraVideoId);
+      if(null == wCameraDOM) {
+
+        var wVideoDom = document.getElementById(gGlobal.OutputVideoId);
+        if (null != wVideoDom) {
+          var wNewVideo = document.createElement('video');
+          wNewVideo.id = gGlobal.OutputCameraVideoId;
+          wNewVideo.autoplay = true;
+          wNewVideo.setAttribute("muted", null);
+          wNewVideo.setAttribute("playsinline", null);
+          wVideoDom.append(wNewVideo);
+          
+          wCameraDOM = wNewVideo;
+        }
+      }
+
+      if (null != wCameraDOM) {
+        wCameraDOM.srcObject = iNewStream;
+      }
+
+      gGlobal.CurrentCameraStram = iNewStream;
+    }
+    
+    function updateStream() {
+
+      var wCameraSelector = document.getElementById(gGlobal.InputCameraSelectId);
+      if (null != wCameraSelector) {
+        var wCameraFacing = wCameraSelector.options[wCameraSelector.selectedIndex].value;
+
+        const constraints = {
+          audio: false,
+          video: { facingMode: wCameraFacing }
+        };
+
+        getStream(constraints).then(changeCurrentStream).catch(handleError);
+
+      }
+    }
+
     function Init() {
+      updateStream();
+
+      /*
       stopStreams();
       
       const constraints = {
@@ -117,6 +167,7 @@
 
       Resize();
       renderCanvas();
+      */
     }
 
     function Resize() {
@@ -153,6 +204,10 @@
 </HEAD>
 <BODY onload="Init()" onresize ="Resize()">
   <div id="main-content-div">
+    <select id="id_camera_selection" onchange="updateStream()">
+      <option value="user" selected="selected">Front Camera</option>
+      <option value="environment">Back Camera</option>
+    </select>
     <div id="id_video_div">
     </div>
     <div id="id_TextOut_div">
