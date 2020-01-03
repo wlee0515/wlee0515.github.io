@@ -14,8 +14,9 @@
       OutputTextId : "id_TextOut_div",
       InputCameraSelectId : "id_camera_selection",
       OutputCameraVideoId : "id_OutputCameraVideo",
-      CurrentCameraStream : null
-    }
+      CurrentCameraStream : null,
+      OutputCanvasId : "id_OutputCanvas",
+      }
 
     function getStream(iConstraints) {
       return navigator.mediaDevices.getUserMedia(iConstraints);
@@ -144,9 +145,30 @@
         getDeviceStreamByFacingMode(wCameraFacing).then(changeCurrentStream).catch(handleError);
       }
     }
+    
+    function renderCanvas() {
+
+      var wCameraDOM = document.getElementById(gGlobal.OutputCameraVideoId);
+      var wCanvasDOM = document.getElementById(gGlobal.OutputCanvasId);
+      if((null != wCameraDOM) && (null != wCanvasDOM)) {
+        var wHeight = wCameraDOM.clientHeight;
+        var wWidth = wCameraDOM.clientWidth;
+        
+        wCanvasDOM.height = wHeight;
+        wCanvasDOM.width = wWidth;
+        
+        
+        var wCtx = wCanvasDOM.getContext('2d');
+	      wCtx.drawImage(wCameraDOM, 0, 0, wWidth, wHeight);
+      
+      }
+
+      window.requestAnimationFrame(renderCanvas);
+    }
 
     function Init() {
       updateStream();
+      renderCanvas();
 
       /*
       
@@ -157,7 +179,6 @@
       getStream(constraints).then(getDeviceList).then(loadDevices).catch(handleError);;
 
       Resize();
-      renderCanvas();
       */
     }
 
@@ -201,8 +222,12 @@
     </select>
     <div id="id_video_div">
     </div>
+    <div id="id_canavas_div">
+      <canvas id="id_OutputCanvas"></canvas>
+    </div>
     <div id="id_TextOut_div">
     </div>
+    
 
 
   <!--
