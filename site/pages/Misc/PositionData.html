@@ -23,6 +23,7 @@
     </script>
   </HEAD>
   <body>
+    <!--
     <canvas id="myCanvas" width="360" height="450" style="border:1px solid #d3d3d3;">
     </canvas>
     <script>
@@ -77,7 +78,9 @@
       }
 
     </script>
+    -->
     <h3>Device Motion Capture</h3>
+    <button onclick="init3()">Activate</button>
     <div id="DeviceMotion"></div>
     <script>
     
@@ -126,9 +129,9 @@
         wOutput.innerText += "TimeStamp : " + motion.timeStamp + "\n";
       }
 
-      init3();
     </script>
     <h3>Device Orientation Capture</h3>
+    <button onclick="init2()">Activate</button>
     <div id="DeviceOrientation"></div>
     <script>
     
@@ -168,9 +171,9 @@
         wOutput.innerText += "TimeStamp : " + orientation.timeStamp + "\n";
       }
 
-      init2();
     </script>
     <h3>Device Geo Location Capture</h3>
+    <button onclick="init()">Activate</button>
     <div id="GeoPosition"></div>
     <script>
       
@@ -201,8 +204,6 @@
         console.warn('ERROR(' + err.code + '): ' + err.message);
       }
 
-
-
       function showPosition(position) {
         var wOutput = document.getElementById("GeoPosition");
         wOutput.innerText = "";
@@ -217,7 +218,6 @@
         wOutput.innerText += "TimeStamp : " + position.timestamp + "\n";
       }
 
-      init();
-</script>
+    </script>
   </body>
 </html>
