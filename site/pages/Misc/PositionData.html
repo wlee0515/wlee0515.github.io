@@ -5,6 +5,8 @@
     <TITLE>Position Data Demo</TITLE>
     <script type="text/javascript" src="../../global/frame.js"></script>
     <script>
+
+      /*
       const sensor = new AbsoluteOrientationSensor();
       Promise.all([navigator.permissions.query({ name: "accelerometer" }),
       navigator.permissions.query({ name: "magnetometer" }),
@@ -17,6 +19,7 @@
             alert("No permissions to use AbsoluteOrientationSensor.");
           }
       });
+      */
     </script>
   </HEAD>
   <body>
@@ -49,11 +52,26 @@
         ctx.fillRect(90, 340, 180, event.gamma);
       }
 
+
       if (window.DeviceOrientationEvent) {
-        window.addEventListener("deviceorientation", deviceOrientationListener);
+
+          if (typeof DeviceOrientationEvent.requestPermission === 'function') {
+            // iOS 13+
+            DeviceOrientationEvent.requestPermission()
+              .then(response => {
+                if (response == 'granted') {
+                  window.addEventListener('deviceorientation', deviceOrientationListener)
+                }
+              })
+              .catch(console.error)
+          } else {
+            window.addEventListener("deviceorientation", deviceOrientationListener);
+          }
+
       } else {
         alert("Sorry, your browser doesn't support Device Orientation");
       }
+
     </script>
     <div id="DeviceOrientation"></div>
     <script>
