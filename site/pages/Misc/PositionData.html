@@ -3,12 +3,27 @@
   <HEAD>
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
     <TITLE>Position Data Demo</TITLE>
-    <script type="text/javascript" src="../../global/frame.js"></script>  
+    <script type="text/javascript" src="../../global/frame.js"></script>
+    <script>
+      const sensor = new AbsoluteOrientationSensor();
+      Promise.all([navigator.permissions.query({ name: "accelerometer" }),
+      navigator.permissions.query({ name: "magnetometer" }),
+      navigator.permissions.query({ name: "gyroscope" })])
+        .then(results => {
+          if (results.every(result => result.state === "granted")) {
+            sensor.start();
+           // ...
+          } else {
+            alert("No permissions to use AbsoluteOrientationSensor.");
+          }
+      });
+    </script>
   </HEAD>
   <body>
     <canvas id="myCanvas" width="360" height="450" style="border:1px solid #d3d3d3;">
     </canvas>
     <script>
+      
       function deviceOrientationListener(event) {
         var c = document.getElementById("myCanvas");
         var ctx = c.getContext("2d");
