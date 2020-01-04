@@ -35,5 +35,77 @@
         alert("Sorry, your browser doesn't support Device Orientation");
       }
     </script>
+    <div id="DeviceOrientation"></div>
+    <script>
+    
+      function init2() {
+
+        if (window.DeviceOrientationEvent) {
+          window.addEventListener("deviceorientation", showOrientation);
+        } else {
+          alert("Sorry, your browser doesn't support Device Orientation");
+        }
+        
+      }
+      
+      function showOrientation(orientation) {
+        var wOutput = document.getElementById("DeviceOrientation");
+        wOutput.innerText = "";
+        wOutput.innerText += "Alpha : " + orientation.alpha + "\n";
+        wOutput.innerText += "Beta : " + orientation.beta + "\n";
+        wOutput.innerText += "Gamma : " + orientation.gamma + "\n";
+        wOutput.innerText += "Absolute : " + orientation.absolute + "\n";
+      }
+
+      init2();
+    </script>
+    <div id="GeoPosition"></div>
+    <script>
+      
+      function init() {
+
+        options = {
+          enableHighAccuracy: true,
+          timeout: 5000,
+          maximumAge: 0
+        };
+
+        var wOutput = document.getElementById("GeoPosition");
+        if (navigator.geolocation) {
+         navigator.geolocation.watchPosition(showPosition, error, options);
+        } else {
+          wOutput.innerText = "Geolocation is not supported by this browser.";
+        }
+        
+        //to stop 
+        //navigator.geolocation.clearWatch()
+
+        //To Pull
+        //navigator.geolocation.getCurrentPosition()
+      }
+
+      
+      function error(err) {
+        console.warn('ERROR(' + err.code + '): ' + err.message);
+      }
+
+
+
+      function showPosition(position) {
+        var wOutput = document.getElementById("GeoPosition");
+        wOutput.innerText = "";
+        wOutput.innerText += "Latitude : " + position.coords.latitude + "\n";
+        wOutput.innerText += "Longitude : " + position.coords.longitude + "\n";
+        wOutput.innerText += "Altitude : " + position.coords.altitude + "\n";
+        wOutput.innerText += "Accuracy : " + position.coords.accuracy + "\n";
+        wOutput.innerText += "Altitude Accuracy : " + position.coords.altitudeAccuracy + "\n";
+        wOutput.innerText += "Heading : " + position.coords.heading + "\n";
+        wOutput.innerText += "Speed : " + position.coords.speed + "\n";
+        
+        wOutput.innerText += "TimeStamp : " + position.timestamp + "\n";
+      }
+
+      init();
+</script>
   </body>
 </html>
