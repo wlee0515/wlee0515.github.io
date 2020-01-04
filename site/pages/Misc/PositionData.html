@@ -73,17 +73,75 @@
       }
 
     </script>
+    <div id="DeviceMotion"></div>
+    <script>
+    
+      function init3() {
+
+        if (window.DeviceMotionEvent) {
+
+          if (typeof DeviceMotionEvent.requestPermission === 'function') {
+            // iOS 13+
+            DeviceMotionEvent.requestPermission()
+              .then(response => {
+                if (response == 'granted') {
+                  window.addEventListener('devicemotion', showMotion)
+                }
+              })
+              .catch(console.error)
+          } else {
+            window.addEventListener("devicemotion", showMotion);
+          }
+
+        } else {
+          alert("Sorry, your browser doesn't support Device Motion");
+        }        
+      }
+      
+      function showMotion(motion) {
+
+        var wOutput = document.getElementById("DeviceMotion");
+        wOutput.innerText = "";
+        wOutput.innerText += "Rotation Rate Alpha : " + motion.rotationRate.alpha + "\n";
+        wOutput.innerText += "Rotation Rate Beta : " + motion.rotationRate.beta + "\n";
+        wOutput.innerText += "Rotation Rate Gamma : " + motion.rotationRate.gamma + "\n";
+
+        wOutput.innerText += "Acceleration - x : " + motion.acceleration.x + "\n";
+        wOutput.innerText += "Acceleration - y : " + motion.acceleration.y + "\n";
+        wOutput.innerText += "Acceleration I- z : " + motion.acceleration.z + "\n";
+                
+        wOutput.innerText += "Acceleration Including Gravity - x : " + motion.accelerationIncludingGravity.x + "\n";
+        wOutput.innerText += "Acceleration Including Gravity - y : " + motion.accelerationIncludingGravity.y + "\n";
+        wOutput.innerText += "Acceleration Including Gravity - z : " + motion.accelerationIncludingGravity.z + "\n";
+
+        wOutput.innerText += "TimeStamp : " + motion.timeStamp + "\n";
+      }
+
+      init3();
+    </script>
     <div id="DeviceOrientation"></div>
     <script>
     
       function init2() {
 
         if (window.DeviceOrientationEvent) {
-          window.addEventListener("deviceorientation", showOrientation);
+
+          if (typeof DeviceOrientationEvent.requestPermission === 'function') {
+            // iOS 13+
+            DeviceOrientationEvent.requestPermission()
+              .then(response => {
+                if (response == 'granted') {
+                  window.addEventListener('deviceorientation', showOrientation)
+                }
+              })
+              .catch(console.error)
+          } else {
+            window.addEventListener("deviceorientation", showOrientation);
+          }
+
         } else {
           alert("Sorry, your browser doesn't support Device Orientation");
-        }
-        
+        }        
       }
       
       function showOrientation(orientation) {
