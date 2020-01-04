@@ -27,6 +27,10 @@
     </canvas>
     <script>
       
+      function handleError(iError) {
+        alert(iError);
+      }
+
       function deviceOrientationListener(event) {
         var c = document.getElementById("myCanvas");
         var ctx = c.getContext("2d");
@@ -63,7 +67,7 @@
                   window.addEventListener('deviceorientation', deviceOrientationListener)
                 }
               })
-              .catch(console.error)
+              .catch(handleError)
           } else {
             window.addEventListener("deviceorientation", deviceOrientationListener);
           }
@@ -89,7 +93,7 @@
                   window.addEventListener('devicemotion', showMotion)
                 }
               })
-              .catch(console.error)
+              .catch(handleError)
           } else {
             window.addEventListener("devicemotion", showMotion);
           }
@@ -136,7 +140,7 @@
                   window.addEventListener('deviceorientation', showOrientation)
                 }
               })
-              .catch(console.error)
+              .catch(handleError)
           } else {
             window.addEventListener("deviceorientation", showOrientation);
           }
