@@ -1,0 +1,296 @@
+<html>
+<head>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
+  <title>Head Up Display</title>
+  <script type="text/javascript" src="../../global/frame.js"></script>
+  <script src="JavaScript\Instruments.js"></script>
+  <style>
+    body {
+      background: rgb(0,0,0);
+      margin: 0;
+      padding: 0;
+    }
+    
+    #id_plotArea_div {
+      width : 100vw;
+      height : 100vh;
+      z-index : -10;
+      position : fixed;
+      top : 0px;
+      left : 0px;
+    }
+
+  </style>
+    <script type="text/javascript">
+
+        function normalizeAngle_Sign180deg(iAngle) {
+          var wAngle = iAngle;
+          while(wAngle > 180) {
+            wAngle -= 360;
+          }
+          
+          while(wAngle < -180) {
+            wAngle += 360;
+          }
+          return wAngle;
+        }
+
+        var gGlobal = {
+          OuputCanvas_Id : "id_output_canvas",
+          ScreenOrientation : 0,
+        }
+
+        var wArtificalHorizon;
+
+        var wAltitudeWheel;
+        var wSpeedWheel;
+
+        var wRollTargetPosition = 0;
+        var wPitchTargetPosition = 0;
+        var wYawTargetPosition = 0;
+        var wAltitudeTargetPosition = 0;
+        var wSpeedTargetPosition = 0;
+        var wVelAzPosition = 0;
+        var wVelElPosition = 0;
+
+        function init() {
+
+            reboot();
+            var wDeltaTime = 100;
+            setInterval(interation, wDeltaTime, false);
+
+            resize();
+        }
+
+        function resize() {
+          var wCanvas = document.getElementById(gGlobal.OuputCanvas_Id);
+          if(null != wCanvas) {
+            wCanvas.height = wCanvas.parentElement.clientHeight;
+            wCanvas.width = wCanvas.parentElement.clientWidth;
+          }
+        }
+
+        function reboot() {
+
+          wArtificalHorizon = new ArtificialHorizon();
+
+          wAltitudeWheel = new Wheel();
+          wAltitudeWheel.mIsPerpendicular = false;
+          wAltitudeWheel.mIsVertical = true;
+          wAltitudeWheel.mWheelViewAngle = Math.PI;
+          wAltitudeWheel.mWheelRadius = 50;
+          wAltitudeWheel.drawMajorTic = drawNumberedDash;
+          wAltitudeWheel.mWheelAngle = 3*Math.PI / 4;
+          wAltitudeWheel.mValueScale = 1000 /(10*Math.PI/180);
+
+          wSpeedWheel = new Wheel();
+          wSpeedWheel.mIsPerpendicular = false;
+          wSpeedWheel.mIsVertical = true;
+          wSpeedWheel.mWheelViewAngle = Math.PI;
+          wSpeedWheel.mWheelRadius = 50;
+          wSpeedWheel.mWheelAngle = 3*Math.PI / 4;
+        }
+
+        function interation() {
+
+            
+            var wCanvas = document.getElementById(gGlobal.OuputCanvas_Id);
+            var ctx = wCanvas.getContext("2d");
+            ctx.clearRect(0, 0, wCanvas.width, wCanvas.height);
+            ctx.strokeStyle = "red";
+            ctx.fillStyle = "lime";
+
+            var wHorizonX = wCanvas.width/2;
+            var wHorizonY = wCanvas.height/2;
+            
+            var wAltitudeX = wCanvas.width - (wAltitudeWheel.mWheelRadius + 100);
+            var wAltitudeY = wAltitudeWheel.mWheelRadius + 100;
+
+            var wSpeedX = wSpeedWheel.mWheelRadius + 100;
+            var wSpeedY = wSpeedWheel.mWheelRadius + 100;
+
+
+            wArtificalHorizon.processTime(0.8);
+            wArtificalHorizon.requestPosition(wRollTargetPosition, wPitchTargetPosition, wYawTargetPosition, wVelAzPosition, wVelElPosition);
+            wAltitudeWheel.mWheelPosition += 0.5 * (wAltitudeTargetPosition - wAltitudeWheel.mWheelPosition);
+            wSpeedWheel.mWheelPosition += 0.5 * (wSpeedTargetPosition - wSpeedWheel.mWheelPosition);
+
+
+
+            wArtificalHorizon.drawArtificialHorizon(ctx, wHorizonX, wHorizonY);
+            wSpeedWheel.drawWheel(ctx, wSpeedX, wSpeedY);
+            wAltitudeWheel.drawWheel(ctx, wAltitudeX, wAltitudeY);
+        }
+
+        function ActivateGyro() {
+          if (window.DeviceOrientationEvent) {
+
+            if (typeof DeviceOrientationEvent.requestPermission === 'function') {
+              // iOS 13+
+              DeviceOrientationEvent.requestPermission()
+                .then(response => {
+                  if (response == 'granted') {
+                    window.addEventListener('deviceorientation', updateOrientation);
+                  }
+                  else {
+                    alert("Device Orientation Denied");
+                  }
+                })
+                .catch(handleError)
+            } else {
+              window.addEventListener("deviceorientation", updateOrientation);
+            }
+
+          } else {
+            alert("Sorry, your browser doesn't support Device Orientation");
+          } 
+
+
+          if (window.DeviceMotionEvent) {
+
+            if (typeof DeviceMotionEvent.requestPermission === 'function') {
+              // iOS 13+
+              DeviceMotionEvent.requestPermission()
+                .then(response => {
+                  if (response == 'granted') {
+                    window.addEventListener('devicemotion', updateMotion);
+                  }
+                  else {
+                    alert("Device Motion Denied");
+                  }
+                })
+                .catch(handleError)
+            } else {
+              window.addEventListener("devicemotion", updateMotion);
+            }
+
+          } else {
+            alert("Sorry, your browser doesn't support Device Motion");
+          }
+
+          
+          options = {
+            enableHighAccuracy: true,
+            timeout: 500,
+            maximumAge: 0
+          };
+
+          if (navigator.geolocation) {
+            navigator.geolocation.watchPosition(updateGPS, error, options);
+          } else {
+            wOutput.innerText = "Geolocation is not supported by this browser.";
+          }
+        }
+
+        function updateOrientation(iOrientation) {
+          var wHeading = iOrientation.alpha;
+          if (iOrientation.webkitCompassHeading != undefined) {
+            wHeading = iOrientation.webkitCompassHeading;
+          }
+
+          wYawTargetPosition = - normalizeAngle_Sign180deg(wHeading);
+
+        }
+
+        function updateMotion(iMotion) {
+          var wGravityVector = {
+            x : iMotion.accelerationIncludingGravity.x  - iMotion.acceleration.x,
+            y : iMotion.accelerationIncludingGravity.y  - iMotion.acceleration.y,
+            z : iMotion.accelerationIncludingGravity.z  - iMotion.acceleration.z,
+          }
+          
+          var wMagnitude = Math.sqrt(wGravityVector.x*wGravityVector.x
+                                   + wGravityVector.y*wGravityVector.y
+                                   + wGravityVector.z*wGravityVector.z);
+          
+          var wPitch = Math.asin(wGravityVector.z/ wMagnitude);
+          wPitch *= 180/Math.PI;
+          wPitch *= -1;
+
+          var wRoll = Math.atan2(wGravityVector.x, wGravityVector.y);
+          wRoll *= 180/Math.PI;
+          wRoll *= -1;
+          wRoll += screen.orientation.angle;
+
+          screen.orientation.angle
+          //screen.orientation.type
+
+          wPitchTargetPosition = normalizeAngle_Sign180deg(wPitch);
+          wRollTargetPosition = normalizeAngle_Sign180deg(wRoll);
+
+        }
+        
+
+        function updateGPS(iPosition) {
+          
+          if (null != iPosition.coords.altitude) {
+            wAltitudeTargetPosition = position.coords.altitude;
+          }
+          
+          if (null != iPosition.coords.speed) {
+            wSpeedTargetPosition = position.coords.speed;
+          }
+
+            
+          /*
+          var wOutput = document.getElementById("GeoPosition");
+          wOutput.innerText = "";
+          wOutput.innerText += "Latitude : " + position.coords.latitude + "\n";
+          wOutput.innerText += "Longitude : " + position.coords.longitude + "\n";
+          wOutput.innerText += "Altitude : " + position.coords.altitude + "\n";
+          wOutput.innerText += "Accuracy : " + position.coords.accuracy + "\n";
+          wOutput.innerText += "Altitude Accuracy : " + position.coords.altitudeAccuracy + "\n";
+          wOutput.innerText += "Heading : " + position.coords.heading + "\n";
+          wOutput.innerText += "Speed : " + position.coords.speed + "\n";
+        
+          wOutput.innerText += "TimeStamp : " + position.timestamp + "\n";
+          */
+        }
+
+        function updateRange(iIndex, iValue) {
+          if (iIndex == 0)
+          {
+            wRollTargetPosition = 180 * iValue / 100;
+          }
+          if (iIndex == 1) {
+            wPitchTargetPosition = 180 * iValue / 100;
+          }
+          if (iIndex == 2) {
+            wYawTargetPosition = 180 * iValue / 100;
+          }
+          if (iIndex == 3) {
+            wVelAzPosition = 180 * iValue / 100;
+          }
+          if (iIndex == 4) {
+            wVelElPosition = 180 * iValue / 100;
+          }
+          if (iIndex == 5) {
+            wAltitudeTargetPosition = iValue;
+          }
+          if (iIndex == 6) {
+            wSpeedTargetPosition = iValue;
+          }
+        }
+
+    </script>
+</head>
+<body onload="init()" onresize="resize()">
+  <!--
+  <div>
+      <span>Entity Count:</span><input id="EntityCount" type="number" /></br>
+      <input type="button" value="Refresh" onclick="reboot()" /></br>
+      <input type="range" id="Range0" value="0.0" min="-100" max="100" oninput="updateRange(0, this.value)" onchange="updateRange(0, this.value)"/>
+      <input type="range" id="Range1" value="0.0" min="-100" max="100" oninput="updateRange(1, this.value)" onchange="updateRange(1, this.value)"/>
+      <input type="range" id="Range2" value="0.0" min="-100" max="100" oninput="updateRange(2, this.value)" onchange="updateRange(2, this.value)"/>
+      <input type="range" id="Range3" value="0.0" min="-100" max="100" oninput="updateRange(3, this.value)" onchange="updateRange(3, this.value)" />
+      <input type="range" id="Range4" value="0.0" min="-100" max="100" oninput="updateRange(4, this.value)" onchange="updateRange(4, this.value)" />
+      <input type="range" id="Range5" value="0.0" min="-100" max="100" oninput="updateRange(5, this.value)" onchange="updateRange(5, this.value)" />
+      <input type="range" id="Range6" value="0.0" min="-100" max="100" oninput="updateRange(6, this.value)" onchange="updateRange(6, this.value)" />
+  </div>
+-->
+  <input type="button" value="Activate" onclick="ActivateGyro()" /></br>
+  <div id="id_plotArea_div">
+      <canvas id="id_output_canvas"></canvas>
+  </div>
+</body>
+</html>

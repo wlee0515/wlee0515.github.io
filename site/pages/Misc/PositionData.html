@@ -4,81 +4,8 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
     <TITLE>Position Data Demo</TITLE>
     <script type="text/javascript" src="../../global/frame.js"></script>
-    <script>
-
-      /*
-      const sensor = new AbsoluteOrientationSensor();
-      Promise.all([navigator.permissions.query({ name: "accelerometer" }),
-      navigator.permissions.query({ name: "magnetometer" }),
-      navigator.permissions.query({ name: "gyroscope" })])
-        .then(results => {
-          if (results.every(result => result.state === "granted")) {
-            sensor.start();
-           // ...
-          } else {
-            alert("No permissions to use AbsoluteOrientationSensor.");
-          }
-      });
-      */
-    </script>
   </HEAD>
   <body>
-    <!--
-    <canvas id="myCanvas" width="360" height="450" style="border:1px solid #d3d3d3;">
-    </canvas>
-    <script>
-      
-      function handleError(iError) {
-        alert(iError);
-      }
-
-      function deviceOrientationListener(event) {
-        var c = document.getElementById("myCanvas");
-        var ctx = c.getContext("2d");
-
-        ctx.clearRect(0, 0, c.width, c.height);
-        ctx.fillStyle = "#FF7777";
-        ctx.font = "14px Verdana";
-        ctx.fillText("Alpha: " + Math.round(event.alpha), 10, 20);
-        ctx.beginPath();
-        ctx.moveTo(180, 75);
-        ctx.lineTo(210, 75);
-        ctx.arc(180, 75, 60, 0, event.alpha * Math.PI / 180);
-        ctx.fill();
-
-        ctx.fillStyle = "#FF6600";
-        ctx.fillText("Beta: " + Math.round(event.beta), 10, 140);
-        ctx.beginPath();
-        ctx.fillRect(180, 150, event.beta, 90);
-
-        ctx.fillStyle = "#FF0000";
-        ctx.fillText("Gamma: " + Math.round(event.gamma), 10, 270);
-        ctx.beginPath();
-        ctx.fillRect(90, 340, 180, event.gamma);
-      }
-
-
-      if (window.DeviceOrientationEvent) {
-
-          if (typeof DeviceOrientationEvent.requestPermission === 'function') {
-            // iOS 13+
-            DeviceOrientationEvent.requestPermission()
-              .then(response => {
-                if (response == 'granted') {
-                  window.addEventListener('deviceorientation', deviceOrientationListener)
-                }
-              })
-              .catch(handleError)
-          } else {
-            window.addEventListener("deviceorientation", deviceOrientationListener);
-          }
-
-      } else {
-        alert("Sorry, your browser doesn't support Device Orientation");
-      }
-
-    </script>
-    -->
     <h3>Device Motion Capture</h3>
     <button onclick="init3()">Activate</button>
     <div id="DeviceMotion"></div>
