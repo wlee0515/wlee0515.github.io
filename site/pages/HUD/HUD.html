@@ -207,6 +207,15 @@
               Y
               |
               Z--X 
+              Chrome Orientation
+              Z--X
+              |
+              Y
+              Edge Orientation
+              Y
+              |
+              Z--X 
+
           */
 
           var wDeviceGravityVector = {
@@ -215,6 +224,12 @@
             z : iMotion.accelerationIncludingGravity.z  - iMotion.acceleration.z,
           }
           
+          // Is Chrome
+          if (null != window.chrome) {
+            wDeviceGravityVector.y *= -1;
+            wDeviceGravityVector.z *= -1;
+          }
+
           var wScreenOrientation = 0;
           if (null != screen.orientation) {
             if (null != screen.orientation.angle) {
@@ -253,6 +268,7 @@
           }
           
           var wRoll = Math.atan2(wScreenGravityVector.x, wScreenGravityVector.y);
+          wRoll -= Math.PI;
 
           var wCosRoll = Math.cos(wRoll);
           var wSinRoll = Math.sin(wRoll);
@@ -264,12 +280,13 @@
           }
 
           var wPitch = Math.atan2(wRollCorrectedGravityVector.z, wRollCorrectedGravityVector.y);
+          wPitch -= Math.PI;
+          wPitch *= -1;
 
           wRoll *= 180/Math.PI;
           wRollTargetPosition = normalizeAngle_Sign180deg(wRoll);
 
           wPitch *= 180/Math.PI;
-          wPitch = 0;
           wPitchTargetPosition = normalizeAngle_Sign180deg(wPitch);
 
         }
