@@ -189,7 +189,7 @@
         function updateOrientation(iOrientation) {
           var wHeading = iOrientation.alpha;
           if (iOrientation.webkitCompassHeading != undefined) {
-            wHeading = iOrientation.webkitCompassHeading;
+            wHeading = -iOrientation.webkitCompassHeading;
           }
 
           wYawTargetPosition = - normalizeAngle_Sign180deg(wHeading);
@@ -208,7 +208,6 @@
           
           var wPitch = Math.atan(wGravityVector.z/ wXYMagnitude);
           wPitch *= 180/Math.PI;
-          wPitch *= -1;
 
           var wRoll = Math.atan(wGravityVector.x/ wGravityVector.y);
           wRoll *= 180/Math.PI;
