@@ -35,6 +35,10 @@
           return wAngle;
         }
 
+        function handleError(iError) {
+          alert(iError);
+        }
+
         var gGlobal = {
           OuputCanvas_Id : "id_output_canvas",
           ScreenOrientation : 0,
@@ -176,7 +180,7 @@
           };
 
           if (navigator.geolocation) {
-            navigator.geolocation.watchPosition(updateGPS, error, options);
+            navigator.geolocation.watchPosition(updateGPS, handleError, options);
           } else {
             wOutput.innerText = "Geolocation is not supported by this browser.";
           }
@@ -199,11 +203,10 @@
             z : iMotion.accelerationIncludingGravity.z  - iMotion.acceleration.z,
           }
           
-          var wMagnitude = Math.sqrt(wGravityVector.x*wGravityVector.x
-                                   + wGravityVector.y*wGravityVector.y
-                                   + wGravityVector.z*wGravityVector.z);
+          var wXYMagnitude = Math.sqrt(wGravityVector.x*wGravityVector.x
+                                   + wGravityVector.y*wGravityVector.y);
           
-          var wPitch = Math.asin(wGravityVector.z/ wMagnitude);
+          var wPitch = Math.atan2(wGravityVector.z, wXYMagnitude);
           wPitch *= 180/Math.PI;
           wPitch *= -1;
 
