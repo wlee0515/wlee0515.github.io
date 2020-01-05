@@ -230,12 +230,18 @@
           var wRoll = Math.atan(wGravityVector.x/ wGravityVector.y);
           wRoll *= 180/Math.PI;
           wRoll *= -1;
+          
+          var wOrientation = 0;
           if (null != screen.orientation) {
             if (null != screen.orientation.angle) {
-              wRoll += screen.orientation.angle;
+              wOrientation = screen.orientation.angle;
             }
           }
+          else if (null != window.orientation) {
+            wOrientation = window.orientation;
+          }
 
+          wRoll += wOrientation;
           //screen.orientation.angle
           //screen.orientation.type
 
