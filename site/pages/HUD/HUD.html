@@ -3,7 +3,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
   <title>Head Up Display</title>
   <script type="text/javascript" src="../../global/frame.js"></script>
-  <script src="./javaScript\Instruments.js"></script>
+  <script src="./javaScript/Instruments.js"></script>
   <style>
     body {
       background: rgb(0,0,0);
@@ -210,9 +210,13 @@
           var wRoll = Math.atan2(wGravityVector.x, wGravityVector.y);
           wRoll *= 180/Math.PI;
           wRoll *= -1;
-          wRoll += screen.orientation.angle;
+          if (null != screen.orientation) {
+            if (null != screen.orientation.angle) {
+              wRoll += screen.orientation.angle;
+            }
+          }
 
-          screen.orientation.angle
+          //screen.orientation.angle
           //screen.orientation.type
 
           wPitchTargetPosition = normalizeAngle_Sign180deg(wPitch);
