@@ -226,6 +226,7 @@
           
           // Is Chrome
           if (null != window.chrome) {
+            wDeviceGravityVector.x *= -1;
             wDeviceGravityVector.y *= -1;
             wDeviceGravityVector.z *= -1;
           }
@@ -269,6 +270,7 @@
           
           var wRoll = Math.atan2(wScreenGravityVector.x, wScreenGravityVector.y);
           wRoll -= Math.PI;
+          wRoll *= -1;
 
           var wCosRoll = Math.cos(wRoll);
           var wSinRoll = Math.sin(wRoll);
