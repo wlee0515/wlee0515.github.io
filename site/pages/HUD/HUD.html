@@ -203,47 +203,68 @@
         }
 
         function updateMotion(iMotion) {
-          var wGravityVector = {
+          var wDeviceGravityVector = {
             x : iMotion.accelerationIncludingGravity.x  - iMotion.acceleration.x,
             y : iMotion.accelerationIncludingGravity.y  - iMotion.acceleration.y,
             z : iMotion.accelerationIncludingGravity.z  - iMotion.acceleration.z,
           }
           
-          var wXYMagnitude = Math.sqrt(wGravityVector.x*wGravityVector.x
-                                   + wGravityVector.y*wGravityVector.y);
+          var wScreenOrientation = 0;
+          if (null != screen.orientation) {
+            if (null != screen.orientation.angle) {
+              wScreenOrientation = screen.orientation.angle;
+            }
+          }
+          else if (null != window.orientation) {
+            wScreenOrientation = window.orientation;
+          }
+
+          // rotate Gravity vector accordingly
+          var wScreenGravityVector = {
+            x : wDeviceGravityVector.x,
+            y : wDeviceGravityVector.y,
+            z : wDeviceGravityVector.z,
+          }
+
+          switch(wScreenOrientation) {
+            case 0:
+              break;
+            case 90:
+              wScreenGravityVector.x = -wDeviceGravityVector.y;
+              wScreenGravityVector.y = wDeviceGravityVector.x;
+              break;
+            case 180:
+              wScreenGravityVector.x = -wDeviceGravityVector.x;
+              wScreenGravityVector.y = -wDeviceGravityVector.y;
+              break;
+            case 270:
+              wScreenGravityVector.x = wDeviceGravityVector.y;
+              wScreenGravityVector.y = -wDeviceGravityVector.x;
+              break;
+          }
+          
+
+          var wXYMagnitude = Math.sqrt(wScreenGravityVector.x*wScreenGravityVector.x
+                                   + wScreenGravityVector.y*wScreenGravityVector.y);
           
           // Need to keep signs because Edge and Chrome has different sign conventions for acceleration Chrome = -1 *Edge             
-          if (wGravityVector.x > wGravityVector.y) {
-            if (0 < wGravityVector.x) {
+          if (wScreenGravityVector.x > wScreenGravityVector.y) {
+            if (0 < wScreenGravityVector.x) {
               wXYMagnitude *= -1;
             }
           }
           else {
-            if (0 < wGravityVector.y) {
+            if (0 < wScreenGravityVector.y) {
               wXYMagnitude *= -1;
             }
           }
 
-          var wPitch = Math.atan(wGravityVector.z/ wXYMagnitude);
+          var wPitch = Math.atan2(wScreenGravityVector.z, wXYMagnitude);
           wPitch *= 180/Math.PI;
 
-          var wRoll = Math.atan(wGravityVector.x/ wGravityVector.y);
+          var wRoll = Math.atan(wScreenGravityVector.x/ wScreenGravityVector.y);
           wRoll *= 180/Math.PI;
           wRoll *= -1;
-          
-          var wOrientation = 0;
-          if (null != screen.orientation) {
-            if (null != screen.orientation.angle) {
-              wOrientation = screen.orientation.angle;
-            }
-          }
-          else if (null != window.orientation) {
-            wOrientation = window.orientation;
-          }
-
-          wRoll += wOrientation;
-          //screen.orientation.angle
-          //screen.orientation.type
 
           wPitchTargetPosition = normalizeAngle_Sign180deg(wPitch);
           wRollTargetPosition = normalizeAngle_Sign180deg(wRoll);
