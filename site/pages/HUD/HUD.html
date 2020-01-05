@@ -224,11 +224,11 @@
         function updateGPS(iPosition) {
           
           if (null != iPosition.coords.altitude) {
-            wAltitudeTargetPosition = position.coords.altitude;
+            wAltitudeTargetPosition = iPosition.coords.altitude;
           }
           
           if (null != iPosition.coords.speed) {
-            wSpeedTargetPosition = position.coords.speed;
+            wSpeedTargetPosition = iPosition.coords.speed;
           }
 
             
