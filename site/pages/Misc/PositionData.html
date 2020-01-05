@@ -169,6 +169,13 @@
         wOutput.innerText += "Gamma : " + orientation.gamma + "\n";
         wOutput.innerText += "Absolute : " + orientation.absolute + "\n";
         wOutput.innerText += "TimeStamp : " + orientation.timeStamp + "\n";
+
+        if (orientation.webkitCompassHeading != undefined) {
+          wOutput.innerText += "Compass Heading : " + orientation.webkitCompassHeading + "\n";
+        }
+        if (orientation.webkitCompassAccuracy != undefined) {
+          wOutput.innerText += "Compass Heading accuracy : " + orientation.webkitCompassAccuracy + "\n";
+        }
       }
 
     </script>
