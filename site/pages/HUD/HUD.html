@@ -184,6 +184,12 @@
           } else {
             wOutput.innerText = "Geolocation is not supported by this browser.";
           }
+
+          
+          window.addEventListener("orientationchange", function() {
+           alert("the orientation of the device is now " + screen.orientation.angle);
+          });
+
         }
 
         function updateOrientation(iOrientation) {
@@ -217,7 +223,7 @@
               wXYMagnitude *= -1;
             }
           }
-          
+
           var wPitch = Math.atan(wGravityVector.z/ wXYMagnitude);
           wPitch *= 180/Math.PI;
 
