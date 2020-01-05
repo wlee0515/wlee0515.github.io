@@ -266,11 +266,9 @@
           var wPitch = Math.atan2(wRollCorrectedGravityVector.z, wRollCorrectedGravityVector.y);
 
           wRoll *= 180/Math.PI;
-          wRoll *= -1;
           wRollTargetPosition = normalizeAngle_Sign180deg(wRoll);
 
           wPitch *= 180/Math.PI;
-          wPitch *= -1;
           wPitchTargetPosition = normalizeAngle_Sign180deg(wPitch);
 
         }
