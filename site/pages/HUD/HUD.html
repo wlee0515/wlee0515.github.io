@@ -203,6 +203,12 @@
         }
 
         function updateMotion(iMotion) {
+          /* iPhone Orientation
+              Y
+              |
+              Z--X 
+          */
+
           var wDeviceGravityVector = {
             x : iMotion.accelerationIncludingGravity.x  - iMotion.acceleration.x,
             y : iMotion.accelerationIncludingGravity.y  - iMotion.acceleration.y,
@@ -230,44 +236,42 @@
             case 0:
               break;
             case 90:
+            case -270:
               wScreenGravityVector.x = -wDeviceGravityVector.y;
               wScreenGravityVector.y = wDeviceGravityVector.x;
               break;
             case 180:
+            case -180:
               wScreenGravityVector.x = -wDeviceGravityVector.x;
               wScreenGravityVector.y = -wDeviceGravityVector.y;
               break;
+            case -90:
             case 270:
               wScreenGravityVector.x = wDeviceGravityVector.y;
               wScreenGravityVector.y = -wDeviceGravityVector.x;
               break;
           }
           
+          var wRoll = Math.atan2(wScreenGravityVector.x, wScreenGravityVector.y);
 
-          var wXYMagnitude = Math.sqrt(wScreenGravityVector.x*wScreenGravityVector.x
-                                   + wScreenGravityVector.y*wScreenGravityVector.y);
-          
-          // Need to keep signs because Edge and Chrome has different sign conventions for acceleration Chrome = -1 *Edge             
-          if (wScreenGravityVector.x > wScreenGravityVector.y) {
-            if (0 < wScreenGravityVector.x) {
-              wXYMagnitude *= -1;
-            }
-          }
-          else {
-            if (0 < wScreenGravityVector.y) {
-              wXYMagnitude *= -1;
-            }
+          var wCosRoll = Math.cos(wRoll);
+          var wSinRoll = Math.sin(wRoll);
+
+          var wRollCorrectedGravityVector = {
+            x : wScreenGravityVector.x*wCosRoll - wScreenGravityVector.y*wSinRoll,
+            y : wScreenGravityVector.x*wSinRoll + wScreenGravityVector.y*wCosRoll,
+            z : wScreenGravityVector.z,
           }
 
-          var wPitch = Math.atan2(wScreenGravityVector.z, wXYMagnitude);
-          wPitch *= 180/Math.PI;
+          var wPitch = Math.atan2(wRollCorrectedGravityVector.z, wRollCorrectedGravityVector.y);
 
-          var wRoll = Math.atan(wScreenGravityVector.x/ wScreenGravityVector.y);
           wRoll *= 180/Math.PI;
           wRoll *= -1;
-
-          wPitchTargetPosition = normalizeAngle_Sign180deg(wPitch);
           wRollTargetPosition = normalizeAngle_Sign180deg(wRoll);
+
+          wPitch *= 180/Math.PI;
+          wPitch *= -1;
+          wPitchTargetPosition = normalizeAngle_Sign180deg(wPitch);
 
         }
         
