@@ -206,6 +206,18 @@
           var wXYMagnitude = Math.sqrt(wGravityVector.x*wGravityVector.x
                                    + wGravityVector.y*wGravityVector.y);
           
+          // Need to keep signs because Edge and Chrome has different sign conventions for acceleration Chrome = -1 *Edge             
+          if (wGravityVector.x > wGravityVector.y) {
+            if (0 < wGravityVector.x) {
+              wXYMagnitude *= -1;
+            }
+          }
+          else {
+            if (0 < wGravityVector.y) {
+              wXYMagnitude *= -1;
+            }
+          }
+          
           var wPitch = Math.atan(wGravityVector.z/ wXYMagnitude);
           wPitch *= 180/Math.PI;
 
