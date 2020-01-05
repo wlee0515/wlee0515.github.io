@@ -3,7 +3,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
   <title>Head Up Display</title>
   <script type="text/javascript" src="../../global/frame.js"></script>
-  <script src="./javaScript/Instruments.js"></script>
+  <script src="./javascript/Instruments.js"></script>
   <style>
     body {
       background: rgb(0,0,0);
@@ -206,11 +206,11 @@
           var wXYMagnitude = Math.sqrt(wGravityVector.x*wGravityVector.x
                                    + wGravityVector.y*wGravityVector.y);
           
-          var wPitch = Math.atan2(wGravityVector.z, wXYMagnitude);
+          var wPitch = Math.atan(wGravityVector.z/ wXYMagnitude);
           wPitch *= 180/Math.PI;
           wPitch *= -1;
 
-          var wRoll = Math.atan2(wGravityVector.x, wGravityVector.y);
+          var wRoll = Math.atan(wGravityVector.x/ wGravityVector.y);
           wRoll *= 180/Math.PI;
           wRoll *= -1;
           if (null != screen.orientation) {
