@@ -178,8 +178,8 @@
     }
 
     function Init() {
-      updateStream_FacingMode();
       Camera.getCameraList().then(updateDeviceSelector).catch(handleError);
+      updateStream_FacingMode();
       renderCanvas();
 
       Resize();
