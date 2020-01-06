@@ -4,6 +4,9 @@
   <title>Head Up Display</title>
   <script type="text/javascript" src="../../global/frame.js"></script>
   <script src="./javascript/Instruments.js"></script>
+  <script src="../../javascript/Camera.js"></script>  
+  <script src="../../javascript/commonCanvasFunction.js"></script>  
+  
   <style>
     body {
       background: rgb(0,0,0);
@@ -20,6 +23,21 @@
       left : 0px;
     }
 
+    #id_video_div {
+      /* Video DOM for the camera screen must be visible for the stream to be updated in safari */
+      /* If hidden from user, the canvas will not be able to capture the camera picture */
+      /* The video is position fixed to the viewpoint to prevent it from falling off screen */
+      /* The dimensions of the video needs to be greater than 2px */
+      /* The opacity of the video may be set to 0 to be invisible on screen */
+      width: 100vw;
+      height: 100vh;
+      position: fixed;
+      top: 0px;
+      left: 0px;
+      overflow: hidden;
+      opacity: 0.0;
+      z-index : 0;
+    }
   </style>
     <script type="text/javascript">
 
@@ -41,7 +59,12 @@
 
         var gGlobal = {
           OuputCanvas_Id : "id_output_canvas",
-          ScreenOrientation : 0,
+          ScreenOrientation : 0,        
+          OutputVideoDivId : "id_video_div", 
+          CameraOn : false,
+          CurrentCameraStream : null,
+          OutputCanvasId : "id_OutputCanvas",
+          InternalCanvasDOM : null
         }
 
         var wArtificalHorizon;
@@ -85,7 +108,7 @@
           wAltitudeWheel.mWheelRadius = 50;
           wAltitudeWheel.drawMajorTic = drawNumberedDash;
           wAltitudeWheel.mWheelAngle = 3*Math.PI / 4;
-          wAltitudeWheel.mValueScale = 1000 /(10*Math.PI/180);
+          wAltitudeWheel.mValueScale = 1 /(10*Math.PI/180);
 
           wSpeedWheel = new Wheel();
           wSpeedWheel.mIsPerpendicular = false;
@@ -97,33 +120,50 @@
 
         function interation() {
 
-            
-            var wCanvas = document.getElementById(gGlobal.OuputCanvas_Id);
-            var ctx = wCanvas.getContext("2d");
-            ctx.clearRect(0, 0, wCanvas.width, wCanvas.height);
-            ctx.strokeStyle = "red";
-            ctx.fillStyle = "lime";
+          var wCanvas = document.getElementById(gGlobal.OuputCanvas_Id);
+          var ctx = wCanvas.getContext("2d");
+          ctx.clearRect(0, 0, wCanvas.width, wCanvas.height);
 
-            var wHorizonX = wCanvas.width/2;
-            var wHorizonY = wCanvas.height/2;
-            
-            var wAltitudeX = wCanvas.width - (wAltitudeWheel.mWheelRadius + 100);
-            var wAltitudeY = wAltitudeWheel.mWheelRadius + 100;
+          if (true == gGlobal.CameraOn) {
 
-            var wSpeedX = wSpeedWheel.mWheelRadius + 100;
-            var wSpeedY = wSpeedWheel.mWheelRadius + 100;
+            var wCameraDOM = document.getElementById(gGlobal.OutputCameraVideoId);
+            if (null == wCameraDOM) {
+
+              var wTempCanvasDOM = gGlobal.InternalCanvasDOM;
+              if (null == wTempCanvasDOM) {
+                wTempCanvasDOM = document.createElement('canvas');
+              }
+              
+              if (0 != wCameraDOM.videoWidth) {
+                putVideoInCanvas(wCameraDOM, wTempCanvasDOM);
+                stretchAndCenterCanvas(wTempCanvasDOM, wCanvas);
+              }
+            }
+          }
+
+          ctx.strokeStyle = "red";
+          ctx.fillStyle = "lime";
+
+          var wHorizonX = wCanvas.width / 2;
+          var wHorizonY = wCanvas.height / 2;
+
+          var wAltitudeX = wCanvas.width - (wAltitudeWheel.mWheelRadius + 100);
+          var wAltitudeY = wAltitudeWheel.mWheelRadius + 100;
+
+          var wSpeedX = wSpeedWheel.mWheelRadius + 100;
+          var wSpeedY = wSpeedWheel.mWheelRadius + 100;
 
 
-            wArtificalHorizon.processTime(0.8);
-            wArtificalHorizon.requestPosition(wRollTargetPosition, wPitchTargetPosition, wYawTargetPosition, wVelAzPosition, wVelElPosition);
-            wAltitudeWheel.mWheelPosition += 0.5 * (wAltitudeTargetPosition - wAltitudeWheel.mWheelPosition);
-            wSpeedWheel.mWheelPosition += 0.5 * (wSpeedTargetPosition - wSpeedWheel.mWheelPosition);
+          wArtificalHorizon.processTime(0.8);
+          wArtificalHorizon.requestPosition(wRollTargetPosition, wPitchTargetPosition, wYawTargetPosition, wVelAzPosition, wVelElPosition);
+          wAltitudeWheel.mWheelPosition += 0.5 * (wAltitudeTargetPosition - wAltitudeWheel.mWheelPosition);
+          wSpeedWheel.mWheelPosition += 0.5 * (wSpeedTargetPosition - wSpeedWheel.mWheelPosition);
 
 
 
-            wArtificalHorizon.drawArtificialHorizon(ctx, wHorizonX, wHorizonY);
-            wSpeedWheel.drawWheel(ctx, wSpeedX, wSpeedY);
-            wAltitudeWheel.drawWheel(ctx, wAltitudeX, wAltitudeY);
+          wArtificalHorizon.drawArtificialHorizon(ctx, wHorizonX, wHorizonY);
+          wSpeedWheel.drawWheel(ctx, wSpeedX, wSpeedY);
+          wAltitudeWheel.drawWheel(ctx, wAltitudeX, wAltitudeY);
         }
 
         function ActivateGyro() {
@@ -328,6 +368,41 @@
           */
         }
 
+        function changeCurrentStream(iNewStream) {
+        
+          var wCameraDOM = document.getElementById(gGlobal.OutputCameraVideoId);
+          if (null == wCameraDOM) {
+            var wVideoDivDom = document.getElementById(gGlobal.OutputVideoDivId);
+            if (null != wVideoDivDom) {
+              var wNewVideo = Camera.createLiveVideoDOM();
+              wNewVideo.id = gGlobal.OutputCameraVideoId;
+              wVideoDivDom.append(wNewVideo);
+              wCameraDOM = wNewVideo;
+            }
+          }
+        
+          if (null != wCameraDOM) {
+            Camera.setVideoDOMStream(wCameraDOM, iNewStream);
+          }
+        }
+
+        function ActivateCamera() {
+          
+          gGlobal.CameraOn = !gGlobal.CameraOn;
+
+          if (false == gGlobal.CameraOn) {
+
+            var wCameraDOM = document.getElementById(gGlobal.OutputCameraVideoId);
+            if (null == wCameraDOM) {
+              Camera.setVideoDOMStream(wCameraDOM, null);
+            }
+          }
+          else {
+            Camera.getStream_BackCamera().then(changeCurrentStream).catch(handleError);
+          }
+          
+        }
+
         function updateRange(iIndex, iValue) {
           if (iIndex == 0)
           {
@@ -369,7 +444,10 @@
       <input type="range" id="Range6" value="0.0" min="-100" max="100" oninput="updateRange(6, this.value)" onchange="updateRange(6, this.value)" />
   </div>
 -->
-  <input type="button" value="Activate" onclick="ActivateGyro()" /></br>
+  <input type="button" value="Activate Sensor" onclick="ActivateGyro()" /></br>
+  <input type="button" value="Camera" onclick="ActivateCamera()" /></br>
+  <div id="id_video_div">
+  </div>
   <div id="id_plotArea_div">
       <canvas id="id_output_canvas"></canvas>
   </div>
