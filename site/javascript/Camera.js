@@ -27,12 +27,6 @@ var Camera = {
   },
 
   getStream_BackCamera : function () {
-
-    const constraints = {
-      audio: false,
-      video: { facingMode: { exact: iDirection } }
-    };
-
     return Camera.getStreamByFacingMode("environment");
   },
 
@@ -50,9 +44,9 @@ var Camera = {
   
       // Loop through device list
       for (const wDeviceInfo of iDeviceList) {
-       // if (wDeviceInfo.kind === 'videoinput') {
+        if (wDeviceInfo.kind === 'videoinput') {
           wCameraList.push(wDeviceInfo);
-        //}
+        }
       }
 
       return wCameraList;

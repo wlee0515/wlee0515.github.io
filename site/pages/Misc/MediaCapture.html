@@ -69,7 +69,7 @@
       var wCameraSelector = document.getElementById(gGlobal.InputCameraSelectId);
       if (null != wCameraSelector) {
         // Loop through device list
-        for (const wDeviceInfo of wDeviceList) {
+        for (const wDeviceInfo of iCameraList) {
           var wOption = document.createElement("option");
           wOption.value = wDeviceInfo.deviceId;
           wOption.text = wDeviceInfo.label;
