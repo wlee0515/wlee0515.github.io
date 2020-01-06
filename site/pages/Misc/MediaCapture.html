@@ -3,118 +3,25 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
   <TITLE>Camera Capture Demo</TITLE>
   <script type="text/javascript" src="../../global/frame.js"></script>  
+  <script type="text/javascript" src="../../javascript/Camera.js"></script>  
   <!--
   <link rel="stylesheet" href="../../css/theme_01.css" />
   -->
 
   <script>
-
+    
     var gGlobal = {
       OutputVideoDivId : "id_video_div",
       OutputTextId : "id_TextOut_div",
-      InputCameraSelectId : "id_camera_selection",
+      InputFacingModeSelectId : "id_FacingMode_selection",
+      InputCameraSelectId : "id_Device_selection",
       OutputCameraVideoId : "id_OutputCameraVideo",
       CurrentCameraStream : null,
       OutputCanvasId : "id_OutputCanvas",
       InternalCanvasDOM : null
       }
 
-    function getStream(iConstraints) {
-      return navigator.mediaDevices.getUserMedia(iConstraints);
-    }
-
-    function getDeviceList() {
-      // Only works after "navigator.mediaDevices.getUserMedia(iConstraints)" is called
-      return navigator.mediaDevices.enumerateDevices();
-    }
-
-    function getDeviceStreamByDeviceId(iDeviceId) {
-
-      const constraints = {
-        audio: false,
-        video: { deviceId : {exact: iDeviceId} }
-      };
-
-      return getStream(constraints);
-    }
-    
-    function getDeviceStreamByFacingMode(iDirection) {
-
-      const constraints = {
-        audio: false,
-        video: { facingMode: {exact: iDirection}}
-      };
-
-      return getStream(constraints);
-    }
-
-    function createLiveVideoDOM() {
-      var wNewVideo = document.createElement('video');
-      wNewVideo.autoplay = true;
-      wNewVideo.setAttribute("muted",null);
-      wNewVideo.setAttribute("playsinline",null);    
-      return wNewVideo;
-    }
-
-    function setVideoDOMStream(iVideoDOM, iNewStream) {
-      if (null != iVideoDOM) {
-        if (null != iVideoDOM.srcObject) {
-          iVideoDOM.srcObject.getTracks().forEach(track => {track.stop();});
-        }
-        iVideoDOM.srcObject = iNewStream;
-      }
-    }
-
-    function loadDevices(iDeviceList) {
       
-      var wTextOut = document.getElementById(gGlobal.OutputTextId);
-      if (null != wTextOut) {
-        wTextOut.innerText += JSON.stringify(iDeviceList, null, 2);
-      }
-
-      //get Device List
-      var wDeviceList = iDeviceList;
-      var wDeviceInfoList_audio = [];
-      var wDeviceInfoList_video = [];
-      
-      // Loop through device list
-      for (const wDeviceInfo of wDeviceList) {
-        var wDevice = {
-          Kind : wDeviceInfo.kind,
-          Label : wDeviceInfo.label,
-          Id : wDeviceInfo.deviceId
-        }
-
-        if (wDeviceInfo.kind === 'audioinput') {
-          if ("" == wDevice.Label) {
-            wDevice.Label = 'Audio ' + (wDeviceInfoList_audio.length + 1);
-          }
-          wDeviceInfoList_audio.push(wDevice);
-        }
-        else if (wDeviceInfo.kind === 'videoinput') {
-          if ("" == wDevice.Label) {
-            wDevice.Label = 'Camera ' + (wDeviceInfoList_audio.length + 1);
-          }
-
-          wDeviceInfoList_video.push(wDevice);
-        }
-      }
-
-      for (var wi = 0; wi < wDeviceInfoList_video.length; ++wi) {
-        getDeviceStreamByDeviceId(wDeviceInfoList_video[wi].Id).then(processStream).catch(handleError);
-      }
-    }
-
-    function processStream(iNewStream) {
-
-      var wVideoDivDom = document.getElementById(gGlobal.OutputVideoDivId);
-      if (null != wVideoDivDom) {
-        var wNewVideo = createLiveVideoDOM();
-        wVideoDivDom.append(wNewVideo);
-        setVideoDOMStream(wNewVideo, iNewStream);
-      }
-    }
-
     function handleError(iError) {
       alert(iError);
     }
@@ -133,17 +40,45 @@
       }
 
       if (null != wCameraDOM) {
-        setVideoDOMStream(wCameraDOM, iNewStream);
+        Camera.setVideoDOMStream(wCameraDOM, iNewStream);
       }
+    }
+    
+    function updateStream_FacingMode() {
 
+      var wCameraSelector = document.getElementById(gGlobal.InputFacingModeSelectId);
+      if (null != wCameraSelector) {
+        var wCameraFacing = wCameraSelector.options[wCameraSelector.selectedIndex].value;
+        Camera.getStreamByFacingMode(wCameraFacing).then(changeCurrentStream).catch(handleError);
+      }
     }
 
-    function updateStream() {
+    function updateStream_DeviceId() {
 
       var wCameraSelector = document.getElementById(gGlobal.InputCameraSelectId);
       if (null != wCameraSelector) {
-        var wCameraFacing = wCameraSelector.options[wCameraSelector.selectedIndex].value;
-        getDeviceStreamByFacingMode(wCameraFacing).then(changeCurrentStream).catch(handleError);
+        var wDeviceId = wCameraSelector.options[wCameraSelector.selectedIndex].value;
+        if(null != wDeviceId) {
+          Camera.getStreamByDeviceId(wDeviceId).then(changeCurrentStream).catch(handleError);
+        }
+      }
+    }
+     
+    function updateDeviceSelector(iCameraList) {
+
+      var wCameraSelector = document.getElementById(gGlobal.InputCameraSelectId);
+      if (null != wCameraSelector) {
+        // Loop through device list
+        for (const wDeviceInfo of wDeviceList) {
+          var wOption = document.createElement("option");
+          wOption.value = wDeviceInfo.deviceId;
+          wOption.text = wDeviceInfo.label;
+          if ("" == wOption.text) {
+            wOption.text = "Camera " + wCameraSelector.length;
+          }
+          
+          wCameraSelector.appendChild(wOption);
+        }
       }
     }
 
@@ -243,7 +178,8 @@
     }
 
     function Init() {
-      updateStream();
+      updateStream_FacingMode();
+      Camera.getCameraList().then(updateDeviceSelector).catch(handleError);
       renderCanvas();
 
       Resize();
@@ -314,10 +250,11 @@
 </HEAD>
 <BODY onload="Init()" onresize ="Resize()">
   <div id="main-content-div">
-    <select id="id_camera_selection" onchange="updateStream()">
+    <select id="id_FacingMode_selection" onchange="updateStream_FacingMode()">
       <option value="user" selected="selected">Front Camera</option>
       <option value="environment">Back Camera</option>
     </select>
+    <select id="id_Device_selection" onchange="updateStream_DeviceId()"></select>
     <div id="id_video_div">
     </div>
     <div id="id_canavas_div">
