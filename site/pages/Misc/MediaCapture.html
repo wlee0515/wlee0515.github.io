@@ -132,7 +132,7 @@
       if((null != wCameraDOM) && (null != wCanvasDOM)) {
         if(0 != wCameraDOM.videoWidth) {
           
-          putVideoInCanvas(wCameraDOM, wTempCanvasDOM);
+          putVideoInCanvas(wCameraDOM, wTempCanvasDOM, true);
           applyCanvasFilter_InvertChecker(wTempCanvasDOM);
           stretchAndCenterCanvas(wTempCanvasDOM, wCanvasDOM);
           
