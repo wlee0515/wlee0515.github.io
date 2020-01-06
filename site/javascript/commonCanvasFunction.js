@@ -266,3 +266,40 @@ function drawNumberLine(iDOM, iStartX, iStartY, iEndX, iEndY, iRefX, iRefY, iRef
   wCtx.lineTo(iEndX, iEndY);
   wCtx.stroke();
 }
+
+function stretchAndCenterCanvas(iSourceCanvasDOM, iDestinationCanvasDOM) {
+  var wDestWidth = iDestinationCanvasDOM.width;
+  var wDestHeight = iDestinationCanvasDOM.height;
+
+  var wSrcHeight = iSourceCanvasDOM.height;
+  var wSrcWidth = iSourceCanvasDOM.width;
+  var wSrcTop = 0;
+  var wSrcLeft = 0;
+
+  var wScale = wDestHeight/wSrcHeight;
+  if (wScale*wSrcWidth < wDestWidth) {
+    wScale = wDestWidth/wSrcWidth;
+  }
+  wSrcHeight *= wScale;
+  wSrcWidth *= wScale;
+  wSrcTop = - (wSrcHeight - wDestHeight)/2;
+  wSrcLeft = - (wSrcWidth - wDestWidth)/2;
+
+  var wCtx = iDestinationCanvasDOM.getContext('2d');
+  wCtx.drawImage(iSourceCanvasDOM, wSrcLeft, wSrcTop, wSrcWidth, wSrcHeight);
+  
+}
+
+function putVideoInCanvas(iVideoDOM, iCanvasDOM, iResizeCanvas) {
+  if((null != iVideoDOM) && (null != iCanvasDOM)) {
+    var wVideoHeight = iVideoDOM.videoHeight;
+    var wVideoWidth = iVideoDOM.videoWidth;
+    if (true == iResizeCanvas) {
+      iCanvasDOM.height = wVideoHeight;
+      iCanvasDOM.width = wVideoWidth;  
+    }
+
+    var wCtx = iCanvasDOM.getContext('2d');
+    wCtx.drawImage(iVideoDOM, 0, 0, wVideoWidth, wVideoHeight);
+  }  
+}

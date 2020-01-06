@@ -4,6 +4,7 @@
   <TITLE>Camera Capture Demo</TITLE>
   <script type="text/javascript" src="../../global/frame.js"></script>  
   <script type="text/javascript" src="../../javascript/Camera.js"></script>  
+  <script type="text/javascript" src="../../javascript/commonCanvasFunction.js"></script>  
   <!--
   <link rel="stylesheet" href="../../css/theme_01.css" />
   -->
@@ -82,18 +83,6 @@
       }
     }
 
-    function putVideoInCanvas(iVideoDOM, iCanvasDOM) {
-      if((null != iVideoDOM) && (null != iCanvasDOM)) {
-        var wVideoHeight = iVideoDOM.videoHeight;
-        var wVideoWidth = iVideoDOM.videoWidth;
-        iCanvasDOM.height = wVideoHeight;
-        iCanvasDOM.width = wVideoWidth;
-
-        var wCtx = iCanvasDOM.getContext('2d');
-	      wCtx.drawImage(iVideoDOM, 0, 0, wVideoWidth, wVideoHeight);
-      }  
-    }
-
     function applyCanvasFilter_InvertChecker(iCanvasDOM) {
       
       var wCtx = iCanvasDOM.getContext('2d');	  
@@ -129,29 +118,6 @@
       wCtx.putImageData(wImageData, 0, 0);
     }
 
-    function stretchAndCenterCanvas(iSourceCanvasDOM, iDestinationCanvasDOM) {
-      var wDestWidth = iDestinationCanvasDOM.width;
-      var wDestHeight = iDestinationCanvasDOM.height;
-
-      var wSrcHeight = iSourceCanvasDOM.height;
-      var wSrcWidth = iSourceCanvasDOM.width;
-      var wSrcTop = 0;
-      var wSrcLeft = 0;
-
-      var wScale = wDestHeight/wSrcHeight;
-      if (wScale*wSrcWidth < wDestWidth) {
-        wScale = wDestWidth/wSrcWidth;
-      }
-      wSrcHeight *= wScale;
-      wSrcWidth *= wScale;
-      wSrcTop = - (wSrcHeight - wDestHeight)/2;
-      wSrcLeft = - (wSrcWidth - wDestWidth)/2;
-
-      var wCtx = iDestinationCanvasDOM.getContext('2d');
-	    wCtx.drawImage(iSourceCanvasDOM, wSrcLeft, wSrcTop, wSrcWidth, wSrcHeight);
-      
-    }
-
     function renderCanvas() {
 
       var wTempCanvasDOM = gGlobal.InternalCanvasDOM;
@@ -183,23 +149,12 @@
       renderCanvas();
 
       Resize();
-      /*
-      
-      const constraints = {
-          audio: {},
-          video: {}
-      };
-      getStream(constraints).then(getDeviceList).then(loadDevices).catch(handleError);;
-
-      Resize();
-      */
     }
 
     function Resize() {
       var wCanvasDOM = document.getElementById(gGlobal.OutputCanvasId);
       if(null != wCanvasDOM) {
-        wCanvasDOM.height = wCanvasDOM.parentNode.clientHeight;
-        wCanvasDOM.width = wCanvasDOM.parentNode.clientWidth;
+        resizeCanvas(wCanvasDOM);
       }
     }
 
