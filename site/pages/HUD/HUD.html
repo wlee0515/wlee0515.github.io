@@ -1,26 +1,27 @@
 <html>
+
 <head>
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
   <title>Head Up Display</title>
   <script type="text/javascript" src="../../global/frame.js"></script>
   <script src="./javascript/Instruments.js"></script>
-  <script src="../../javascript/Camera.js"></script>  
-  <script src="../../javascript/commonCanvasFunction.js"></script>  
-  
+  <script src="../../javascript/Camera.js"></script>
+  <script src="../../javascript/commonCanvasFunction.js"></script>
+
   <style>
     body {
-      background: rgb(0,0,0);
+      background: rgb(0, 0, 0);
       margin: 0;
       padding: 0;
     }
-    
+
     #id_plotArea_div {
-      width : 100vw;
-      height : 100vh;
-      z-index : -10;
-      position : fixed;
-      top : 0px;
-      left : 0px;
+      width: 100vw;
+      height: 100vh;
+      z-index: -10;
+      position: fixed;
+      top: 0px;
+      left: 0px;
     }
 
     #id_video_div {
@@ -29,407 +30,407 @@
       /* The video is position fixed to the viewpoint to prevent it from falling off screen */
       /* The dimensions of the video needs to be greater than 2px */
       /* The opacity of the video may be set to 0 to be invisible on screen */
-      width: 100vw;
-      height: 100vh;
+      width: 2px;
+      height: 2px;
       position: fixed;
       top: 0px;
       left: 0px;
       overflow: hidden;
       opacity: 0.0;
-      z-index : 0;
+      z-index: -10;
     }
   </style>
-    <script type="text/javascript">
+  <script type="text/javascript">
 
-        function normalizeAngle_Sign180deg(iAngle) {
-          var wAngle = iAngle;
-          while(wAngle > 180) {
-            wAngle -= 360;
+    function normalizeAngle_Sign180deg(iAngle) {
+      var wAngle = iAngle;
+      while (wAngle > 180) {
+        wAngle -= 360;
+      }
+
+      while (wAngle < -180) {
+        wAngle += 360;
+      }
+      return wAngle;
+    }
+
+    function handleError(iError) {
+      alert(iError);
+    }
+
+    var gGlobal = {
+      OuputCanvas_Id: "id_output_canvas",
+      ScreenOrientation: 0,
+      OutputVideoDivId: "id_video_div",
+      CameraOn: false,
+      CurrentCameraStream: null,
+      OutputCanvasId: "id_OutputCanvas",
+      InternalCanvasDOM: null
+    }
+
+    var wArtificalHorizon;
+
+    var wAltitudeWheel;
+    var wSpeedWheel;
+
+    var wRollTargetPosition = 0;
+    var wPitchTargetPosition = 0;
+    var wYawTargetPosition = 0;
+    var wAltitudeTargetPosition = 0;
+    var wSpeedTargetPosition = 0;
+    var wVelAzPosition = 0;
+    var wVelElPosition = 0;
+
+    function init() {
+
+      reboot();
+      var wDeltaTime = 100;
+      setInterval(interation, wDeltaTime, false);
+
+      resize();
+    }
+
+    function resize() {
+      var wCanvas = document.getElementById(gGlobal.OuputCanvas_Id);
+      if (null != wCanvas) {
+        wCanvas.height = wCanvas.parentElement.clientHeight;
+        wCanvas.width = wCanvas.parentElement.clientWidth;
+      }
+    }
+
+    function reboot() {
+
+      wArtificalHorizon = new ArtificialHorizon();
+
+      wAltitudeWheel = new Wheel();
+      wAltitudeWheel.mIsPerpendicular = false;
+      wAltitudeWheel.mIsVertical = true;
+      wAltitudeWheel.mWheelViewAngle = Math.PI;
+      wAltitudeWheel.mWheelRadius = 50;
+      wAltitudeWheel.drawMajorTic = drawNumberedDash;
+      wAltitudeWheel.mWheelAngle = 3 * Math.PI / 4;
+      wAltitudeWheel.mValueScale = 1 / (10 * Math.PI / 180);
+
+      wSpeedWheel = new Wheel();
+      wSpeedWheel.mIsPerpendicular = false;
+      wSpeedWheel.mIsVertical = true;
+      wSpeedWheel.mWheelViewAngle = Math.PI;
+      wSpeedWheel.mWheelRadius = 50;
+      wSpeedWheel.mWheelAngle = 3 * Math.PI / 4;
+    }
+
+    function interation() {
+
+      var wCanvas = document.getElementById(gGlobal.OuputCanvas_Id);
+      var ctx = wCanvas.getContext("2d");
+      ctx.clearRect(0, 0, wCanvas.width, wCanvas.height);
+
+      if (true == gGlobal.CameraOn) {
+
+        var wCameraDOM = document.getElementById(gGlobal.OutputCameraVideoId);
+        if (null != wCameraDOM) {
+
+          var wTempCanvasDOM = gGlobal.InternalCanvasDOM;
+          if (null == wTempCanvasDOM) {
+            wTempCanvasDOM = document.createElement('canvas');
           }
-          
-          while(wAngle < -180) {
-            wAngle += 360;
-          }
-          return wAngle;
-        }
 
-        function handleError(iError) {
-          alert(iError);
-        }
-
-        var gGlobal = {
-          OuputCanvas_Id : "id_output_canvas",
-          ScreenOrientation : 0,        
-          OutputVideoDivId : "id_video_div", 
-          CameraOn : false,
-          CurrentCameraStream : null,
-          OutputCanvasId : "id_OutputCanvas",
-          InternalCanvasDOM : null
-        }
-
-        var wArtificalHorizon;
-
-        var wAltitudeWheel;
-        var wSpeedWheel;
-
-        var wRollTargetPosition = 0;
-        var wPitchTargetPosition = 0;
-        var wYawTargetPosition = 0;
-        var wAltitudeTargetPosition = 0;
-        var wSpeedTargetPosition = 0;
-        var wVelAzPosition = 0;
-        var wVelElPosition = 0;
-
-        function init() {
-
-            reboot();
-            var wDeltaTime = 100;
-            setInterval(interation, wDeltaTime, false);
-
-            resize();
-        }
-
-        function resize() {
-          var wCanvas = document.getElementById(gGlobal.OuputCanvas_Id);
-          if(null != wCanvas) {
-            wCanvas.height = wCanvas.parentElement.clientHeight;
-            wCanvas.width = wCanvas.parentElement.clientWidth;
+          if (0 != wCameraDOM.videoWidth) {
+            putVideoInCanvas(wCameraDOM, wTempCanvasDOM);
+            stretchAndCenterCanvas(wTempCanvasDOM, wCanvas);
           }
         }
+      }
 
-        function reboot() {
+      ctx.strokeStyle = "red";
+      ctx.fillStyle = "lime";
 
-          wArtificalHorizon = new ArtificialHorizon();
+      var wHorizonX = wCanvas.width / 2;
+      var wHorizonY = wCanvas.height / 2;
 
-          wAltitudeWheel = new Wheel();
-          wAltitudeWheel.mIsPerpendicular = false;
-          wAltitudeWheel.mIsVertical = true;
-          wAltitudeWheel.mWheelViewAngle = Math.PI;
-          wAltitudeWheel.mWheelRadius = 50;
-          wAltitudeWheel.drawMajorTic = drawNumberedDash;
-          wAltitudeWheel.mWheelAngle = 3*Math.PI / 4;
-          wAltitudeWheel.mValueScale = 1 /(10*Math.PI/180);
+      var wAltitudeX = wCanvas.width - (wAltitudeWheel.mWheelRadius + 100);
+      var wAltitudeY = wAltitudeWheel.mWheelRadius + 100;
 
-          wSpeedWheel = new Wheel();
-          wSpeedWheel.mIsPerpendicular = false;
-          wSpeedWheel.mIsVertical = true;
-          wSpeedWheel.mWheelViewAngle = Math.PI;
-          wSpeedWheel.mWheelRadius = 50;
-          wSpeedWheel.mWheelAngle = 3*Math.PI / 4;
-        }
+      var wSpeedX = wSpeedWheel.mWheelRadius + 100;
+      var wSpeedY = wSpeedWheel.mWheelRadius + 100;
 
-        function interation() {
 
-          var wCanvas = document.getElementById(gGlobal.OuputCanvas_Id);
-          var ctx = wCanvas.getContext("2d");
-          ctx.clearRect(0, 0, wCanvas.width, wCanvas.height);
+      wArtificalHorizon.processTime(0.8);
+      wArtificalHorizon.requestPosition(wRollTargetPosition, wPitchTargetPosition, wYawTargetPosition, wVelAzPosition, wVelElPosition);
+      wAltitudeWheel.mWheelPosition += 0.5 * (wAltitudeTargetPosition - wAltitudeWheel.mWheelPosition);
+      wSpeedWheel.mWheelPosition += 0.5 * (wSpeedTargetPosition - wSpeedWheel.mWheelPosition);
 
-          if (true == gGlobal.CameraOn) {
 
-            var wCameraDOM = document.getElementById(gGlobal.OutputCameraVideoId);
-            if (null == wCameraDOM) {
 
-              var wTempCanvasDOM = gGlobal.InternalCanvasDOM;
-              if (null == wTempCanvasDOM) {
-                wTempCanvasDOM = document.createElement('canvas');
+      wArtificalHorizon.drawArtificialHorizon(ctx, wHorizonX, wHorizonY);
+      wSpeedWheel.drawWheel(ctx, wSpeedX, wSpeedY);
+      wAltitudeWheel.drawWheel(ctx, wAltitudeX, wAltitudeY);
+    }
+
+    function ActivateGyro() {
+      if (window.DeviceOrientationEvent) {
+
+        if (typeof DeviceOrientationEvent.requestPermission === 'function') {
+          // iOS 13+
+          DeviceOrientationEvent.requestPermission()
+            .then(response => {
+              if (response == 'granted') {
+                window.addEventListener('deviceorientation', updateOrientation);
               }
-              
-              if (0 != wCameraDOM.videoWidth) {
-                putVideoInCanvas(wCameraDOM, wTempCanvasDOM);
-                stretchAndCenterCanvas(wTempCanvasDOM, wCanvas);
+              else {
+                alert("Device Orientation Denied");
               }
-            }
-          }
-
-          ctx.strokeStyle = "red";
-          ctx.fillStyle = "lime";
-
-          var wHorizonX = wCanvas.width / 2;
-          var wHorizonY = wCanvas.height / 2;
-
-          var wAltitudeX = wCanvas.width - (wAltitudeWheel.mWheelRadius + 100);
-          var wAltitudeY = wAltitudeWheel.mWheelRadius + 100;
-
-          var wSpeedX = wSpeedWheel.mWheelRadius + 100;
-          var wSpeedY = wSpeedWheel.mWheelRadius + 100;
-
-
-          wArtificalHorizon.processTime(0.8);
-          wArtificalHorizon.requestPosition(wRollTargetPosition, wPitchTargetPosition, wYawTargetPosition, wVelAzPosition, wVelElPosition);
-          wAltitudeWheel.mWheelPosition += 0.5 * (wAltitudeTargetPosition - wAltitudeWheel.mWheelPosition);
-          wSpeedWheel.mWheelPosition += 0.5 * (wSpeedTargetPosition - wSpeedWheel.mWheelPosition);
-
-
-
-          wArtificalHorizon.drawArtificialHorizon(ctx, wHorizonX, wHorizonY);
-          wSpeedWheel.drawWheel(ctx, wSpeedX, wSpeedY);
-          wAltitudeWheel.drawWheel(ctx, wAltitudeX, wAltitudeY);
+            })
+            .catch(handleError)
+        } else {
+          window.addEventListener("deviceorientation", updateOrientation);
         }
 
-        function ActivateGyro() {
-          if (window.DeviceOrientationEvent) {
-
-            if (typeof DeviceOrientationEvent.requestPermission === 'function') {
-              // iOS 13+
-              DeviceOrientationEvent.requestPermission()
-                .then(response => {
-                  if (response == 'granted') {
-                    window.addEventListener('deviceorientation', updateOrientation);
-                  }
-                  else {
-                    alert("Device Orientation Denied");
-                  }
-                })
-                .catch(handleError)
-            } else {
-              window.addEventListener("deviceorientation", updateOrientation);
-            }
-
-          } else {
-            alert("Sorry, your browser doesn't support Device Orientation");
-          } 
+      } else {
+        alert("Sorry, your browser doesn't support Device Orientation");
+      }
 
 
-          if (window.DeviceMotionEvent) {
+      if (window.DeviceMotionEvent) {
 
-            if (typeof DeviceMotionEvent.requestPermission === 'function') {
-              // iOS 13+
-              DeviceMotionEvent.requestPermission()
-                .then(response => {
-                  if (response == 'granted') {
-                    window.addEventListener('devicemotion', updateMotion);
-                  }
-                  else {
-                    alert("Device Motion Denied");
-                  }
-                })
-                .catch(handleError)
-            } else {
-              window.addEventListener("devicemotion", updateMotion);
-            }
-
-          } else {
-            alert("Sorry, your browser doesn't support Device Motion");
-          }
-
-          
-          options = {
-            enableHighAccuracy: true,
-            timeout: 5000,
-            maximumAge: 0
-          };
-
-          if (navigator.geolocation) {
-            navigator.geolocation.watchPosition(updateGPS, handleError, options);
-          } else {
-            wOutput.innerText = "Geolocation is not supported by this browser.";
-          }
-
-          
-          window.addEventListener("orientationchange", function() {
-           alert("the orientation of the device is now " + screen.orientation.angle);
-          });
-
+        if (typeof DeviceMotionEvent.requestPermission === 'function') {
+          // iOS 13+
+          DeviceMotionEvent.requestPermission()
+            .then(response => {
+              if (response == 'granted') {
+                window.addEventListener('devicemotion', updateMotion);
+              }
+              else {
+                alert("Device Motion Denied");
+              }
+            })
+            .catch(handleError)
+        } else {
+          window.addEventListener("devicemotion", updateMotion);
         }
 
-        function updateOrientation(iOrientation) {
-          var wHeading = iOrientation.alpha;
-          if (iOrientation.webkitCompassHeading != undefined) {
-            wHeading = -iOrientation.webkitCompassHeading;
-          }
+      } else {
+        alert("Sorry, your browser doesn't support Device Motion");
+      }
 
-          wYawTargetPosition = - normalizeAngle_Sign180deg(wHeading);
 
+      options = {
+        enableHighAccuracy: true,
+        timeout: 5000,
+        maximumAge: 0
+      };
+
+      if (navigator.geolocation) {
+        navigator.geolocation.watchPosition(updateGPS, handleError, options);
+      } else {
+        wOutput.innerText = "Geolocation is not supported by this browser.";
+      }
+
+
+      window.addEventListener("orientationchange", function () {
+        alert("the orientation of the device is now " + screen.orientation.angle);
+      });
+
+    }
+
+    function updateOrientation(iOrientation) {
+      var wHeading = iOrientation.alpha;
+      if (iOrientation.webkitCompassHeading != undefined) {
+        wHeading = -iOrientation.webkitCompassHeading;
+      }
+
+      wYawTargetPosition = - normalizeAngle_Sign180deg(wHeading);
+
+    }
+
+    function updateMotion(iMotion) {
+      /* iPhone Orientation
+          Y
+          |
+          Z--X 
+          Chrome Orientation
+          Z--X
+          |
+          Y
+          Edge Orientation
+          Y
+          |
+          Z--X 
+
+      */
+
+      var wDeviceGravityVector = {
+        x: iMotion.accelerationIncludingGravity.x - iMotion.acceleration.x,
+        y: iMotion.accelerationIncludingGravity.y - iMotion.acceleration.y,
+        z: iMotion.accelerationIncludingGravity.z - iMotion.acceleration.z,
+      }
+
+      // Is Chrome
+      if (null != window.chrome) {
+        wDeviceGravityVector.x *= -1;
+        wDeviceGravityVector.y *= -1;
+        wDeviceGravityVector.z *= -1;
+      }
+
+      var wScreenOrientation = 0;
+      if (null != screen.orientation) {
+        if (null != screen.orientation.angle) {
+          wScreenOrientation = screen.orientation.angle;
         }
+      }
+      else if (null != window.orientation) {
+        wScreenOrientation = window.orientation;
+      }
 
-        function updateMotion(iMotion) {
-          /* iPhone Orientation
-              Y
-              |
-              Z--X 
-              Chrome Orientation
-              Z--X
-              |
-              Y
-              Edge Orientation
-              Y
-              |
-              Z--X 
+      // rotate Gravity vector accordingly
+      var wScreenGravityVector = {
+        x: wDeviceGravityVector.x,
+        y: wDeviceGravityVector.y,
+        z: wDeviceGravityVector.z,
+      }
 
-          */
+      switch (wScreenOrientation) {
+        case 0:
+          break;
+        case 90:
+        case -270:
+          wScreenGravityVector.x = -wDeviceGravityVector.y;
+          wScreenGravityVector.y = wDeviceGravityVector.x;
+          break;
+        case 180:
+        case -180:
+          wScreenGravityVector.x = -wDeviceGravityVector.x;
+          wScreenGravityVector.y = -wDeviceGravityVector.y;
+          break;
+        case -90:
+        case 270:
+          wScreenGravityVector.x = wDeviceGravityVector.y;
+          wScreenGravityVector.y = -wDeviceGravityVector.x;
+          break;
+      }
 
-          var wDeviceGravityVector = {
-            x : iMotion.accelerationIncludingGravity.x  - iMotion.acceleration.x,
-            y : iMotion.accelerationIncludingGravity.y  - iMotion.acceleration.y,
-            z : iMotion.accelerationIncludingGravity.z  - iMotion.acceleration.z,
-          }
-          
-          // Is Chrome
-          if (null != window.chrome) {
-            wDeviceGravityVector.x *= -1;
-            wDeviceGravityVector.y *= -1;
-            wDeviceGravityVector.z *= -1;
-          }
+      var wRoll = Math.atan2(wScreenGravityVector.x, wScreenGravityVector.y);
+      wRoll -= Math.PI;
+      wRoll *= -1;
 
-          var wScreenOrientation = 0;
-          if (null != screen.orientation) {
-            if (null != screen.orientation.angle) {
-              wScreenOrientation = screen.orientation.angle;
-            }
-          }
-          else if (null != window.orientation) {
-            wScreenOrientation = window.orientation;
-          }
+      /*
+      var wCosRoll = Math.cos(wRoll);
+      var wSinRoll = Math.sin(wRoll);
 
-          // rotate Gravity vector accordingly
-          var wScreenGravityVector = {
-            x : wDeviceGravityVector.x,
-            y : wDeviceGravityVector.y,
-            z : wDeviceGravityVector.z,
-          }
+      var wRollCorrectedGravityVector = {
+        x : wScreenGravityVector.x*wCosRoll - wScreenGravityVector.y*wSinRoll,
+        y : wScreenGravityVector.x*wSinRoll + wScreenGravityVector.y*wCosRoll,
+        z : wScreenGravityVector.z,
+      }
 
-          switch(wScreenOrientation) {
-            case 0:
-              break;
-            case 90:
-            case -270:
-              wScreenGravityVector.x = -wDeviceGravityVector.y;
-              wScreenGravityVector.y = wDeviceGravityVector.x;
-              break;
-            case 180:
-            case -180:
-              wScreenGravityVector.x = -wDeviceGravityVector.x;
-              wScreenGravityVector.y = -wDeviceGravityVector.y;
-              break;
-            case -90:
-            case 270:
-              wScreenGravityVector.x = wDeviceGravityVector.y;
-              wScreenGravityVector.y = -wDeviceGravityVector.x;
-              break;
-          }
-          
-          var wRoll = Math.atan2(wScreenGravityVector.x, wScreenGravityVector.y);
-          wRoll -= Math.PI;
-          wRoll *= -1;
+      var wPitch = Math.atan2(wRollCorrectedGravityVector.z, wRollCorrectedGravityVector.y);
+      wPitch -= Math.PI;
+      wPitch *= -1;
 
-          /*
-          var wCosRoll = Math.cos(wRoll);
-          var wSinRoll = Math.sin(wRoll);
+      */
+      var wMagnitude = Math.sqrt(wScreenGravityVector.x * wScreenGravityVector.x
+        + wScreenGravityVector.y * wScreenGravityVector.y
+        + wScreenGravityVector.z * wScreenGravityVector.z);
 
-          var wRollCorrectedGravityVector = {
-            x : wScreenGravityVector.x*wCosRoll - wScreenGravityVector.y*wSinRoll,
-            y : wScreenGravityVector.x*wSinRoll + wScreenGravityVector.y*wCosRoll,
-            z : wScreenGravityVector.z,
-          }
+      var wPitch = Math.asin(wScreenGravityVector.z / wMagnitude);
 
-          var wPitch = Math.atan2(wRollCorrectedGravityVector.z, wRollCorrectedGravityVector.y);
-          wPitch -= Math.PI;
-          wPitch *= -1;
+      wRoll *= 180 / Math.PI;
+      wRollTargetPosition = normalizeAngle_Sign180deg(wRoll);
 
-          */
-          var wMagnitude = Math.sqrt(wScreenGravityVector.x*wScreenGravityVector.x
-                                   + wScreenGravityVector.y*wScreenGravityVector.y
-                                   + wScreenGravityVector.z*wScreenGravityVector.z);
+      wPitch *= 180 / Math.PI;
+      wPitchTargetPosition = normalizeAngle_Sign180deg(wPitch);
 
-          var wPitch = Math.asin(wScreenGravityVector.z/ wMagnitude);
+    }
 
-          wRoll *= 180/Math.PI;
-          wRollTargetPosition = normalizeAngle_Sign180deg(wRoll);
 
-          wPitch *= 180/Math.PI;
-          wPitchTargetPosition = normalizeAngle_Sign180deg(wPitch);
+    function updateGPS(iPosition) {
 
+      if (null != iPosition.coords.altitude) {
+        wAltitudeTargetPosition = iPosition.coords.altitude;
+      }
+
+      if (null != iPosition.coords.speed) {
+        wSpeedTargetPosition = iPosition.coords.speed;
+      }
+
+
+      /*
+      var wOutput = document.getElementById("GeoPosition");
+      wOutput.innerText = "";
+      wOutput.innerText += "Latitude : " + position.coords.latitude + "\n";
+      wOutput.innerText += "Longitude : " + position.coords.longitude + "\n";
+      wOutput.innerText += "Altitude : " + position.coords.altitude + "\n";
+      wOutput.innerText += "Accuracy : " + position.coords.accuracy + "\n";
+      wOutput.innerText += "Altitude Accuracy : " + position.coords.altitudeAccuracy + "\n";
+      wOutput.innerText += "Heading : " + position.coords.heading + "\n";
+      wOutput.innerText += "Speed : " + position.coords.speed + "\n";
+    
+      wOutput.innerText += "TimeStamp : " + position.timestamp + "\n";
+      */
+    }
+
+    function changeCurrentStream(iNewStream) {
+
+      var wCameraDOM = document.getElementById(gGlobal.OutputCameraVideoId);
+      if (null == wCameraDOM) {
+        var wVideoDivDom = document.getElementById(gGlobal.OutputVideoDivId);
+        if (null != wVideoDivDom) {
+          var wNewVideo = Camera.createLiveVideoDOM();
+          wNewVideo.id = gGlobal.OutputCameraVideoId;
+          wVideoDivDom.append(wNewVideo);
+          wCameraDOM = wNewVideo;
         }
-        
+      }
 
-        function updateGPS(iPosition) {
-          
-          if (null != iPosition.coords.altitude) {
-            wAltitudeTargetPosition = iPosition.coords.altitude;
-          }
-          
-          if (null != iPosition.coords.speed) {
-            wSpeedTargetPosition = iPosition.coords.speed;
-          }
+      if (null != wCameraDOM) {
+        Camera.setVideoDOMStream(wCameraDOM, iNewStream);
+      }
+    }
 
-            
-          /*
-          var wOutput = document.getElementById("GeoPosition");
-          wOutput.innerText = "";
-          wOutput.innerText += "Latitude : " + position.coords.latitude + "\n";
-          wOutput.innerText += "Longitude : " + position.coords.longitude + "\n";
-          wOutput.innerText += "Altitude : " + position.coords.altitude + "\n";
-          wOutput.innerText += "Accuracy : " + position.coords.accuracy + "\n";
-          wOutput.innerText += "Altitude Accuracy : " + position.coords.altitudeAccuracy + "\n";
-          wOutput.innerText += "Heading : " + position.coords.heading + "\n";
-          wOutput.innerText += "Speed : " + position.coords.speed + "\n";
-        
-          wOutput.innerText += "TimeStamp : " + position.timestamp + "\n";
-          */
+    function ActivateCamera() {
+
+      gGlobal.CameraOn = !gGlobal.CameraOn;
+
+      if (false == gGlobal.CameraOn) {
+
+        var wCameraDOM = document.getElementById(gGlobal.OutputCameraVideoId);
+        if (null == wCameraDOM) {
+          Camera.setVideoDOMStream(wCameraDOM, null);
         }
+      }
+      else {
+        Camera.getStream_BackCamera().then(changeCurrentStream).catch(handleError);
+      }
 
-        function changeCurrentStream(iNewStream) {
-        
-          var wCameraDOM = document.getElementById(gGlobal.OutputCameraVideoId);
-          if (null == wCameraDOM) {
-            var wVideoDivDom = document.getElementById(gGlobal.OutputVideoDivId);
-            if (null != wVideoDivDom) {
-              var wNewVideo = Camera.createLiveVideoDOM();
-              wNewVideo.id = gGlobal.OutputCameraVideoId;
-              wVideoDivDom.append(wNewVideo);
-              wCameraDOM = wNewVideo;
-            }
-          }
-        
-          if (null != wCameraDOM) {
-            Camera.setVideoDOMStream(wCameraDOM, iNewStream);
-          }
-        }
+    }
 
-        function ActivateCamera() {
-          
-          gGlobal.CameraOn = !gGlobal.CameraOn;
+    function updateRange(iIndex, iValue) {
+      if (iIndex == 0) {
+        wRollTargetPosition = 180 * iValue / 100;
+      }
+      if (iIndex == 1) {
+        wPitchTargetPosition = 180 * iValue / 100;
+      }
+      if (iIndex == 2) {
+        wYawTargetPosition = 180 * iValue / 100;
+      }
+      if (iIndex == 3) {
+        wVelAzPosition = 180 * iValue / 100;
+      }
+      if (iIndex == 4) {
+        wVelElPosition = 180 * iValue / 100;
+      }
+      if (iIndex == 5) {
+        wAltitudeTargetPosition = iValue;
+      }
+      if (iIndex == 6) {
+        wSpeedTargetPosition = iValue;
+      }
+    }
 
-          if (false == gGlobal.CameraOn) {
-
-            var wCameraDOM = document.getElementById(gGlobal.OutputCameraVideoId);
-            if (null == wCameraDOM) {
-              Camera.setVideoDOMStream(wCameraDOM, null);
-            }
-          }
-          else {
-            Camera.getStream_BackCamera().then(changeCurrentStream).catch(handleError);
-          }
-          
-        }
-
-        function updateRange(iIndex, iValue) {
-          if (iIndex == 0)
-          {
-            wRollTargetPosition = 180 * iValue / 100;
-          }
-          if (iIndex == 1) {
-            wPitchTargetPosition = 180 * iValue / 100;
-          }
-          if (iIndex == 2) {
-            wYawTargetPosition = 180 * iValue / 100;
-          }
-          if (iIndex == 3) {
-            wVelAzPosition = 180 * iValue / 100;
-          }
-          if (iIndex == 4) {
-            wVelElPosition = 180 * iValue / 100;
-          }
-          if (iIndex == 5) {
-            wAltitudeTargetPosition = iValue;
-          }
-          if (iIndex == 6) {
-            wSpeedTargetPosition = iValue;
-          }
-        }
-
-    </script>
+  </script>
 </head>
+
 <body onload="init()" onresize="resize()">
   <!--
   <div>
@@ -449,7 +450,8 @@
   <div id="id_video_div">
   </div>
   <div id="id_plotArea_div">
-      <canvas id="id_output_canvas"></canvas>
+    <canvas id="id_output_canvas"></canvas>
   </div>
 </body>
+
 </html>
