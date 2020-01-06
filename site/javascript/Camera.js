@@ -49,7 +49,7 @@ var Camera = {
       var wCameraList = [];
   
       // Loop through device list
-      for (const wDeviceInfo of wDeviceList) {
+      for (const wDeviceInfo of iDeviceList) {
        // if (wDeviceInfo.kind === 'videoinput') {
           wCameraList.push(wDeviceInfo);
         //}

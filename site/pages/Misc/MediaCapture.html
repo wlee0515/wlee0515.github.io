@@ -32,7 +32,7 @@
       if(null == wCameraDOM) {
         var wVideoDivDom = document.getElementById(gGlobal.OutputVideoDivId);
         if (null != wVideoDivDom) {
-          var wNewVideo = createLiveVideoDOM();
+          var wNewVideo = Camera.createLiveVideoDOM();
           wNewVideo.id = gGlobal.OutputCameraVideoId;
           wVideoDivDom.append(wNewVideo);
           wCameraDOM = wNewVideo;
