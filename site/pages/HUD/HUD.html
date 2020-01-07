@@ -7,6 +7,7 @@
   <script src="./javascript/Instruments.js"></script>
   <script src="../../javascript/Camera.js"></script>
   <script src="../../javascript/commonCanvasFunction.js"></script>
+  <script src="../../javascript/DevicePosition.js" ></script>
 
   <style>
     body {
@@ -121,6 +122,10 @@
 
     function interation() {
 
+      wRollTargetPosition = DevicePosition.EulerAngle.phi;
+      wPitchTargetPosition = DevicePosition.EulerAngle.theta;
+      wYawTargetPosition = DevicePosition.EulerAngle.psi;
+      
       var wCanvas = document.getElementById(gGlobal.OuputCanvas_Id);
       var ctx = wCanvas.getContext("2d");
       ctx.clearRect(0, 0, wCanvas.width, wCanvas.height);
@@ -168,6 +173,10 @@
     }
 
     function ActivateGyro() {
+      
+      DevicePosition.StartService();
+      return;
+
       if (window.DeviceOrientationEvent) {
 
         if (typeof DeviceOrientationEvent.requestPermission === 'function') {
