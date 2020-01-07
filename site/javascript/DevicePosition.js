@@ -248,7 +248,6 @@ var DevicePositionCallBackFunctions = {
     var wScreenGravityVector = DevicePositionHelperFunctions.convertFromePhoneToScreenAxis(wDeviceGravityVector.x, wDeviceGravityVector.y, wDeviceGravityVector.z);
 
     var wRoll = Math.atan2(wScreenGravityVector.y, wScreenGravityVector.z);
-    wRoll *= -1;
 
     var wMagnitude = Math.sqrt(wScreenGravityVector.x * wScreenGravityVector.x
       + wScreenGravityVector.y * wScreenGravityVector.y
