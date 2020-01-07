@@ -277,16 +277,16 @@ var DevicePositionCallBackFunctions = {
   updateDeviceDevicePosition : function (iPosition) {
 
     if (null != iPosition.coords.latitude) {
-      this.GeoLocation.Latitude = iPosition.coords.latitude;
+      this.GeoCoodinate.Latitude = iPosition.coords.latitude;
     }
     
     if (null != iPosition.coords.longitude) {
-      this.GeoLocation.Longitude = iPosition.coords.longitude;
+      this.GeoCoodinate.Longitude = iPosition.coords.longitude;
     }
 
     
     if (null != iPosition.coords.altitude) {
-      this.GeoLocation.Altitude = iPosition.coords.altitude;
+      this.GeoCoodinate.Altitude = iPosition.coords.altitude;
     }
 /*
     if (null != iPosition.coords.speed) {
@@ -316,7 +316,7 @@ var DevicePositionCallBackFunctions = {
 
 var DevicePosition = {
   IsInitialized: false,
-  GeoLocation: {
+  GeoCoodinate: {
     Longitude: 0.0,
     Latitude: 0.0,
     Altitude: 0.0
@@ -325,19 +325,19 @@ var DevicePosition = {
   VelocityNED: {
     x: 0.0,
     y: 0.0,
-    x: 0.0,
+    z: 0.0,
   },
 
   AccelerationNED: {
     x: 0.0,
     y: 0.0,
-    x: 0.0,
+    z: 0.0,
   },
 
   AccelerationBody: {
     x: 0.0,
     y: 0.0,
-    x: 0.0,
+    z: 0.0,
   },
 
   EulerAngle: {

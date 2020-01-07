@@ -34,8 +34,8 @@
       width: 2px;
       height: 2px;
       position: fixed;
-      top: 0px;
-      left: 0px;
+      bottom: 0px;
+      right: 0px;
       overflow: hidden;
       opacity: 0.0;
       z-index: -10;
@@ -125,6 +125,8 @@
       wRollTargetPosition = (180/Math.PI)*DevicePosition.EulerAngle.phi;
       wPitchTargetPosition = (180/Math.PI)*DevicePosition.EulerAngle.theta;
       wYawTargetPosition = (180/Math.PI)*DevicePosition.EulerAngle.psi;
+      wAltitudeTargetPosition = DevicePosition.GeoCoodinate.Altitude;
+      wSpeedTargetPosition = 0;
       
       var wCanvas = document.getElementById(gGlobal.OuputCanvas_Id);
       var ctx = wCanvas.getContext("2d");
@@ -173,209 +175,26 @@
     }
 
     function ActivateGyro() {
-      
       DevicePosition.StartService();
       return;
-
-      if (window.DeviceOrientationEvent) {
-
-        if (typeof DeviceOrientationEvent.requestPermission === 'function') {
-          // iOS 13+
-          DeviceOrientationEvent.requestPermission()
-            .then(response => {
-              if (response == 'granted') {
-                window.addEventListener('deviceorientation', updateOrientation);
-              }
-              else {
-                alert("Device Orientation Denied");
-              }
-            })
-            .catch(handleError)
-        } else {
-          window.addEventListener("deviceorientation", updateOrientation);
-        }
-
-      } else {
-        alert("Sorry, your browser doesn't support Device Orientation");
-      }
-
-
-      if (window.DeviceMotionEvent) {
-
-        if (typeof DeviceMotionEvent.requestPermission === 'function') {
-          // iOS 13+
-          DeviceMotionEvent.requestPermission()
-            .then(response => {
-              if (response == 'granted') {
-                window.addEventListener('devicemotion', updateMotion);
-              }
-              else {
-                alert("Device Motion Denied");
-              }
-            })
-            .catch(handleError)
-        } else {
-          window.addEventListener("devicemotion", updateMotion);
-        }
-
-      } else {
-        alert("Sorry, your browser doesn't support Device Motion");
-      }
-
-
-      options = {
-        enableHighAccuracy: true,
-        timeout: 5000,
-        maximumAge: 0
-      };
-
-      if (navigator.geolocation) {
-        navigator.geolocation.watchPosition(updateGPS, handleError, options);
-      } else {
-        wOutput.innerText = "Geolocation is not supported by this browser.";
-      }
-
-
-      window.addEventListener("orientationchange", function () {
-        alert("the orientation of the device is now " + screen.orientation.angle);
-      });
-
-    }
-
-    function updateOrientation(iOrientation) {
-      var wHeading = iOrientation.alpha;
-      if (iOrientation.webkitCompassHeading != undefined) {
-        wHeading = -iOrientation.webkitCompassHeading;
-      }
-
-      wYawTargetPosition = - normalizeAngle_Sign180deg(wHeading);
-
-    }
-
-    function updateMotion(iMotion) {
-      /* iPhone Orientation
-          Y
-          |
-          Z--X 
-          Chrome Orientation
-          Z--X
-          |
-          Y
-          Edge Orientation
-          Y
-          |
-          Z--X 
-
-      */
-
-      var wDeviceGravityVector = {
-        x: iMotion.accelerationIncludingGravity.x - iMotion.acceleration.x,
-        y: iMotion.accelerationIncludingGravity.y - iMotion.acceleration.y,
-        z: iMotion.accelerationIncludingGravity.z - iMotion.acceleration.z,
-      }
-
-      // Is Chrome
-      if (null != window.chrome) {
-        wDeviceGravityVector.x *= -1;
-        wDeviceGravityVector.y *= -1;
-        wDeviceGravityVector.z *= -1;
-      }
-
-      var wScreenOrientation = 0;
-      if (null != screen.orientation) {
-        if (null != screen.orientation.angle) {
-          wScreenOrientation = screen.orientation.angle;
-        }
-      }
-      else if (null != window.orientation) {
-        wScreenOrientation = window.orientation;
-      }
-
-      // rotate Gravity vector accordingly
-      var wScreenGravityVector = {
-        x: wDeviceGravityVector.x,
-        y: wDeviceGravityVector.y,
-        z: wDeviceGravityVector.z,
-      }
-
-      switch (wScreenOrientation) {
-        case 0:
-          break;
-        case 90:
-        case -270:
-          wScreenGravityVector.x = -wDeviceGravityVector.y;
-          wScreenGravityVector.y = wDeviceGravityVector.x;
-          break;
-        case 180:
-        case -180:
-          wScreenGravityVector.x = -wDeviceGravityVector.x;
-          wScreenGravityVector.y = -wDeviceGravityVector.y;
-          break;
-        case -90:
-        case 270:
-          wScreenGravityVector.x = wDeviceGravityVector.y;
-          wScreenGravityVector.y = -wDeviceGravityVector.x;
-          break;
-      }
-
-      var wRoll = Math.atan2(wScreenGravityVector.x, wScreenGravityVector.y);
-      wRoll -= Math.PI;
-      wRoll *= -1;
-
-      /*
-      var wCosRoll = Math.cos(wRoll);
-      var wSinRoll = Math.sin(wRoll);
-
-      var wRollCorrectedGravityVector = {
-        x : wScreenGravityVector.x*wCosRoll - wScreenGravityVector.y*wSinRoll,
-        y : wScreenGravityVector.x*wSinRoll + wScreenGravityVector.y*wCosRoll,
-        z : wScreenGravityVector.z,
-      }
-
-      var wPitch = Math.atan2(wRollCorrectedGravityVector.z, wRollCorrectedGravityVector.y);
-      wPitch -= Math.PI;
-      wPitch *= -1;
-
-      */
-      var wMagnitude = Math.sqrt(wScreenGravityVector.x * wScreenGravityVector.x
-        + wScreenGravityVector.y * wScreenGravityVector.y
-        + wScreenGravityVector.z * wScreenGravityVector.z);
-
-      var wPitch = Math.asin(wScreenGravityVector.z / wMagnitude);
-
-      wRoll *= 180 / Math.PI;
-      wRollTargetPosition = normalizeAngle_Sign180deg(wRoll);
-
-      wPitch *= 180 / Math.PI;
-      wPitchTargetPosition = normalizeAngle_Sign180deg(wPitch);
-
     }
 
 
-    function updateGPS(iPosition) {
+    function ActivateCamera() {
 
-      if (null != iPosition.coords.altitude) {
-        wAltitudeTargetPosition = iPosition.coords.altitude;
+      gGlobal.CameraOn = !gGlobal.CameraOn;
+
+      if (false == gGlobal.CameraOn) {
+
+        var wCameraDOM = document.getElementById(gGlobal.OutputCameraVideoId);
+        if (null == wCameraDOM) {
+          Camera.setVideoDOMStream(wCameraDOM, null);
+        }
+      }
+      else {
+        Camera.getStream_BackCamera().then(changeCurrentStream).catch(handleError);
       }
 
-      if (null != iPosition.coords.speed) {
-        wSpeedTargetPosition = iPosition.coords.speed;
-      }
-
-
-      /*
-      var wOutput = document.getElementById("GeoPosition");
-      wOutput.innerText = "";
-      wOutput.innerText += "Latitude : " + position.coords.latitude + "\n";
-      wOutput.innerText += "Longitude : " + position.coords.longitude + "\n";
-      wOutput.innerText += "Altitude : " + position.coords.altitude + "\n";
-      wOutput.innerText += "Accuracy : " + position.coords.accuracy + "\n";
-      wOutput.innerText += "Altitude Accuracy : " + position.coords.altitudeAccuracy + "\n";
-      wOutput.innerText += "Heading : " + position.coords.heading + "\n";
-      wOutput.innerText += "Speed : " + position.coords.speed + "\n";
-    
-      wOutput.innerText += "TimeStamp : " + position.timestamp + "\n";
-      */
     }
 
     function changeCurrentStream(iNewStream) {
@@ -395,65 +214,10 @@
         Camera.setVideoDOMStream(wCameraDOM, iNewStream);
       }
     }
-
-    function ActivateCamera() {
-
-      gGlobal.CameraOn = !gGlobal.CameraOn;
-
-      if (false == gGlobal.CameraOn) {
-
-        var wCameraDOM = document.getElementById(gGlobal.OutputCameraVideoId);
-        if (null == wCameraDOM) {
-          Camera.setVideoDOMStream(wCameraDOM, null);
-        }
-      }
-      else {
-        Camera.getStream_BackCamera().then(changeCurrentStream).catch(handleError);
-      }
-
-    }
-
-    function updateRange(iIndex, iValue) {
-      if (iIndex == 0) {
-        wRollTargetPosition = 180 * iValue / 100;
-      }
-      if (iIndex == 1) {
-        wPitchTargetPosition = 180 * iValue / 100;
-      }
-      if (iIndex == 2) {
-        wYawTargetPosition = 180 * iValue / 100;
-      }
-      if (iIndex == 3) {
-        wVelAzPosition = 180 * iValue / 100;
-      }
-      if (iIndex == 4) {
-        wVelElPosition = 180 * iValue / 100;
-      }
-      if (iIndex == 5) {
-        wAltitudeTargetPosition = iValue;
-      }
-      if (iIndex == 6) {
-        wSpeedTargetPosition = iValue;
-      }
-    }
-
   </script>
 </head>
 
 <body onload="init()" onresize="resize()">
-  <!--
-  <div>
-      <span>Entity Count:</span><input id="EntityCount" type="number" /></br>
-      <input type="button" value="Refresh" onclick="reboot()" /></br>
-      <input type="range" id="Range0" value="0.0" min="-100" max="100" oninput="updateRange(0, this.value)" onchange="updateRange(0, this.value)"/>
-      <input type="range" id="Range1" value="0.0" min="-100" max="100" oninput="updateRange(1, this.value)" onchange="updateRange(1, this.value)"/>
-      <input type="range" id="Range2" value="0.0" min="-100" max="100" oninput="updateRange(2, this.value)" onchange="updateRange(2, this.value)"/>
-      <input type="range" id="Range3" value="0.0" min="-100" max="100" oninput="updateRange(3, this.value)" onchange="updateRange(3, this.value)" />
-      <input type="range" id="Range4" value="0.0" min="-100" max="100" oninput="updateRange(4, this.value)" onchange="updateRange(4, this.value)" />
-      <input type="range" id="Range5" value="0.0" min="-100" max="100" oninput="updateRange(5, this.value)" onchange="updateRange(5, this.value)" />
-      <input type="range" id="Range6" value="0.0" min="-100" max="100" oninput="updateRange(6, this.value)" onchange="updateRange(6, this.value)" />
-  </div>
--->
   <input type="button" value="Activate Sensor" onclick="ActivateGyro()" /></br>
   <input type="button" value="Camera" onclick="ActivateCamera()" /></br>
   <div id="id_video_div">
