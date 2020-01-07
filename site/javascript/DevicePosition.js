@@ -248,7 +248,6 @@ var DevicePositionCallBackFunctions = {
     var wScreenGravityVector = DevicePositionHelperFunctions.convertFromePhoneToScreenAxis(wDeviceGravityVector.x, wDeviceGravityVector.y, wDeviceGravityVector.z);
 
     var wRoll = Math.atan2(wScreenGravityVector.y, wScreenGravityVector.z);
-    wRoll -= Math.PI;
     wRoll *= -1;
 
     var wMagnitude = Math.sqrt(wScreenGravityVector.x * wScreenGravityVector.x
@@ -256,9 +255,10 @@ var DevicePositionCallBackFunctions = {
       + wScreenGravityVector.z * wScreenGravityVector.z);
 
     var wPitch = Math.asin(wScreenGravityVector.x / wMagnitude);
-
-    this.EulerAngle.theta = DevicePositionHelperFunctions.normalizeAngle_Sign180rad(wRoll);
-    this.EulerAngle.phi = DevicePositionHelperFunctions.normalizeAngle_Sign180rad(wPitch);
+    wPitch *= -1;
+    
+    this.EulerAngle.phi = DevicePositionHelperFunctions.normalizeAngle_Sign180rad(wRoll);
+    this.EulerAngle.theta = DevicePositionHelperFunctions.normalizeAngle_Sign180rad(wPitch);
 
 
     if (null != iMotion.rotationRate.gamma) {
