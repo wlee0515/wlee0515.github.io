@@ -175,6 +175,7 @@ var DevicePositionCallBackFunctions = {
         DeviceMotionEvent.requestPermission()
           .then(response => {
             if (response == 'granted') {
+              alert("Request Device Motion Granted");
               window.addEventListener('devicemotion', this.updateDeviceMotion.bind(iTarget));
             }
             else {

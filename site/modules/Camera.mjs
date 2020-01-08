@@ -1,5 +1,5 @@
 export default {
-  
+
   getStream :  function (iConstraints) {
     return navigator.mediaDevices.getUserMedia(iConstraints);
   },
@@ -10,7 +10,7 @@ export default {
       video: { deviceId: { exact: iDeviceId } }
     };
 
-    return Camera.getStream(constraints);
+    return this.getStream(constraints);
   },
 
   getStreamByFacingMode : function (iDirection) {
@@ -20,15 +20,15 @@ export default {
       video: { facingMode: { exact: iDirection } }
     };
 
-    return Camera.getStream(constraints);
+    return this.getStream(constraints);
   },
   
   getStream_FrontCamera : function () {
-    return Camera.getStreamByFacingMode("user");
+    return this.getStreamByFacingMode("user");
   },
 
   getStream_BackCamera : function () {
-    return Camera.getStreamByFacingMode("environment");
+    return this.getStreamByFacingMode("environment");
   },
 
   getDeviceList : function () {
@@ -39,7 +39,7 @@ export default {
   getCameraList : function() {
 
     const constraints = { audio : {}, video : {}};
-    return Camera.getStream(constraints).then(Camera.getDeviceList).then( function (iDeviceList) {
+    return this.getStream(constraints).then(Camera.getDeviceList).then( function (iDeviceList) {
 
       var wCameraList = [];
   
