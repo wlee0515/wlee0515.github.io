@@ -1,3 +1,4 @@
+import "../../../modules/CanvasOp.mjs"
 
 function drawCursorCircle(iCanvasCtx, iX, iY, iValue, iHeight, iWidth) {
     
@@ -96,7 +97,7 @@ function drawSimpleDash(iCanvasCtx, iX, iY, iValue, iHeight, iWidth) {
 
 }
 
-function drawNumberedDash(iCanvasCtx, iX, iY, iValue, iHeight, iWidth) {
+export function drawNumberedDash(iCanvasCtx, iX, iY, iValue, iHeight, iWidth) {
     var wLineWidth = iCanvasCtx.linewidth;
     iCanvasCtx.linewidth = iWidth;
     iCanvasCtx.textAlign = "center";
@@ -396,7 +397,7 @@ function Gauge() {
     }
 }
 
-function Wheel() {
+export function Wheel() {
 
     this.reset = function(){
         this.mIsPerpendicular = false;
@@ -610,7 +611,7 @@ function Wheel() {
 }
 
 
-function ArtificialHorizon(){
+export function ArtificialHorizon() {
     
     this.drawRollGyro = function(iCanvasCtx, iX, iY, iValue, iHeight, iWidth) {
 

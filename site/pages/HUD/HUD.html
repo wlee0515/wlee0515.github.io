@@ -4,9 +4,8 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
   <title>Head Up Display</title>
   <script type="text/javascript" src="../../global/frame.js"></script>
-  <script src="./javascript/Instruments.js"></script>
+  
   <script src="../../javascript/Camera.js"></script>
-  <script src="../../javascript/commonCanvasFunction.js"></script>
   <script src="../../javascript/DevicePosition.js" ></script>
 
   <style>
@@ -41,8 +40,10 @@
       z-index: -10;
     }
   </style>
-  <script type="text/javascript">
+  <script type="module">
 
+    import {ArtificialHorizon, Wheel, drawNumberedDash } from './javascript/Instruments.mjs';
+    
     function normalizeAngle_Sign180deg(iAngle) {
       var wAngle = iAngle;
       while (wAngle > 180) {
@@ -214,12 +215,20 @@
         Camera.setVideoDOMStream(wCameraDOM, iNewStream);
       }
     }
+
+    window.addEventListener("load", init)
+    window.addEventListener("resize", resize)
+    document.getElementById("id_Sensor_button").addEventListener("click", ActivateGyro);
+    document.getElementById("id_Camera_button").addEventListener("click", ActivateCamera);
   </script>
 </head>
 
+<!--
 <body onload="init()" onresize="resize()">
-  <input type="button" value="Activate Sensor" onclick="ActivateGyro()" /></br>
-  <input type="button" value="Camera" onclick="ActivateCamera()" /></br>
+-->
+<body>
+  <input type="button" value="Activate Sensor" id="id_Sensor_button" /></br>
+  <input type="button" value="Camera" id="id_Camera_button" /></br>
   <div id="id_video_div">
   </div>
   <div id="id_plotArea_div">
