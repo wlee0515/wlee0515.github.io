@@ -170,6 +170,8 @@ var DevicePositionCallBackFunctions = {
     }
 
 
+    alert("Sending Request for Orientation complete");
+
     if (window.DeviceMotionEvent) {
 
       alert("Sending Request for Motion");
@@ -194,6 +196,8 @@ var DevicePositionCallBackFunctions = {
       alert("Sorry, your browser doesn't support Device Motion");
     }
 
+    alert("Sending Request for Motion complete");
+    
 
     const options = {
       enableHighAccuracy: true,
