@@ -145,7 +145,9 @@ var DevicePositionCallBackFunctions = {
 
   StartService : function (iTarget) {
 
+    alert("StartService  - Start");
     if (window.DeviceOrientationEvent) {
+      alert("Sending Request of Orientation");
 
       if (typeof DeviceOrientationEvent.requestPermission === 'function') {
         // iOS 13+
@@ -170,6 +172,7 @@ var DevicePositionCallBackFunctions = {
 
     if (window.DeviceMotionEvent) {
 
+      alert("Sending Request for Motion");
       if (typeof DeviceMotionEvent.requestPermission === 'function') {
         // iOS 13+
         DeviceMotionEvent.requestPermission()
@@ -199,10 +202,14 @@ var DevicePositionCallBackFunctions = {
     };
 
     if (navigator.geolocation) {
+      alert("Sending Request for GPS");
+
       navigator.geolocation.watchPosition(this.updateDeviceDevicePosition.bind(iTarget), this.handleError, options);
     } else {
-      wOutput.innerText = "Geolocation is not supported by this browser.";
+      alert("Geolocation is not supported by this browser.");
     }
+    alert("StartService  - End");
+
   },
 
 
