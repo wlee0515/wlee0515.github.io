@@ -1,0 +1,238 @@
+<html>
+
+<head>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
+  <title>Head Up Display</title>
+  <script type="text/javascript" src="../../global/frame.js"></script>
+  
+  <style>
+    body {
+      background: rgb(0, 0, 0);
+      margin: 0;
+      padding: 0;
+    }
+
+    #id_plotArea_div {
+      width: 100vw;
+      height: 100vh;
+      z-index: -10;
+      position: fixed;
+      top: 0px;
+      left: 0px;
+    }
+
+    #id_video_div {
+      /* Video DOM for the camera screen must be visible for the stream to be updated in safari */
+      /* If hidden from user, the canvas will not be able to capture the camera picture */
+      /* The video is position fixed to the viewpoint to prevent it from falling off screen */
+      /* The dimensions of the video needs to be greater than 2px */
+      /* The opacity of the video may be set to 0 to be invisible on screen */
+      width: 2px;
+      height: 2px;
+      position: fixed;
+      bottom: 0px;
+      right: 0px;
+      overflow: hidden;
+      opacity: 0.0;
+      z-index: -10;
+    }
+  </style>
+  <script type="module">
+
+    import {ArtificialHorizon, Wheel, drawNumberedDash } from './javascript/Instruments.mjs';
+    import Camera from "../../modules/Camera.mjs"
+    import DevicePosition from '../../modules/DevicePosition.mjs';
+    
+    function normalizeAngle_Sign180deg(iAngle) {
+      var wAngle = iAngle;
+      while (wAngle > 180) {
+        wAngle -= 360;
+      }
+
+      while (wAngle < -180) {
+        wAngle += 360;
+      }
+      return wAngle;
+    }
+
+    function handleError(iError) {
+      alert(iError);
+    }
+
+    var gGlobal = {
+      OuputCanvas_Id: "id_output_canvas",
+      ScreenOrientation: 0,
+      OutputVideoDivId: "id_video_div",
+      CameraOn: false,
+      CurrentCameraStream: null,
+      OutputCanvasId: "id_OutputCanvas",
+      InternalCanvasDOM: null
+    }
+
+    var wArtificalHorizon;
+
+    var wAltitudeWheel;
+    var wSpeedWheel;
+
+    var wRollTargetPosition = 0;
+    var wPitchTargetPosition = 0;
+    var wYawTargetPosition = 0;
+    var wAltitudeTargetPosition = 0;
+    var wSpeedTargetPosition = 0;
+    var wVelAzPosition = 0;
+    var wVelElPosition = 0;
+
+    function init() {
+
+      reboot();
+      var wDeltaTime = 100;
+      setInterval(interation, wDeltaTime, false);
+
+      resize();
+    }
+
+    function resize() {
+      var wCanvas = document.getElementById(gGlobal.OuputCanvas_Id);
+      if (null != wCanvas) {
+        wCanvas.height = wCanvas.parentElement.clientHeight;
+        wCanvas.width = wCanvas.parentElement.clientWidth;
+      }
+    }
+
+    function reboot() {
+
+      wArtificalHorizon = new ArtificialHorizon();
+
+      wAltitudeWheel = new Wheel();
+      wAltitudeWheel.mIsPerpendicular = false;
+      wAltitudeWheel.mIsVertical = true;
+      wAltitudeWheel.mWheelViewAngle = Math.PI;
+      wAltitudeWheel.mWheelRadius = 50;
+      wAltitudeWheel.drawMajorTic = drawNumberedDash;
+      wAltitudeWheel.mWheelAngle = 3 * Math.PI / 4;
+      wAltitudeWheel.mValueScale = 1 / (10 * Math.PI / 180);
+
+      wSpeedWheel = new Wheel();
+      wSpeedWheel.mIsPerpendicular = false;
+      wSpeedWheel.mIsVertical = true;
+      wSpeedWheel.mWheelViewAngle = Math.PI;
+      wSpeedWheel.mWheelRadius = 50;
+      wSpeedWheel.mWheelAngle = 3 * Math.PI / 4;
+    }
+
+    function interation() {
+
+      wRollTargetPosition = (180/Math.PI)*DevicePosition.EulerAngle.phi;
+      wPitchTargetPosition = (180/Math.PI)*DevicePosition.EulerAngle.theta;
+      wYawTargetPosition = (180/Math.PI)*DevicePosition.EulerAngle.psi;
+      wAltitudeTargetPosition = DevicePosition.GeoCoodinate.Altitude;
+      wSpeedTargetPosition = 0;
+      
+      var wCanvas = document.getElementById(gGlobal.OuputCanvas_Id);
+      var ctx = wCanvas.getContext("2d");
+      ctx.clearRect(0, 0, wCanvas.width, wCanvas.height);
+
+      if (true == gGlobal.CameraOn) {
+
+        var wCameraDOM = document.getElementById(gGlobal.OutputCameraVideoId);
+        if (null != wCameraDOM) {
+
+          var wTempCanvasDOM = gGlobal.InternalCanvasDOM;
+          if (null == wTempCanvasDOM) {
+            wTempCanvasDOM = document.createElement('canvas');
+          }
+
+          if (0 != wCameraDOM.videoWidth) {
+            putVideoInCanvas(wCameraDOM, wTempCanvasDOM, true);
+            stretchAndCenterCanvas(wTempCanvasDOM, wCanvas);
+          }
+        }
+      }
+
+      ctx.strokeStyle = "red";
+      ctx.fillStyle = "lime";
+
+      var wHorizonX = wCanvas.width / 2;
+      var wHorizonY = wCanvas.height / 2;
+
+      var wAltitudeX = wCanvas.width - (wAltitudeWheel.mWheelRadius + 100);
+      var wAltitudeY = wAltitudeWheel.mWheelRadius + 100;
+
+      var wSpeedX = wSpeedWheel.mWheelRadius + 100;
+      var wSpeedY = wSpeedWheel.mWheelRadius + 100;
+
+
+      wArtificalHorizon.processTime(0.8);
+      wArtificalHorizon.requestPosition(wRollTargetPosition, wPitchTargetPosition, wYawTargetPosition, wVelAzPosition, wVelElPosition);
+      wAltitudeWheel.mWheelPosition += 0.5 * (wAltitudeTargetPosition - wAltitudeWheel.mWheelPosition);
+      wSpeedWheel.mWheelPosition += 0.5 * (wSpeedTargetPosition - wSpeedWheel.mWheelPosition);
+
+
+
+      wArtificalHorizon.drawArtificialHorizon(ctx, wHorizonX, wHorizonY);
+      wSpeedWheel.drawWheel(ctx, wSpeedX, wSpeedY);
+      wAltitudeWheel.drawWheel(ctx, wAltitudeX, wAltitudeY);
+    }
+
+    function ActivateGyro() {
+      DevicePosition.StartService();
+      return;
+    }
+
+
+    function ActivateCamera() {
+
+      gGlobal.CameraOn = !gGlobal.CameraOn;
+
+      if (false == gGlobal.CameraOn) {
+
+        var wCameraDOM = document.getElementById(gGlobal.OutputCameraVideoId);
+        if (null == wCameraDOM) {
+          Camera.setVideoDOMStream(wCameraDOM, null);
+        }
+      }
+      else {
+        Camera.getStream_BackCamera().then(changeCurrentStream).catch(handleError);
+      }
+
+    }
+
+    function changeCurrentStream(iNewStream) {
+
+      var wCameraDOM = document.getElementById(gGlobal.OutputCameraVideoId);
+      if (null == wCameraDOM) {
+        var wVideoDivDom = document.getElementById(gGlobal.OutputVideoDivId);
+        if (null != wVideoDivDom) {
+          var wNewVideo = Camera.createLiveVideoDOM();
+          wNewVideo.id = gGlobal.OutputCameraVideoId;
+          wVideoDivDom.append(wNewVideo);
+          wCameraDOM = wNewVideo;
+        }
+      }
+
+      if (null != wCameraDOM) {
+        Camera.setVideoDOMStream(wCameraDOM, iNewStream);
+      }
+    }
+
+    window.addEventListener("load", init)
+    window.addEventListener("resize", resize)
+    document.getElementById("id_Sensor_button").addEventListener("click", ActivateGyro);
+    document.getElementById("id_Camera_button").addEventListener("click", ActivateCamera);
+  </script>
+</head>
+
+<!--
+<body onload="init()" onresize="resize()">
+-->
+<body>
+  <input type="button" value="Activate Sensor" id="id_Sensor_button" /></br>
+  <input type="button" value="Camera" id="id_Camera_button" /></br>
+  <div id="id_video_div">
+  </div>
+  <div id="id_plotArea_div">
+    <canvas id="id_output_canvas"></canvas>
+  </div>
+</body>
+
+</html>

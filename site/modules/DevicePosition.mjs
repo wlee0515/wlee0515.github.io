@@ -314,7 +314,8 @@ var DevicePositionCallBackFunctions = {
   },
 }
 
-var DevicePosition = {
+export default {
+
   IsInitialized: false,
   GeoCoodinate: {
     Longitude: 0.0,
@@ -375,7 +376,7 @@ var DevicePosition = {
 
     DevicePositionCallBackFunctions.StopService(this);
   },
-
+/*
   getGeoLocation: function () {
 
   },
@@ -398,5 +399,5 @@ var DevicePosition = {
 
   getRelativeNEDVector: function (iLatitude, iLongitude, iAltitude) {
 
-  },
+  },*/
 }

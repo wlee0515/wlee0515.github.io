@@ -1,4 +1,4 @@
-export var CanvasOp = {
+export default {
 
   resizeToParent: function (iCanvasDOM) {
     iCanvasDOM.width = iCanvasDOM.parentNode.clientWidth - 2;
