@@ -1,61 +1,6 @@
+import CommonMath from "./CommonMath.mjs";
+
 var DevicePositionHelperFunctions = {
-
-  degToRad: function (iAngle) {
-    return iAngle * Math.PI / 180.0;
-  },
-
-  radToDeg: function (iAngle) {
-    return iAngle * 180.0 / Math.PI;
-  },
-
-  normalizeAngle_Sign180deg: function (iAngle) {
-    var wAngle = iAngle;
-    while (wAngle > 180) {
-      wAngle -= 360;
-    }
-
-    while (wAngle < -180) {
-      wAngle += 360;
-    }
-    return wAngle;
-  },
-
-  normalizeAngle_360deg: function (iAngle) {
-    var wAngle = iAngle;
-    while (wAngle > 360) {
-      wAngle -= 360;
-    }
-
-    while (wAngle < 0) {
-      wAngle += 360;
-    }
-    return wAngle;
-  },
-
-
-  normalizeAngle_Sign180rad: function (iAngle) {
-    var wAngle = iAngle;
-    while (wAngle > Math.PI) {
-      wAngle -= 2 * Math.PI;
-    }
-
-    while (wAngle < -Math.PI) {
-      wAngle += 2 * Math.PI;
-    }
-    return wAngle;
-  },
-
-  normalizeAngle_360rad: function (iAngle) {
-    var wAngle = iAngle;
-    while (wAngle > 2 * Math.PI) {
-      wAngle -= 2 * Math.PI;
-    }
-
-    while (wAngle < 0) {
-      wAngle += 2 * Math.PI;
-    }
-    return wAngle;
-  },
 
   convertFromePhoneToScreenAxis : function (ix, iy, iz) {
     /* iPhone Orientation
@@ -145,9 +90,7 @@ var DevicePositionCallBackFunctions = {
 
   StartService : function (iTarget) {
 
-    alert("StartService  - Start");
     if (window.DeviceOrientationEvent) {
-      alert("Sending Request of Orientation");
 
       if (typeof DeviceOrientationEvent.requestPermission === 'function') {
         // iOS 13+
@@ -169,18 +112,13 @@ var DevicePositionCallBackFunctions = {
       alert("Sorry, your browser doesn't support Device Orientation");
     }
 
-
-    alert("Sending Request for Orientation complete");
-
     if (window.DeviceMotionEvent) {
 
-      alert("Sending Request for Motion");
       if (typeof DeviceMotionEvent.requestPermission === 'function') {
         // iOS 13+
         DeviceMotionEvent.requestPermission()
           .then(response => {
             if (response == 'granted') {
-              alert("Request Device Motion Granted");
               window.addEventListener('devicemotion', this.updateDeviceMotion.bind(iTarget));
             }
             else {
@@ -195,10 +133,7 @@ var DevicePositionCallBackFunctions = {
     } else {
       alert("Sorry, your browser doesn't support Device Motion");
     }
-
-    alert("Sending Request for Motion complete");
     
-
     const options = {
       enableHighAccuracy: true,
       timeout: 500,
@@ -206,13 +141,10 @@ var DevicePositionCallBackFunctions = {
     };
 
     if (navigator.geolocation) {
-      alert("Sending Request for GPS");
-
       navigator.geolocation.watchPosition(this.updateDeviceDevicePosition.bind(iTarget), this.handleError, options);
     } else {
       alert("Geolocation is not supported by this browser.");
     }
-    alert("StartService  - End");
 
   },
 
@@ -235,8 +167,8 @@ var DevicePositionCallBackFunctions = {
       wHeading = iOrientation.webkitCompassHeading;
     }
 
-    wHeading = DevicePositionHelperFunctions.degToRad(wHeading);
-    this.EulerAngle.psi = DevicePositionHelperFunctions.normalizeAngle_Sign180deg(wHeading);
+    wHeading = CommonMath.degToRad(wHeading);
+    this.EulerAngle.psi = CommonMath.normalizeAngle_Sign180deg(wHeading);
   },
 
   updateDeviceMotion : function (iMotion) {
@@ -268,8 +200,8 @@ var DevicePositionCallBackFunctions = {
     var wPitch = Math.asin(wScreenGravityVector.x / wMagnitude);
     wPitch *= -1;
     
-    this.EulerAngle.phi = DevicePositionHelperFunctions.normalizeAngle_Sign180rad(wRoll);
-    this.EulerAngle.theta = DevicePositionHelperFunctions.normalizeAngle_Sign180rad(wPitch);
+    this.EulerAngle.phi = CommonMath.normalizeAngle_Sign180rad(wRoll);
+    this.EulerAngle.theta = CommonMath.normalizeAngle_Sign180rad(wPitch);
 
 
     if (null != iMotion.rotationRate.gamma) {
@@ -300,25 +232,6 @@ var DevicePositionCallBackFunctions = {
     if (null != iPosition.coords.altitude) {
       this.GeoCoodinate.Altitude = iPosition.coords.altitude;
     }
-/*
-    if (null != iPosition.coords.speed) {
-      wSpeedTargetPosition = iPosition.coords.speed;
-    }
-*/
-
-    /*
-    var wOutput = document.getElementById("GeoPosition");
-    wOutput.innerText = "";
-    wOutput.innerText += "Latitude : " + position.coords.latitude + "\n";
-    wOutput.innerText += "Longitude : " + position.coords.longitude + "\n";
-    wOutput.innerText += "Altitude : " + position.coords.altitude + "\n";
-    wOutput.innerText += "Accuracy : " + position.coords.accuracy + "\n";
-    wOutput.innerText += "Altitude Accuracy : " + position.coords.altitudeAccuracy + "\n";
-    wOutput.innerText += "Heading : " + position.coords.heading + "\n";
-    wOutput.innerText += "Speed : " + position.coords.speed + "\n";
-  
-    wOutput.innerText += "TimeStamp : " + position.timestamp + "\n";
-    */
   },
   
   updateDeadReckoning: function () {
