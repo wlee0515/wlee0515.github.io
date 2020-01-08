@@ -5,6 +5,7 @@
   <title>Head Up Display</title>
   <script type="text/javascript" src="../../global/frame.js"></script>
   
+  <script src="./javascript/Instruments.js"></script>
   <script src="../../javascript/Camera.js"></script>
   <script src="../../javascript/DevicePosition.js" ></script>
 
@@ -40,10 +41,8 @@
       z-index: -10;
     }
   </style>
-  <script type="module">
+  <script>
 
-    import {ArtificialHorizon, Wheel, drawNumberedDash } from './javascript/Instruments.mjs';
-    
     function normalizeAngle_Sign180deg(iAngle) {
       var wAngle = iAngle;
       while (wAngle > 180) {
@@ -218,8 +217,6 @@
 
     window.addEventListener("load", init)
     window.addEventListener("resize", resize)
-    document.getElementById("id_Sensor_button").addEventListener("click", ActivateGyro);
-    document.getElementById("id_Camera_button").addEventListener("click", ActivateCamera);
   </script>
 </head>
 
@@ -227,8 +224,8 @@
 <body onload="init()" onresize="resize()">
 -->
 <body>
-  <input type="button" value="Activate Sensor" id="id_Sensor_button" /></br>
-  <input type="button" value="Camera" id="id_Camera_button" /></br>
+  <input type="button" value="Activate Sensor" onclick="ActivateGyro()" /></br>
+  <input type="button" value="Camera" onclick="ActivateCamera()" /></br>
   <div id="id_video_div">
   </div>
   <div id="id_plotArea_div">
