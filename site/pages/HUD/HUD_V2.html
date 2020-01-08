@@ -42,6 +42,7 @@
     import {ArtificialHorizon, Wheel, drawNumberedDash } from './javascript/Instruments.mjs';
     import Camera from "../../modules/Camera.mjs"
     import DevicePosition from '../../modules/DevicePosition.mjs';
+    import CanvasOp from '../../modules/CanvasOp.mjs';
     
     function normalizeAngle_Sign180deg(iAngle) {
       var wAngle = iAngle;
@@ -129,8 +130,8 @@
       wSpeedTargetPosition = 0;
       
       var wCanvas = document.getElementById(gGlobal.OuputCanvas_Id);
+      CanvasOp.clear(wCanvas);
       var ctx = wCanvas.getContext("2d");
-      ctx.clearRect(0, 0, wCanvas.width, wCanvas.height);
 
       if (true == gGlobal.CameraOn) {
 
@@ -143,8 +144,8 @@
           }
 
           if (0 != wCameraDOM.videoWidth) {
-            putVideoInCanvas(wCameraDOM, wTempCanvasDOM, true);
-            stretchAndCenterCanvas(wTempCanvasDOM, wCanvas);
+            CanvasOp.putVideoInCanvas(wCameraDOM, wTempCanvasDOM, true);
+            CanvasOp.stretchAndCenterCanvas(wTempCanvasDOM, wCanvas);
           }
         }
       }
