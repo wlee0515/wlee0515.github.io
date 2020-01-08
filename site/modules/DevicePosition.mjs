@@ -160,7 +160,7 @@ var DevicePositionCallBackFunctions = {
               alert("Device Orientation Denied");
             }
           })
-          .catch(handleError)
+          .catch(this.handleError)
       } else {
         window.addEventListener("deviceorientation", this.updateDeviceOrientation.bind(iTarget));
       }
@@ -187,7 +187,7 @@ var DevicePositionCallBackFunctions = {
               alert("Device Motion Denied");
             }
           })
-          .catch(handleError)
+          .catch(this.handleError)
       } else {
         window.addEventListener("devicemotion", this.updateDeviceMotion.bind(iTarget));
       }
