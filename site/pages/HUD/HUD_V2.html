@@ -194,7 +194,7 @@
       wSpeedWheel.drawWheel(ctx, wSpeedX, wSpeedY);
       wAltitudeWheel.drawWheel(ctx, wAltitudeX, wAltitudeY);
 
-      gGlobal.ArtificialHorizon.setTargetEulerAngle(wRollTargetPosition, wPitchTargetPosition, wYawTargetPosition);
+      gGlobal.ArtificialHorizon.setTargetEulerAngle(DevicePosition.EulerAngle.phi, DevicePosition.EulerAngle.theta, DevicePosition.EulerAngle.psi);
       gGlobal.ArtificialHorizon.processTime(0.05);
       gGlobal.ArtificialHorizon.drawArtificialHorizon(wCanvas,wHorizonX,wHorizonY,0.9*wCanvas.width,0.9*wCanvas.height);
     }
