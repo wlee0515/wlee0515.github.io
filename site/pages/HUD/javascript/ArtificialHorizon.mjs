@@ -107,7 +107,7 @@ export function ArtificialHorizon () {
       var wGain = wDt/this.EulerAngleTimeConstant[wi];
       if (wGain > 1.0) wGain = 1.0;
 
-      this.CurrentEulerAngle[wi] =  wGain*wDelta;
+      this.CurrentEulerAngle[wi] +=  wGain*wDelta;
     }
   }
 
