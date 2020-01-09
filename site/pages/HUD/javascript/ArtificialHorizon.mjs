@@ -32,12 +32,21 @@ export var ArtificialHorizonDrawStyleList = [
       wCtx.arc(0,0,wArcRadius, wRollStart, wRollEnd, wRollDir);
       wCtx.stroke();
 
-      var wArrowRadius = 0.8*wRadius;
-      var wArrowX = wArrowRadius*Math.cos(wRollEnd);
-      var wArrowY = wArrowRadius*Math.sin(wRollEnd);
+      var wArrowHeight = 7;
+      var wArrowRadius = wArcRadius - wArrowHeight;
       CanvasOp.drawCenteredAt(iCanvasDOM, function(iCanvasDOM) {
-        CanvasOp.drawArrow(iCanvasDOM, 0, 0, 7.5, 7.5);
-      }, wArrowX,  wArrowY, 1.0, 1.0, wRollEnd);
+
+        CanvasOp.drawCenteredAt(iCanvasDOM, function(iCanvasDOM) {
+          CanvasOp.drawArrow(iCanvasDOM, 0, 0, wArrowHeight, wArrowHeight);
+        }, 0.0, -wArrowRadius , 1.0, 1.0, -Math.PI/2);
+
+        CanvasOp.drawNumberLine(iCanvasDOM, 
+          0, 0,
+          0, -wArrowRadius,
+          10, 0, (180/Math.PI)*iPitch,
+          5, 10, 5, 1, 1, 1, 0.5);
+
+      }, 0,  0, 1.0, 1.0, wRoll);
         
       
       CanvasOp.drawAircraftCursor(iCanvasDOM, 100);

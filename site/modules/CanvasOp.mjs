@@ -295,8 +295,8 @@ export default {
         y: wPixelJump * wDirection.y
       }
 
-      var wForwardCount = parseInt(Math.ceil(wInvertRefMag / wPixelJump));
-      var wBackwardCount = parseInt(Math.ceil(wRefMag / wPixelJump));
+      var wForwardCount = parseInt(Math.floor(wInvertRefMag / wPixelJump));
+      var wBackwardCount = parseInt(Math.floor(wRefMag / wPixelJump));
 
       var wMajorStartX = wClosestPointOnLine.x + iStartX;
       var wMajorStartY = wClosestPointOnLine.y + iStartY;
