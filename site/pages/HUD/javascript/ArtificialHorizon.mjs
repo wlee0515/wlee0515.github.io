@@ -19,7 +19,7 @@ export var ArtificialHorizonDrawStyleList = [
       var wCtx = iCanvasDOM.getContext("2d");
 
       var wRollStart = -Math.PI /2;
-      var wRoll = CommonMath.normalizeAngle_Sign180rad(parseFloat(iRoll));
+      var wRoll = CommonMath.normalizeAngle_Sign180rad(parseFloat(iRoll + 0.1));
       var wRollEnd = wRollStart - wRoll;
       var wRollDir = wRoll > 0;
 
@@ -30,11 +30,11 @@ export var ArtificialHorizonDrawStyleList = [
 
       wCtx.textAlign = 'center';
       wCtx.textBaseline = 'middle';;
-      wCtx.fillText("" + (wRoll*180/Math.PI).toFixed(1), 0,-(wArcRadius - 10));
+      wCtx.fillText("" + (wRoll*180/Math.PI).toFixed(1), 0,-(wArcRadius + 10));
 
       wCtx.beginPath();
-      wCtx.moveTo(0,-wRadius);
-      wCtx.lineTo(0, -wArcRadius);
+//      wCtx.moveTo(0,-wRadius);
+//      wCtx.lineTo(0, -wArcRadius);
       wCtx.arc(0,0,wArcRadius, wRollStart, wRollEnd, wRollDir);
       wCtx.stroke();
 
@@ -42,15 +42,48 @@ export var ArtificialHorizonDrawStyleList = [
       var wArrowRadius = wArcRadius - wArrowHeight;
       CanvasOp.drawCenteredAt(iCanvasDOM, function(iCanvasDOM) {
 
+        wCtx.fillText("" + (wRoll*180/Math.PI).toFixed(1), 0,-(wArcRadius - 20));
+
         CanvasOp.drawCenteredAt(iCanvasDOM, function(iCanvasDOM) {
           CanvasOp.drawArrow(iCanvasDOM, 0, 0, wArrowHeight, wArrowHeight);
         }, 0.0, -wArrowRadius , 1.0, 1.0, -Math.PI/2);
 
+        var wDistFromCenter = 20;
+        var wRefDistFromCenter = wDistFromCenter + 10;
+        var wAnglePerPixel = 4;
+        var wPitch = (180/Math.PI)*iPitch;
+
         CanvasOp.drawNumberLine(iCanvasDOM, 
-          0, 0,
-          0, -wArrowRadius,
-          10, 0, (180/Math.PI)*iPitch,
-          5, 10, 5, 1, 1, 1, 0.5);
+          wDistFromCenter, 0,
+          wDistFromCenter, -wArrowRadius,
+          wRefDistFromCenter, -wPitch*wAnglePerPixel, 0,
+          wAnglePerPixel,
+          10, 5,
+          5, 3,
+          1, 0.5,
+          false);
+
+        CanvasOp.drawNumberLine(iCanvasDOM, 
+          -wDistFromCenter, 0,
+          -wDistFromCenter, -wArrowRadius,
+          -wRefDistFromCenter, -wPitch*wAnglePerPixel, 0,
+          wAnglePerPixel,
+          10, 5,
+          5, 3,
+          1, 0.5,
+          false);
+
+          
+        var wYaw = (180/Math.PI)*iYaw;
+        CanvasOp.drawNumberLine(iCanvasDOM, 
+          wArrowRadius, 10,
+          -wArrowRadius, 10,
+          -wYaw*wAnglePerPixel, wRefDistFromCenter, 0,
+          wAnglePerPixel,
+          10, 5,
+          5, 3,
+          1, 0.5,
+          false);
 
       }, 0,  0, 1.0, 1.0, -wRoll);
         

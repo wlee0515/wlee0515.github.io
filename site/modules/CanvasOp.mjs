@@ -219,7 +219,7 @@ export default {
   },
 
 
-  drawNumberLine: function (iDOM, iStartX, iStartY, iEndX, iEndY, iRefX, iRefY, iRefValue = 0, iUnitScale = 1, iMajorIncrement = 5, iMinorIncrement = 1, iMajorLength = 2, iMinorLength = 1, iMajorLineWidth = 2, iMinorLineWidth = 1) {
+  drawNumberLine: function (iCanvasDOM, iStartX, iStartY, iEndX, iEndY, iRefX, iRefY, iRefValue = 0, iUnitScale = 1, iMajorIncrement = 5, iMinorIncrement = 1, iMajorLength = 2, iMinorLength = 1, iMajorLineWidth = 2, iMinorLineWidth = 1, iDrawLine = true) {
 
     var wDirection = {
       x: iEndX - iStartX,
@@ -257,7 +257,7 @@ export default {
     wPerpendicular.x /= wPerpendicularMag;
     wPerpendicular.y /= wPerpendicularMag;
 
-    var wCtx = iDOM.getContext("2d");
+    var wCtx = iCanvasDOM.getContext("2d");
 
     if (0 != iMinorIncrement) {
       var wPixelJump = Math.abs(iUnitScale) * iMinorIncrement;
@@ -266,8 +266,8 @@ export default {
         y: wPixelJump * wDirection.y
       }
 
-      var wForwardCount = parseInt(Math.ceil(wInvertRefMag / wPixelJump));
-      var wBackwardCount = parseInt(Math.ceil(wRefMag / wPixelJump));
+      var wForwardCount = parseInt(Math.floor(wInvertRefMag / wPixelJump));
+      var wBackwardCount = parseInt(Math.floor(wRefMag / wPixelJump));
 
       var wMinorStartX = wClosestPointOnLine.x + iStartX;
       var wMinorStartY = wClosestPointOnLine.y + iStartY;
@@ -321,10 +321,12 @@ export default {
       }
     }
 
-    wCtx.lineWidth = iMajorLineWidth;
-    wCtx.beginPath();
-    wCtx.moveTo(iStartX, iStartY);
-    wCtx.lineTo(iEndX, iEndY);
-    wCtx.stroke();
+    if (true == iDrawLine) {
+      wCtx.lineWidth = iMajorLineWidth;
+      wCtx.beginPath();
+      wCtx.moveTo(iStartX, iStartY);
+      wCtx.lineTo(iEndX, iEndY);
+      wCtx.stroke();  
+    }
   }
 }
