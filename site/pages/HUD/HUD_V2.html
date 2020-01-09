@@ -43,6 +43,7 @@
     import Camera from "../../modules/Camera.mjs"
     import DevicePosition from '../../modules/DevicePosition.mjs';
     import CanvasOp from '../../modules/CanvasOp.mjs';
+    import Art from './javascript/ArtificialHorizon.mjs';
     
     function normalizeAngle_Sign180deg(iAngle) {
       var wAngle = iAngle;
@@ -67,7 +68,8 @@
       CameraOn: false,
       CurrentCameraStream: null,
       OutputCanvasId: "id_OutputCanvas",
-      InternalCanvasDOM: null
+      InternalCanvasDOM: null,
+      ArtificialHorizon : new Art.ArtificialHorizon()
     }
 
     var wArtificalHorizon;
@@ -84,6 +86,24 @@
     var wVelElPosition = 0;
 
     function init() {
+
+      document.getElementById("id_Sensor_button").addEventListener("click", ActivateGyro);
+      document.getElementById("id_Camera_button").addEventListener("click", ActivateCamera);
+
+      var StyleSelector = document.getElementById("id_Style_Selector")
+      for(var wi = 0; wi < Art.ArtificialHorizonDrawStyleList.length; ++wi){
+        var wNewOption = document.createElement("option");
+        wNewOption.value = wi;
+        wNewOption.text = wi;
+        StyleSelector.appendChild(wNewOption);
+        if (wi == gGlobal.ArtificialHorizon.styleIndex) {
+          StyleSelector.selectedIndex = wi;
+        }
+      }
+
+      StyleSelector.addEventListener("change", ChangeStyle);
+
+    
 
       reboot();
       var wDeltaTime = 100;
@@ -173,6 +193,10 @@
       wArtificalHorizon.drawArtificialHorizon(ctx, wHorizonX, wHorizonY);
       wSpeedWheel.drawWheel(ctx, wSpeedX, wSpeedY);
       wAltitudeWheel.drawWheel(ctx, wAltitudeX, wAltitudeY);
+
+      gGlobal.ArtificialHorizon.setTargetEulerAngle(wRollTargetPosition, wPitchTargetPosition, wYawTargetPosition);
+      gGlobal.ArtificialHorizon.processTime(0.05);
+      gGlobal.ArtificialHorizon.drawArtificialHorizon(wCanvas,wHorizonX,wHorizonY,0.9*wCanvas.width,0.9*wCanvas.height);
     }
 
     function ActivateGyro() {
@@ -197,6 +221,16 @@
       }
 
     }
+    
+    function ChangeStyle(iSelector) {
+      var wSelectedOption = iSelector.target.selectedOptions[0];
+      if (null != wSelectedOption) {
+        gGlobal.ArtificialHorizon.setStyleIndex(wSelectedOption.value);
+
+      }
+      return;
+    }
+
 
     function changeCurrentStream(iNewStream) {
 
@@ -218,8 +252,6 @@
 
     window.addEventListener("load", init)
     window.addEventListener("resize", resize)
-    document.getElementById("id_Sensor_button").addEventListener("click", ActivateGyro);
-    document.getElementById("id_Camera_button").addEventListener("click", ActivateCamera);
   </script>
 </head>
 
@@ -229,6 +261,8 @@
 <body>
   <input type="button" value="Activate Sensor" id="id_Sensor_button" /></br>
   <input type="button" value="Camera" id="id_Camera_button" /></br>
+  <select id="id_Style_Selector">
+  </select>
   <div id="id_video_div">
   </div>
   <div id="id_plotArea_div">
