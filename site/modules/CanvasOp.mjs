@@ -221,6 +221,17 @@ export default {
 
   drawNumberLine: function (iCanvasDOM, iStartX, iStartY, iEndX, iEndY, iRefX, iRefY, iRefValue = 0, iUnitScale = 1, iMajorIncrement = 5, iMinorIncrement = 1, iMajorLength = 2, iMinorLength = 1, iMajorLineWidth = 2, iMinorLineWidth = 1, iDrawLine = true) {
 
+    var wBoundingBox = {
+      x : {
+        min : iEndX > iStartX ? iStartX : iEndX,
+        max : iEndX < iStartX ? iStartX : iEndX,
+      },      
+      y : {
+        min : iEndY > iStartY ? iStartY : iEndY,
+        max : iEndY < iStartY ? iStartY : iEndY,
+      }
+    }
+
     var wDirection = {
       x: iEndX - iStartX,
       y: iEndY - iStartY
@@ -281,6 +292,10 @@ export default {
         var wNewEndX = wMinorEndX + wi * wPixelJumpVector.x;
         var wNewEndY = wMinorEndY + wi * wPixelJumpVector.y;
 
+        if ((wNewStartX < wBoundingBox.x.min) || (wNewStartX > wBoundingBox.x.max) 
+           || (wNewStartY < wBoundingBox.y.min) || (wNewStartY > wBoundingBox.y.max) ) {
+          continue;
+        }
         wCtx.beginPath();
         wCtx.moveTo(wNewStartX, wNewStartY);
         wCtx.lineTo(wNewEndX, wNewEndY);
@@ -309,6 +324,11 @@ export default {
         var wNewStartY = wMajorStartY + wi * wPixelJumpVector.y;
         var wNewEndX = wMajorEndX + wi * wPixelJumpVector.x;
         var wNewEndY = wMajorEndY + wi * wPixelJumpVector.y;
+        
+        if ((wNewStartX < wBoundingBox.x.min) || (wNewStartX > wBoundingBox.x.max) 
+           || (wNewStartY < wBoundingBox.y.min) || (wNewStartY > wBoundingBox.y.max) ) {
+          continue;
+        }
 
         wCtx.beginPath();
         wCtx.moveTo(wNewStartX, wNewStartY);
