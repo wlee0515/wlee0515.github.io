@@ -30,7 +30,7 @@ export var ArtificialHorizonDrawStyleList = [
 
       wCtx.textAlign = 'center';
       wCtx.textBaseline = 'middle';;
-      wCtx.fillText("" + (wRoll*180/Math.PI).toFixed(1), 0,-(wArcRadius + 10));
+      wCtx.fillText("" + (wRoll*180/Math.PI).toFixed(1), 0,-(wArcRadius));
 
       wCtx.beginPath();
 //      wCtx.moveTo(0,-wRadius);
@@ -72,7 +72,6 @@ export var ArtificialHorizonDrawStyleList = [
           5, 3,
           1, 0.5,
           false);
-
           
         var wYaw = (180/Math.PI)*iYaw;
         CanvasOp.drawNumberLine(iCanvasDOM, 
