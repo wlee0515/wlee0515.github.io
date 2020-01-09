@@ -175,7 +175,7 @@
 
       var wHorizonX = wCanvas.width / 2;
       var wHorizonY = wCanvas.height / 2;
-
+/*
       var wAltitudeX = wCanvas.width - (wAltitudeWheel.mWheelRadius + 100);
       var wAltitudeY = wAltitudeWheel.mWheelRadius + 100;
 
@@ -193,7 +193,7 @@
       wArtificalHorizon.drawArtificialHorizon(ctx, wHorizonX, wHorizonY);
       wSpeedWheel.drawWheel(ctx, wSpeedX, wSpeedY);
       wAltitudeWheel.drawWheel(ctx, wAltitudeX, wAltitudeY);
-
+*/
       gGlobal.ArtificialHorizon.setTargetEulerAngle(DevicePosition.EulerAngle.phi, DevicePosition.EulerAngle.theta, DevicePosition.EulerAngle.psi);
       gGlobal.ArtificialHorizon.processTime(0.05);
       gGlobal.ArtificialHorizon.drawArtificialHorizon(wCanvas,wHorizonX,wHorizonY,0.9*wCanvas.width,0.9*wCanvas.height);

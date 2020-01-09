@@ -20,12 +20,18 @@ export var ArtificialHorizonDrawStyleList = [
 
       var wRollStart = -Math.PI /2;
       var wRoll = CommonMath.normalizeAngle_Sign180rad(parseFloat(iRoll));
-      var wRollEnd = wRollStart + wRoll;
-      var wRollDir = wRoll < 0;
+      var wRollEnd = wRollStart - wRoll;
+      var wRollDir = wRoll > 0;
 
-      wCtx.strokeStyle = "blue";
-      wCtx.fillStyle = "blue";
-      wCtx.lineWidth = 2;
+      wCtx.strokeStyle = "lime";
+      wCtx.fillStyle = "lime";
+      wCtx.lineWidth = 1;
+      wCtx.font='10px Arial';
+
+      wCtx.textAlign = 'center';
+      wCtx.textBaseline = 'middle';;
+      wCtx.fillText("" + (wRoll*180/Math.PI).toFixed(1), 0,-(wArcRadius - 10));
+
       wCtx.beginPath();
       wCtx.moveTo(0,-wRadius);
       wCtx.lineTo(0, -wArcRadius);
@@ -46,7 +52,7 @@ export var ArtificialHorizonDrawStyleList = [
           10, 0, (180/Math.PI)*iPitch,
           5, 10, 5, 1, 1, 1, 0.5);
 
-      }, 0,  0, 1.0, 1.0, wRoll);
+      }, 0,  0, 1.0, 1.0, -wRoll);
         
       
       CanvasOp.drawAircraftCursor(iCanvasDOM, 100);
