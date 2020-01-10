@@ -1,3 +1,5 @@
+import {mergeObject} from "./Utility.mjs";
+
 export default {
 
   resizeToParent: function (iCanvasDOM) {
@@ -219,16 +221,32 @@ export default {
   },
 
 
-  drawNumberLine: function (iCanvasDOM, iStartX, iStartY, iEndX, iEndY, iRefX, iRefY, iRefValue = 0, iUnitScale = 1, iMajorIncrement = 5, iMinorIncrement = 1, iMajorLength = 2, iMinorLength = 1, iMajorLineWidth = 2, iMinorLineWidth = 1, iDrawLine = true) {
+  drawNumberLine: function (iCanvasDOM, iStartX, iStartY, iEndX, iEndY, iRefX, iRefY, iRefValue, iParam) {
+
+    var wParameters = {
+      UnitScale : 1,
+      MajorIncrement : 5,
+      MinorIncrement : 1,
+      MajorLength : 2,
+      MinorLength : 1,
+      MajorLineWidth : 2,
+      MinorLineWidth : 1,
+      DrawLine : true,
+      SingleSided : true,
+    };
+
+    mergeObject(iParam, wParameters);
+
+    var wLongestLength = wParameters.MinorLength > wParameters.MajorLength ? wParameters.MinorLength : wParameters.MajorLength;
 
     var wBoundingBox = {
       x : {
-        min : iEndX > iStartX ? iStartX : iEndX,
-        max : iEndX < iStartX ? iStartX : iEndX,
+        min : (iEndX > iStartX ? iStartX : iEndX) - wLongestLength,
+        max : (iEndX < iStartX ? iStartX : iEndX) + wLongestLength,
       },      
       y : {
-        min : iEndY > iStartY ? iStartY : iEndY,
-        max : iEndY < iStartY ? iStartY : iEndY,
+        min : (iEndY > iStartY ? iStartY : iEndY) - wLongestLength,
+        max : (iEndY < iStartY ? iStartY : iEndY) + wLongestLength,
       }
     }
 
@@ -270,8 +288,8 @@ export default {
 
     var wCtx = iCanvasDOM.getContext("2d");
 
-    if (0 != iMinorIncrement) {
-      var wPixelJump = Math.abs(iUnitScale) * iMinorIncrement;
+    if (0 != wParameters.MinorIncrement) {
+      var wPixelJump = Math.abs(wParameters.UnitScale) * wParameters.MinorIncrement;
       var wPixelJumpVector = {
         x: wPixelJump * wDirection.x,
         y: wPixelJump * wDirection.y
@@ -282,10 +300,17 @@ export default {
 
       var wMinorStartX = wClosestPointOnLine.x + iStartX;
       var wMinorStartY = wClosestPointOnLine.y + iStartY;
-      var wMinorEndX = wClosestPointOnLine.x + iStartX + iMinorLength * wPerpendicular.x;
-      var wMinorEndY = wClosestPointOnLine.y + iStartY + iMinorLength * wPerpendicular.y;
+      var wMinorEndX = wClosestPointOnLine.x + iStartX + wParameters.MinorLength * wPerpendicular.x;
+      var wMinorEndY = wClosestPointOnLine.y + iStartY + wParameters.MinorLength * wPerpendicular.y;
 
-      wCtx.lineWidth = iMinorLineWidth;
+      if (false == wParameters.SingleSided) {
+        wMinorStartX = wClosestPointOnLine.x + iStartX - 0.5*wParameters.MinorLength * wPerpendicular.x;
+        wMinorStartY = wClosestPointOnLine.y + iStartY - 0.5*wParameters.MinorLength * wPerpendicular.y;
+        wMinorEndX = wClosestPointOnLine.x + iStartX + 0.5*wParameters.MinorLength * wPerpendicular.x;
+        wMinorEndY = wClosestPointOnLine.y + iStartY + 0.5*wParameters.MinorLength * wPerpendicular.y;  
+      }
+
+      wCtx.lineWidth = wParameters.MinorLineWidth;
       for (var wi = -wBackwardCount; wi <= wForwardCount; ++wi) {
         var wNewStartX = wMinorStartX + wi * wPixelJumpVector.x;
         var wNewStartY = wMinorStartY + wi * wPixelJumpVector.y;
@@ -303,8 +328,8 @@ export default {
       }
     }
 
-    if (0 != iMajorIncrement) {
-      var wPixelJump = Math.abs(iUnitScale) * iMajorIncrement;
+    if (0 != wParameters.MajorIncrement) {
+      var wPixelJump = Math.abs(wParameters.UnitScale) * wParameters.MajorIncrement;
       var wPixelJumpVector = {
         x: wPixelJump * wDirection.x,
         y: wPixelJump * wDirection.y
@@ -315,16 +340,23 @@ export default {
 
       var wMajorStartX = wClosestPointOnLine.x + iStartX;
       var wMajorStartY = wClosestPointOnLine.y + iStartY;
-      var wMajorEndX = wClosestPointOnLine.x + iStartX + iMajorLength * wPerpendicular.x;
-      var wMajorEndY = wClosestPointOnLine.y + iStartY + iMajorLength * wPerpendicular.y;
+      var wMajorEndX = wClosestPointOnLine.x + iStartX + wParameters.MajorLength * wPerpendicular.x;
+      var wMajorEndY = wClosestPointOnLine.y + iStartY + wParameters.MajorLength * wPerpendicular.y;
 
-      wCtx.lineWidth = iMajorLineWidth;
+      if (false == wParameters.SingleSided) {
+        wMajorStartX = wClosestPointOnLine.x + iStartX - 0.5*wParameters.MajorLength * wPerpendicular.x;
+        wMajorStartY = wClosestPointOnLine.y + iStartY - 0.5*wParameters.MajorLength * wPerpendicular.y;
+        wMajorEndX = wClosestPointOnLine.x + iStartX + 0.5*wParameters.MajorLength * wPerpendicular.x;
+        wMajorEndY = wClosestPointOnLine.y + iStartY + 0.5*wParameters.MajorLength * wPerpendicular.y;
+      }
+
+      wCtx.lineWidth = wParameters.MajorLineWidth;
       for (var wi = -wBackwardCount; wi <= wForwardCount; ++wi) {
         var wNewStartX = wMajorStartX + wi * wPixelJumpVector.x;
         var wNewStartY = wMajorStartY + wi * wPixelJumpVector.y;
         var wNewEndX = wMajorEndX + wi * wPixelJumpVector.x;
         var wNewEndY = wMajorEndY + wi * wPixelJumpVector.y;
-        
+
         if ((wNewStartX < wBoundingBox.x.min) || (wNewStartX > wBoundingBox.x.max) 
            || (wNewStartY < wBoundingBox.y.min) || (wNewStartY > wBoundingBox.y.max) ) {
           continue;
@@ -337,12 +369,12 @@ export default {
 
         wCtx.textAlign = 'center';
         wCtx.textBaseline = 'middle';;
-        wCtx.fillText("" + (parseInt(iRefValue) + wi * iMajorIncrement), iRefX + wi * wPixelJumpVector.x, iRefY + wi * wPixelJumpVector.y);
+        wCtx.fillText("" + (parseInt(iRefValue) + wi * wParameters.MajorIncrement), iRefX + wi * wPixelJumpVector.x, iRefY + wi * wPixelJumpVector.y);
       }
     }
 
-    if (true == iDrawLine) {
-      wCtx.lineWidth = iMajorLineWidth;
+    if (true == wParameters.DrawLine) {
+      wCtx.lineWidth = wParameters.MajorLineWidth;
       wCtx.beginPath();
       wCtx.moveTo(iStartX, iStartY);
       wCtx.lineTo(iEndX, iEndY);

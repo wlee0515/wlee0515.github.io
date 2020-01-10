@@ -39,24 +39,11 @@
   </style>
   <script type="module">
 
-    import {ArtificialHorizon, Wheel, drawNumberedDash } from './javascript/Instruments.mjs';
     import Camera from "../../modules/Camera.mjs"
     import DevicePosition from '../../modules/DevicePosition.mjs';
     import CanvasOp from '../../modules/CanvasOp.mjs';
     import Art from './javascript/ArtificialHorizon.mjs';
     
-    function normalizeAngle_Sign180deg(iAngle) {
-      var wAngle = iAngle;
-      while (wAngle > 180) {
-        wAngle -= 360;
-      }
-
-      while (wAngle < -180) {
-        wAngle += 360;
-      }
-      return wAngle;
-    }
-
     function handleError(iError) {
       alert(iError);
     }
@@ -71,19 +58,6 @@
       InternalCanvasDOM: null,
       ArtificialHorizon : new Art.ArtificialHorizon()
     }
-
-    var wArtificalHorizon;
-
-    var wAltitudeWheel;
-    var wSpeedWheel;
-
-    var wRollTargetPosition = 0;
-    var wPitchTargetPosition = 0;
-    var wYawTargetPosition = 0;
-    var wAltitudeTargetPosition = 0;
-    var wSpeedTargetPosition = 0;
-    var wVelAzPosition = 0;
-    var wVelElPosition = 0;
 
     function init() {
 
@@ -103,13 +77,8 @@
 
       StyleSelector.addEventListener("change", ChangeStyle);
 
-    
-
-      reboot();
-      var wDeltaTime = 100;
-      setInterval(interation, wDeltaTime, false);
-
       resize();
+      interation();
     }
 
     function resize() {
@@ -120,34 +89,7 @@
       }
     }
 
-    function reboot() {
-
-      wArtificalHorizon = new ArtificialHorizon();
-
-      wAltitudeWheel = new Wheel();
-      wAltitudeWheel.mIsPerpendicular = false;
-      wAltitudeWheel.mIsVertical = true;
-      wAltitudeWheel.mWheelViewAngle = Math.PI;
-      wAltitudeWheel.mWheelRadius = 50;
-      wAltitudeWheel.drawMajorTic = drawNumberedDash;
-      wAltitudeWheel.mWheelAngle = 3 * Math.PI / 4;
-      wAltitudeWheel.mValueScale = 1 / (10 * Math.PI / 180);
-
-      wSpeedWheel = new Wheel();
-      wSpeedWheel.mIsPerpendicular = false;
-      wSpeedWheel.mIsVertical = true;
-      wSpeedWheel.mWheelViewAngle = Math.PI;
-      wSpeedWheel.mWheelRadius = 50;
-      wSpeedWheel.mWheelAngle = 3 * Math.PI / 4;
-    }
-
     function interation() {
-
-      wRollTargetPosition = (180/Math.PI)*DevicePosition.EulerAngle.phi;
-      wPitchTargetPosition = (180/Math.PI)*DevicePosition.EulerAngle.theta;
-      wYawTargetPosition = (180/Math.PI)*DevicePosition.EulerAngle.psi;
-      wAltitudeTargetPosition = DevicePosition.GeoCoodinate.Altitude;
-      wSpeedTargetPosition = 0;
       
       var wCanvas = document.getElementById(gGlobal.OuputCanvas_Id);
       CanvasOp.clear(wCanvas);
@@ -170,33 +112,14 @@
         }
       }
 
-      ctx.strokeStyle = "red";
-      ctx.fillStyle = "lime";
-
       var wHorizonX = wCanvas.width / 2;
       var wHorizonY = wCanvas.height / 2;
-/*
-      var wAltitudeX = wCanvas.width - (wAltitudeWheel.mWheelRadius + 100);
-      var wAltitudeY = wAltitudeWheel.mWheelRadius + 100;
 
-      var wSpeedX = wSpeedWheel.mWheelRadius + 100;
-      var wSpeedY = wSpeedWheel.mWheelRadius + 100;
-
-
-      wArtificalHorizon.processTime(0.8);
-      wArtificalHorizon.requestPosition(wRollTargetPosition, wPitchTargetPosition, wYawTargetPosition, wVelAzPosition, wVelElPosition);
-      wAltitudeWheel.mWheelPosition += 0.5 * (wAltitudeTargetPosition - wAltitudeWheel.mWheelPosition);
-      wSpeedWheel.mWheelPosition += 0.5 * (wSpeedTargetPosition - wSpeedWheel.mWheelPosition);
-
-
-
-      wArtificalHorizon.drawArtificialHorizon(ctx, wHorizonX, wHorizonY);
-      wSpeedWheel.drawWheel(ctx, wSpeedX, wSpeedY);
-      wAltitudeWheel.drawWheel(ctx, wAltitudeX, wAltitudeY);
-*/
       gGlobal.ArtificialHorizon.setTargetEulerAngle(DevicePosition.EulerAngle.phi, DevicePosition.EulerAngle.theta, DevicePosition.EulerAngle.psi);
       gGlobal.ArtificialHorizon.processTime(0.05);
       gGlobal.ArtificialHorizon.drawArtificialHorizon(wCanvas,wHorizonX,wHorizonY,0.9*wCanvas.width,0.9*wCanvas.height);
+
+      window.requestAnimationFrame(interation);
     }
 
     function ActivateGyro() {
