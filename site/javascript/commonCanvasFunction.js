@@ -145,7 +145,7 @@ function drawPolyLineXYArray(iDOM, iXArray, iYArray, iXScale = 1.0, iYScale = 1.
   wCtx.beginPath();
 
   var wX = iXScale * iXArray[0] + iXOffset;
-  var wY = iYScale * iYArray[0].y + iYOffset;
+  var wY = iYScale * iYArray[0] + iYOffset;
   wCtx.moveTo(wX, wY);
 
   for (var wi = 0;(wi < iXArray.length)&&(wi < iYArray.length); ++wi) {

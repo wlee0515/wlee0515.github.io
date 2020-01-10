@@ -14,6 +14,8 @@ function parseCSVtoDataset(iCSVFileString, iHasHeader = true) {
   var wFirstLine = wLines[0].split(',');
   var wSecondLine = wLines[1].split(',');
 
+  var wDataLength = iHasHeader ? wLines.length - 1 : wLines.length;
+
   for (var wi = 0; wi < wFirstLine.length; ++wi) {
     var wName = "Data_" + wi;
     if (true == iHasHeader) wName = wFirstLine[wi];
@@ -24,7 +26,7 @@ function parseCSVtoDataset(iCSVFileString, iHasHeader = true) {
     wDataSet.push({ 
       mName: wName,
       mDataType: wDataType,
-      mData: []
+      mData: ("number" == wDataType) ? new Float64Array(wDataLength) : new Array(wDataLength),
      });
   }
 
@@ -40,14 +42,14 @@ function parseCSVtoDataset(iCSVFileString, iHasHeader = true) {
         if ("number" == wDataSet[wj].mDataType) {
           wValue = Number(wValue);
         }
-        wDataSet[wj].mData.push(wValue);
+        wDataSet[wj].mData[wi - wStartIndex] = wValue;
       }
       else {
         var wValue = "NA";
         if ("number" == wDataSet[wj].mDataType) {
           wValue = 0;
         }
-        wDataSet[wj].mData.push(wValue);
+        wDataSet[wj].mData[wi - wStartIndex] = wValue;
       }
     }
   }
