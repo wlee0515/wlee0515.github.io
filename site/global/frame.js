@@ -24,6 +24,7 @@ window.addEventListener("load", function(event) {
 	wDiv.style.padding = "0px";
 	wDiv.style.margins = "auto";
 	wDiv.style.textAlign = "center";
+	wDiv.style.zIndex = 5000;
 	
 	wDiv.onclick = function () {
 		window.location.href = "https://wlee0515.github.io/";
