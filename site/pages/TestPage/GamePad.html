@@ -1,0 +1,94 @@
+<html>
+
+<head>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
+  <title>Gampad Test Page</title>
+  <script type="text/javascript" src="../../global/frame.js"></script>
+  
+  <style>
+    body {
+      background: rgb(255, 255, 255);
+      margin: 0;
+      padding: 0;
+    }
+
+    #id_plotArea_div {
+      width: 100vw;
+      height: 100vh;
+      z-index: -10;
+      position: fixed;
+      top: 0px;
+      left: 0px;
+    }
+
+    #id_GameButton {
+      width: 100vw;
+      height: 100vh;
+      border: 1px solid blue;
+      position: fixed;
+      top: 0px;
+      left: 0px;
+    }
+  </style>
+  <script type="module">
+
+    import GamPadObj from "../../modules/GamePad.mjs"
+    
+    function drawKnob( iCanvasDOM, iKnob) {
+  
+      var wCtx = iCanvasDOM.getContext("2d");
+
+      wCtx.clearRect(0, 0, iCanvasDOM.width, iCanvasDOM.height);
+
+      wCtx.strokeStyle = "lime";
+      wCtx.fillStyle = "lime";
+      wCtx.lineWidth = 1;
+
+      wCtx.fillRect(iKnob.x - 0.5* iKnob.width, iKnob.y - 0.5*iKnob.height ,iKnob.width,iKnob.height);
+
+    }
+
+    var gGlobal = {
+      OuputText_Id: "id_TextOut"
+    }
+
+    function init() {
+      var wButton = GamPadObj.GamePadInput(50, 50, 50, 50, { percentage : true}, drawKnob);
+      wButton.id = "id_GameButton"
+      document.body.append(wButton);
+
+      resize();
+      interation();
+    }
+
+    function resize() {
+
+    }
+
+    function interation() {
+      var wButton = document.getElementById("id_GameButton");
+      var wState = wButton.GamePad_State;
+
+      var wOut = document.getElementById(gGlobal.OuputText_Id);
+
+      wOut.innerText = " x : " + wState.x  + " y : " + wState.y + " active : " + wState.active;
+      window.requestAnimationFrame(interation);
+    }
+
+
+    window.addEventListener("load", init)
+    window.addEventListener("resize", resize)
+  </script>
+</head>
+
+<!--
+<body onload="init()" onresize="resize()">
+-->
+<body>
+  <div>
+    <h1>Gampad Output : </h1>
+    <span id="id_TextOut"></span>
+  </div>
+</body>
+
+</html>
