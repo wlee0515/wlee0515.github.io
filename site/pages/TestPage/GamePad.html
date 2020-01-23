@@ -2,7 +2,7 @@
 
 <head>
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
-  <title>Gampad Test Page</title>
+  <title>Game Pad Test Page</title>
   <script type="text/javascript" src="../../global/frame.js"></script>
   
   <style>
@@ -41,9 +41,16 @@
 
       wCtx.clearRect(0, 0, iCanvasDOM.width, iCanvasDOM.height);
 
-      wCtx.strokeStyle = "lime";
-      wCtx.fillStyle = "lime";
-      wCtx.lineWidth = 1;
+      if (true == iKnob.active) {
+        wCtx.strokeStyle = "red";
+        wCtx.fillStyle = "red";
+        wCtx.lineWidth = 1;
+      }
+      else {
+        wCtx.strokeStyle = "lime";
+        wCtx.fillStyle = "lime";
+        wCtx.lineWidth = 1;
+      }
 
       wCtx.fillRect(iKnob.x - 0.5* iKnob.width, iKnob.y - 0.5*iKnob.height ,iKnob.width,iKnob.height);
 
@@ -95,8 +102,8 @@
 -->
 <body>
   <div>
-    <h1>Gampad Output : </h1>
-    <span id="id_TextOut"></span>
+    <h1>Game Pad Output : </h1>
+    <p id="id_TextOut"></p>
   </div>
 </body>
 
