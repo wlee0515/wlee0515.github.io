@@ -28,6 +28,7 @@
       position: fixed;
       top: 0px;
       left: 0px;
+      z-index: 1;
     }
   </style>
   <script type="module">
@@ -53,7 +54,15 @@
     }
 
     function init() {
-      var wButton = GamPadObj.GamePadInput(50, 50, 50, 50, { percentage : true, radius : 100}, drawKnob);
+      var wSettings = {
+        x_recenter : true,
+        y_recenter : true,
+        x_restriction : [false, false],
+        y_restriction : [false, false],
+        percentage : true,
+        radius : -1,
+      }
+      var wButton = GamPadObj.GamePadInput(50, 50, 50, 50, wSettings, drawKnob);
       wButton.id = "id_GameButton"
       document.body.append(wButton);
 

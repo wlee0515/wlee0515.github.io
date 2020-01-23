@@ -49,11 +49,11 @@ function ControlPoints ( iDOM){
   }
 
   this.touchUp = function(evt) {
-    processTouch(evt);
+    this.processTouch(evt);
   }
 
   this.touchMove = function(evt) {
-    processTouch(evt);
+    this.processTouch(evt);
   }
 
   // Touch Event Processing ----------------
@@ -72,7 +72,8 @@ function ControlPoints ( iDOM){
       var wXVal = evt.targetTouches[i].pageX - this.mDOM.offsetLeft;
       var wYVal = evt.targetTouches[i].pageY - this.mDOM.offsetTop;
 
-      for (j = 1; j < evt.targetTouches.length ; ++j) {
+      var wIsSet = false;
+      for (var j = 1; j < evt.targetTouches.length ; ++j) {
         if( this.mControlPointList[j].id == evt.targetTouches[i].identifier) {
           this.mControlPointList[j].active = true;
           this.mControlPointList[j].x = wXVal;
@@ -164,6 +165,7 @@ export function GamePadInput(iKnobWidth, iKnobHeight, iX_Center, iY_Center, iCon
               this.Knob.active = false;
             }
             else {
+              this.Knob.active = true;
               this.Knob.x = wCPList[j].x;
               this.Knob.y = wCPList[j].y;     
             }
@@ -210,11 +212,11 @@ export function GamePadInput(iKnobWidth, iKnobHeight, iX_Center, iY_Center, iCon
         if (wIsFound == false) {
           this.Knob.active = false;
           if (true == this.Knob.constraints.x_recenter) {
-            this.Knob.x += wXCenter - this.Knob.x;
+            this.Knob.x += 0.75*(wXCenter - this.Knob.x);
           }
           
           if (true == this.Knob.constraints.y_recenter) {
-            this.Knob.y += wYCenter - this.Knob.y;
+            this.Knob.y += 0.75*(wYCenter - this.Knob.y);
           } 
         }
       }
