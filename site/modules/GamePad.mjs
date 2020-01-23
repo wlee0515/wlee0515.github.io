@@ -255,32 +255,55 @@ export function GamePadInput(iKnobWidth, iKnobHeight, iX_Center, iY_Center, iCon
       if (this.Knob.y > this.Canvas.height - wHalfHeight) {
         this.Knob.y = this.Canvas.height - wHalfHeight;
       }
-
-      var wXGain = this.Knob.x - wXCenter;
-      var wYGain = this.Knob.y - wYCenter;
       
-      var wXDenominator = 1.0;
-      if (wXGain > 0) {
-        wXDenominator = this.Canvas.width - wHalfWidth - wXCenter;
+      if (this.Knob.constraints.radius > 1) {
+        var wXDelta = this.Knob.x - wXCenter;
+        var wYDelta = this.Knob.y - wYCenter;
+        var wSqMag = wXDelta*wXDelta + wYDelta*wYDelta;
+        var wSqRefMag = this.Knob.constraints.radius*this.Knob.constraints.radius;
+        
+        if (wSqRefMag < wSqMag) {
+          var wR = Math.sqrt(wSqMag);
+          var wScale = this.Knob.constraints.radius/wR;
+          this.Knob.x = wXDelta*wScale + wXCenter;
+          this.Knob.y = wYDelta*wScale + wYCenter;
+        } 
+
+        var wXGain = this.Knob.x - wXCenter;
+        var wYGain = this.Knob.y - wYCenter;
+
+        this.GamePad_State.x = wXGain / this.Knob.constraints.radius;
+        this.GamePad_State.y = wYGain / this.Knob.constraints.radius;
+        this.GamePad_State.active = this.Knob.active;
       }
       else {
-        wXDenominator = wXCenter - wHalfWidth;  
+        var wXGain = this.Knob.x - wXCenter;
+        var wYGain = this.Knob.y - wYCenter;
+        
+        
+        var wXDenominator = 1.0;
+        if (wXGain > 0) {
+          wXDenominator = this.Canvas.width - wHalfWidth - wXCenter;
+        }
+        else {
+          wXDenominator = wXCenter - wHalfWidth;  
+        }
+        
+        var wYDenominator = 1.0;
+        if (wYGain > 0) {
+          wYDenominator = this.Canvas.height - wHalfHeight - wYCenter;
+        }
+        else {
+          wYDenominator = wYCenter - wHalfHeight;  
+        }
+  
+        if (wXDenominator < 1) wXDenominator = 1;
+        if (wYDenominator < 1) wYDenominator = 1;
+  
+        this.GamePad_State.x = wXGain / wXDenominator;
+        this.GamePad_State.y = wYGain / wYDenominator;
+        this.GamePad_State.active = this.Knob.active;
       }
-      
-      var wYDenominator = 1.0;
-      if (wYGain > 0) {
-        wYDenominator = this.Canvas.height - wHalfHeight - wYCenter;
-      }
-      else {
-        wYDenominator = wYCenter - wHalfHeight;  
-      }
-
-      if (wXDenominator < 1) wXDenominator = 1;
-      if (wYDenominator < 1) wYDenominator = 1;
-
-      this.GamePad_State.x = wXGain / wXDenominator;
-      this.GamePad_State.y = wYGain / wYDenominator;
-      this.GamePad_State.active = this.Knob.active;
 
       if (null != this.Knob.drawfunction) {
         this.Knob.drawfunction(this.Canvas, this.Knob );
