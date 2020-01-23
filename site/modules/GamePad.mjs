@@ -259,14 +259,17 @@ export function GamePadInput(iKnobWidth, iKnobHeight, iX_Center, iY_Center, iCon
       }
       
       if (this.Knob.constraints.radius > 1) {
+        var wSize = this.Canvas.height < this.Canvas.width ? this.Canvas.height : this.Canvas.width;
+        wSize /= 2;
+        var wRefRadius = this.Knob.constraints.percentage ? (this.Knob.constraints.radius/100)*wSize : this.Knob.constraints.radius;
         var wXDelta = this.Knob.x - wXCenter;
         var wYDelta = this.Knob.y - wYCenter;
         var wSqMag = wXDelta*wXDelta + wYDelta*wYDelta;
-        var wSqRefMag = this.Knob.constraints.radius*this.Knob.constraints.radius;
+        var wSqRefMag = wRefRadius*wRefRadius;
         
         if (wSqRefMag < wSqMag) {
           var wR = Math.sqrt(wSqMag);
-          var wScale = this.Knob.constraints.radius/wR;
+          var wScale = wRefRadius/wR;
           this.Knob.x = wXDelta*wScale + wXCenter;
           this.Knob.y = wYDelta*wScale + wYCenter;
         } 
@@ -274,8 +277,8 @@ export function GamePadInput(iKnobWidth, iKnobHeight, iX_Center, iY_Center, iCon
         var wXGain = this.Knob.x - wXCenter;
         var wYGain = this.Knob.y - wYCenter;
 
-        this.GamePad_State.x = wXGain / this.Knob.constraints.radius;
-        this.GamePad_State.y = wYGain / this.Knob.constraints.radius;
+        this.GamePad_State.x = wXGain / wRefRadius;
+        this.GamePad_State.y = wYGain / wRefRadius;
         this.GamePad_State.active = this.Knob.active;
       }
       else {
