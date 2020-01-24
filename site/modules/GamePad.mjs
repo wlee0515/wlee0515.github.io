@@ -63,35 +63,97 @@ function ControlPoints ( iDOM){
     if (!evt) evt = event;
     evt.preventDefault();
   
-    for (var i = 1; i < this.mControlPointList.length ; ++i) {
-      this.mControlPointList[i].active = false;
+    var wActiveIndex = [];
+    var wClosestIndex = [];
+    for (var j = 1; j < this.mControlPointList.length ; ++j) {
+      if (true == this.mControlPointList[j].active) {
+        wActiveIndex.push(j);
+        wClosestIndex.push(-1);
+      }
     }
-  
+
+    var wTouchMatrix = [];
     for (var i = 0; i < evt.targetTouches.length ; ++i) {
 
       var wXVal = evt.targetTouches[i].pageX - this.mDOM.offsetLeft;
       var wYVal = evt.targetTouches[i].pageY - this.mDOM.offsetTop;
+      var wNewRow = [];
 
-      var wIsSet = false;
-      for (var j = 1; j < this.mControlPointList.length ; ++j) {
-        if( this.mControlPointList[j].id == evt.targetTouches[i].identifier) {
-          this.mControlPointList[j].active = true;
-          this.mControlPointList[j].x = wXVal;
-          this.mControlPointList[j].y = wYVal;
-          wIsSet = true;
-          break;
+      var wClosetIndex = 0;
+      var wClosetRange = 0;
+      for (var j = 0; j < wActiveIndex.length ; ++j) {
+
+        var wIndex = wActiveIndex[j];
+        var wDx = wXVal - this.mControlPointList[wIndex].x;
+        var wDy = wYVal - this.mControlPointList[wIndex].y;
+        var wDr2 =  wDx*wDx + wDy*wDy;
+        wNewRow.push ({
+          dx : wDx,
+          dy : wDy,
+          dr2 : wDr2
+        })
+
+        if(wClosetRange > wDr2) {
+          wClosetIndex = j;
+          wClosetRange = wDr2;
         }
       }
-  
-      if(wIsSet == false) {
+      var wTouchPoint = {
+        x : wXVal,
+        y : wYVal,
+        active_pt : wNewRow,
+        
+      }
+      wTouchMatrix.push(wTouchPoint);
+    }
+
+    for (var i = 0; i < wActiveIndex.length ; ++i) {
+      for (var j = i; j < wTouchMatrix.length ; ++j) {
+        for (var k = wTouchMatrix.length - 1; k > j ; --k) {
+          if ( wTouchMatrix[k].active_pt[i].dr2 < wTouchMatrix[k-1].active_pt[i].dr2) {
+            var wTemp = wTouchMatrix[k][i];
+            wTouchMatrix[k] = wTouchMatrix[k - 1];
+            wTouchMatrix[k - 1] = wTouchMatrix[k];
+          }
+          else {
+            break;
+          }
+        }
+      }
+    }
+
+    for (var i = 1; i < this.mControlPointList.length ; ++i) {
+      this.mControlPointList[i].active = false;
+    }
+    
+    for (var i = 0; i < wActiveIndex.length ; ++i) {
+      if ( i < wTouchMatrix.length) {
+        var wIndex = wActiveIndex[i];
+        this.mControlPointList[wIndex].active = true;
+        this.mControlPointList[wIndex].x = wTouchMatrix[i].x;
+        this.mControlPointList[wIndex].y = wTouchMatrix[i].y;
+      }
+    }
+
+    
+    for (var i = wActiveIndex.length; i <  wTouchMatrix.length ; ++i) {
+      var wIsSet = false;
+      for (var j = 1; j < this.mControlPointList.length; ++j) {
+        if (false == this.mControlPointList[j].active) {
+          this.mControlPointList[j].active = true;
+          this.mControlPointList[j].x = wTouchMatrix[i].x;
+          this.mControlPointList[j].y = wTouchMatrix[i].y;  
+          wIsSet = true;
+        }
+      }
+      if (false == wIsSet) {
         var wNewPoint = ControlPointStructure( evt.targetTouches[i].identifier);
         wNewPoint.active = true;
         wNewPoint.x = wXVal;
         wNewPoint.y = wYVal;
-
+        wNewPoint.identifier = this.mControlPointList.length;
         this.mControlPointList.push(wNewPoint);
       }
-            
     }
   }
   
