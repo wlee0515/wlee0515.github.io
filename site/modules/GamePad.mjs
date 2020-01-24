@@ -1,6 +1,59 @@
 
 import DomTouchControl from "./DomTouchControl.mjs"
 
+
+function DefaultDrawFunction( iCanvasDOM, iKnob) {
+  
+  var wCtx = iCanvasDOM.getContext("2d");
+
+  wCtx.clearRect(0, 0, iCanvasDOM.width, iCanvasDOM.height);
+
+  wCtx.strokeStyle = "lime";
+  if (iKnob.radius > 0) {
+    wCtx.beginPath();
+    wCtx.arc(iKnob.x_center, iKnob.y_center, iKnob.radius, 0, 2 * Math.PI);
+    wCtx.closePath();
+    wCtx.stroke();
+  }
+  else {    
+    var wEnvelopeWidth = iKnob.x_limts[2] - iKnob.x_limts[0];
+    var wEnvelopeHeight = iKnob.y_limts[2] - iKnob.y_limts[0];
+    wCtx.strokeRect(iKnob.x_limts[0], iKnob.y_limts[0] , wEnvelopeWidth, wEnvelopeHeight );
+  }
+
+  if (true == iKnob.active) {
+    wCtx.strokeStyle = "red";
+    wCtx.fillStyle = "red";
+    wCtx.lineWidth = 1;
+  }
+  else {
+    wCtx.strokeStyle = "lime";
+    wCtx.fillStyle = "lime";
+    wCtx.lineWidth = 1;
+  }
+  
+  if (iKnob.radius > 0) {
+    wCtx.beginPath();
+    wCtx.arc(iKnob.x_center, iKnob.y_center, iKnob.radius + 0.5*iKnob.width, 0, 2 * Math.PI);
+    wCtx.closePath();
+    wCtx.stroke();
+
+    wCtx.beginPath();
+    wCtx.arc(iKnob.x, iKnob.y, 0.5*iKnob.width, 0, 2 * Math.PI);
+    wCtx.closePath();
+    wCtx.stroke();
+    wCtx.fill();
+  }
+  else {
+    
+    var wEnvelopeWidth = iKnob.x_limts[2] - iKnob.x_limts[0] + iKnob.width;
+    var wEnvelopeHeight = iKnob.y_limts[2] - iKnob.y_limts[0] + iKnob.height;
+    wCtx.strokeRect(iKnob.x_limts[0] - 0.5* iKnob.width, iKnob.y_limts[0] - 0.5*iKnob.height , wEnvelopeWidth, wEnvelopeHeight );
+    wCtx.fillRect(iKnob.x - 0.5* iKnob.width, iKnob.y - 0.5*iKnob.height ,iKnob.width,iKnob.height);
+    
+  }
+}
+
 export function GamePadInput(iKnobWidth, iKnobHeight, iX_Center, iY_Center, iConstraints, iDrawFunction ) {
 
   var wGamePadInput_Contraints = {
@@ -31,6 +84,10 @@ export function GamePadInput(iKnobWidth, iKnobHeight, iX_Center, iY_Center, iCon
       radius : -1.0,
       dx : 0,
       dy : 0,
+      x : 0,
+      y : 0,
+      x_limts : [0,0,0],
+      y_limts : [0,0,0],
       active : false,
       active_control_id : 0,
       height : iKnobHeight,
@@ -54,21 +111,21 @@ export function GamePadInput(iKnobWidth, iKnobHeight, iX_Center, iY_Center, iCon
       var wHalfWidth = this.Knob.width/2;
       var wHalfHeight = this.Knob.height/2;
 
-      var wXLimit = [wHalfWidth, wXCenter ,this.Canvas.width - wHalfWidth];
-      var wYLimit = [wHalfHeight, wYCenter ,this.Canvas.height - wHalfHeight];
+      this.Knob.x_limts = [wHalfWidth, wXCenter ,this.Canvas.width - wHalfWidth];
+      this.Knob.y_limts = [wHalfHeight, wYCenter ,this.Canvas.height - wHalfHeight];
   
       if (true == this.Knob.constraints.x_restriction[0]) {
-        wXLimit[0] = wXCenter;
+        this.Knob.x_limts[0] = wXCenter;
       } 
       if (true == this.Knob.constraints.x_restriction[1]) {
-        wXLimit[2] = wXCenter;
+        this.Knob.x_limts[2] = wXCenter;
       } 
 
       if (true == this.Knob.constraints.y_restriction[0]) {
-        wYLimit[0] = wYCenter;
+        this.Knob.y_limts[0] = wYCenter;
       } 
       if (true == this.Knob.constraints.y_restriction[1]) {
-        wYLimit[2] = wYCenter;
+        this.Knob.y_limts[2] = wYCenter;
       } 
 
       if (true == this.Knob.active) {  
@@ -138,20 +195,20 @@ export function GamePadInput(iKnobWidth, iKnobHeight, iX_Center, iY_Center, iCon
       this.Knob.x = this.Knob.dx + wXCenter;
       this.Knob.y = this.Knob.dy + wYCenter;
 
-      if (this.Knob.x < wXLimit[0]) {
-        this.Knob.x = wXLimit[0];
+      if (this.Knob.x < this.Knob.x_limts[0]) {
+        this.Knob.x = this.Knob.x_limts[0];
       }
       
-      if (this.Knob.x > wXLimit[2]) {
-        this.Knob.x = wXLimit[2];
+      if (this.Knob.x > this.Knob.x_limts[2]) {
+        this.Knob.x = this.Knob.x_limts[2];
       }
       
-      if (this.Knob.y < wYLimit[0]) {
-        this.Knob.y = wYLimit[0];
+      if (this.Knob.y < this.Knob.y_limts[0]) {
+        this.Knob.y = this.Knob.y_limts[0];
       }
       
-      if (this.Knob.y > wYLimit[2]) {
-        this.Knob.y = wYLimit[2];
+      if (this.Knob.y > this.Knob.y_limts[2]) {
+        this.Knob.y = this.Knob.y_limts[2];
       }
       
       this.Knob.dx = this.Knob.x - wXCenter;
@@ -185,10 +242,10 @@ export function GamePadInput(iKnobWidth, iKnobHeight, iX_Center, iY_Center, iCon
         wXDenominator = this.Knob.radius;
       }
       else if (this.Knob.dx > 0) {
-        wXDenominator = wXLimit[2] - wXLimit[1];
+        wXDenominator = this.Knob.x_limts[2] - this.Knob.x_limts[1];
       }
       else {
-        wXDenominator = wXLimit[1] - wXLimit[0];  
+        wXDenominator = this.Knob.x_limts[1] - this.Knob.x_limts[0];  
       }
       
       var wYDenominator = 1.0;
@@ -196,10 +253,10 @@ export function GamePadInput(iKnobWidth, iKnobHeight, iX_Center, iY_Center, iCon
         wYDenominator = this.Knob.radius;
       }
       else if (this.Knob.dy > 0) {
-        wYDenominator = wYLimit[2] - wYLimit[1];
+        wYDenominator = this.Knob.y_limts[2] - this.Knob.y_limts[1];
       }
       else {
-        wYDenominator = wYLimit[2] - wYLimit[1];
+        wYDenominator = this.Knob.y_limts[2] - this.Knob.y_limts[1];
       }
 
       if (wXDenominator < 1) wXDenominator = 1;
@@ -210,7 +267,10 @@ export function GamePadInput(iKnobWidth, iKnobHeight, iX_Center, iY_Center, iCon
       this.GamePad_State.active = this.Knob.active;
 
       if (null != this.Knob.drawfunction) {
-        this.Knob.drawfunction(this.Canvas, this.Knob );
+        this.Knob.drawfunction(this.Canvas, this.Knob);
+      }
+      else {
+        DefaultDrawFunction(this.Canvas, this.Knob);
       }
       
       window.requestAnimationFrame(this.Iteration.bind(this));
