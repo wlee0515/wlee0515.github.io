@@ -1,173 +1,5 @@
-function ControlPointStructure ( iId ) {
-  return {
-    x : 0.0,
-    y : 0.0,
-    active : false,
-    id : iId
-  }
-}
 
-function ControlPoints ( iDOM){
-
-  this.mDOM = iDOM;
-  this.mControlPointList = [];
-
-  this.mControlPointList.push(ControlPointStructure( -1 ));
-  this.mControlPointList[0].active = false;
-  this.mControlPointList[0].x = 0.0;
-  this.mControlPointList[0].y = 0.0;
-
-
-  // Mouse Event Handling ----------------
-  this.mouseUp = function (evt) {
-    this.mControlPointList[0].active = false;
-    this.processMouse(evt);
-  }
-  
-  this.mouseDown = function (evt) {
-    this.mControlPointList[0].active = true;
-    this.processMouse(evt);
-  }
-
-  this.mouseMove = function(evt) {
-    this.processMouse(evt);
-  }
-
-  // Mouse Event Processing ----------------
-
-  this.processMouse = function(evt) {
-    if (!evt) evt = event;
-    evt.preventDefault();
-    this.mControlPointList[0].x = evt.pageX - this.mDOM.offsetLeft;
-    this.mControlPointList[0].y = evt.pageY - this.mDOM.offsetTop;
-  }
-
-  // Touch Event Handling ----------------
-
-  this.touchDown = function(evt) {
-    this.processTouch(evt);
-  }
-
-  this.touchUp = function(evt) {
-    this.processTouch(evt);
-  }
-
-  this.touchMove = function(evt) {
-    this.processTouch(evt);
-  }
-
-  // Touch Event Processing ----------------
-  
-  this.processTouch = function(evt){
-
-    if (!evt) evt = event;
-    evt.preventDefault();
-  
-    var wActiveIndex = [];
-    var wClosestIndex = [];
-    for (var j = 1; j < this.mControlPointList.length ; ++j) {
-      if (true == this.mControlPointList[j].active) {
-        wActiveIndex.push(j);
-        wClosestIndex.push(-1);
-      }
-    }
-
-    var wTouchMatrix = [];
-    for (var i = 0; i < evt.targetTouches.length ; ++i) {
-
-      var wXVal = evt.targetTouches[i].pageX - this.mDOM.offsetLeft;
-      var wYVal = evt.targetTouches[i].pageY - this.mDOM.offsetTop;
-      var wNewRow = [];
-
-      var wClosetIndex = 0;
-      var wClosetRange = 0;
-      for (var j = 0; j < wActiveIndex.length ; ++j) {
-
-        var wIndex = wActiveIndex[j];
-        var wDx = wXVal - this.mControlPointList[wIndex].x;
-        var wDy = wYVal - this.mControlPointList[wIndex].y;
-        var wDr2 =  wDx*wDx + wDy*wDy;
-        wNewRow.push ({
-          dx : wDx,
-          dy : wDy,
-          dr2 : wDr2
-        })
-
-        if(wClosetRange > wDr2) {
-          wClosetIndex = j;
-          wClosetRange = wDr2;
-        }
-      }
-      var wTouchPoint = {
-        x : wXVal,
-        y : wYVal,
-        active_pt : wNewRow,
-        
-      }
-      wTouchMatrix.push(wTouchPoint);
-    }
-
-    for (var i = 0; i < wActiveIndex.length ; ++i) {
-      for (var j = i; j < wTouchMatrix.length ; ++j) {
-        for (var k = wTouchMatrix.length - 1; k > j ; --k) {
-          if ( wTouchMatrix[k].active_pt[i].dr2 < wTouchMatrix[k-1].active_pt[i].dr2) {
-            var wTemp = wTouchMatrix[k][i];
-            wTouchMatrix[k] = wTouchMatrix[k - 1];
-            wTouchMatrix[k - 1] = wTouchMatrix[k];
-          }
-          else {
-            break;
-          }
-        }
-      }
-    }
-
-    for (var i = 1; i < this.mControlPointList.length ; ++i) {
-      this.mControlPointList[i].active = false;
-    }
-    
-    for (var i = 0; i < wActiveIndex.length ; ++i) {
-      if ( i < wTouchMatrix.length) {
-        var wIndex = wActiveIndex[i];
-        this.mControlPointList[wIndex].active = true;
-        this.mControlPointList[wIndex].x = wTouchMatrix[i].x;
-        this.mControlPointList[wIndex].y = wTouchMatrix[i].y;
-      }
-    }
-
-    
-    for (var i = wActiveIndex.length; i <  wTouchMatrix.length ; ++i) {
-      var wIsSet = false;
-      for (var j = 1; j < this.mControlPointList.length; ++j) {
-        if (false == this.mControlPointList[j].active) {
-          this.mControlPointList[j].active = true;
-          this.mControlPointList[j].x = wTouchMatrix[i].x;
-          this.mControlPointList[j].y = wTouchMatrix[i].y;  
-          wIsSet = true;
-        }
-      }
-      if (false == wIsSet) {
-        var wNewPoint = ControlPointStructure( evt.targetTouches[i].identifier);
-        wNewPoint.active = true;
-        wNewPoint.x = wXVal;
-        wNewPoint.y = wYVal;
-        wNewPoint.identifier = this.mControlPointList.length;
-        this.mControlPointList.push(wNewPoint);
-      }
-    }
-  }
-  
-  this.mDOM.addEventListener("mousedown", this.mouseDown.bind(this), false);
-  this.mDOM.addEventListener("mousemove", this.mouseMove.bind(this), false);
-  this.mDOM.addEventListener("mouseup", this.mouseUp.bind(this), false);
-  this.mDOM.addEventListener("mouseenter", this.mouseUp.bind(this), false);
-  this.mDOM.addEventListener("mouseleave", this.mouseUp.bind(this), false);
-
-  this.mDOM.addEventListener("touchstart", this.touchDown.bind(this), false);
-  this.mDOM.addEventListener("touchend", this.touchUp.bind(this), false);
-  this.mDOM.addEventListener("touchmove", this.touchMove.bind(this), false);
-  this.mDOM.addEventListener("touchcancel", this.touchUp.bind(this), false);
-}
+import DomTouchControl from "./DomTouchControl.mjs"
 
 export function GamePadInput(iKnobWidth, iKnobHeight, iX_Center, iY_Center, iConstraints, iDrawFunction ) {
 
@@ -178,6 +10,8 @@ export function GamePadInput(iKnobWidth, iKnobHeight, iX_Center, iY_Center, iCon
     y_restriction : null != iConstraints.y_restriction? iConstraints.y_restriction : [false, false],
     percentage : null != iConstraints.percentage? iConstraints.percentage : false,
     radius : null != iConstraints.radius? iConstraints.radius : -1,
+    x_center : iX_Center,
+    y_center : iY_Center,
   }
 
   var wDOM = document.createElement("div");
@@ -192,10 +26,11 @@ export function GamePadInput(iKnobWidth, iKnobHeight, iX_Center, iY_Center, iCon
       active : false
     },
     Knob : {
-      x_center : iX_Center,
-      y_center : iY_Center,
-      x : iX_Center,
-      y : iY_Center,
+      x_center : 0,
+      y_center : 0,
+      radius : -1.0,
+      dx : 0,
+      dy : 0,
       active : false,
       active_control_id : 0,
       height : iKnobHeight,
@@ -205,17 +40,37 @@ export function GamePadInput(iKnobWidth, iKnobHeight, iX_Center, iY_Center, iCon
     },
 
     Canvas : wCanvas,
-    ControlPoints : new ControlPoints(wDOM),
+    ControlPoints : new DomTouchControl.DomTouchControl(wDOM),
     Iteration : function() {
 
       this.Canvas.width = this.Canvas.parentNode.clientWidth - 2;
       this.Canvas.height = this.Canvas.parentNode.clientHeight - 2;
       
+      var wXCenter = this.Knob.constraints.percentage ? (this.Knob.constraints.x_center/100)*this.Canvas.width : this.Knob.constraints.x_center;
+      var wYCenter = this.Knob.constraints.percentage ? (this.Knob.constraints.y_center/100)*this.Canvas.height : this.Knob.constraints.y_center;
+      this.Knob.x_center = wXCenter;
+      this.Knob.y_center = wYCenter;
+
       var wHalfWidth = this.Knob.width/2;
       var wHalfHeight = this.Knob.height/2;
-      var wXCenter = this.Knob.constraints.percentage ? (this.Knob.x_center/100)*this.Canvas.width : this.Knob.x_center;
-      var wYCenter = this.Knob.constraints.percentage ? (this.Knob.y_center/100)*this.Canvas.height : this.Knob.y_center;
-      
+
+      var wXLimit = [wHalfWidth, wXCenter ,this.Canvas.width - wHalfWidth];
+      var wYLimit = [wHalfHeight, wYCenter ,this.Canvas.height - wHalfHeight];
+  
+      if (true == this.Knob.constraints.x_restriction[0]) {
+        wXLimit[0] = wXCenter;
+      } 
+      if (true == this.Knob.constraints.x_restriction[1]) {
+        wXLimit[2] = wXCenter;
+      } 
+
+      if (true == this.Knob.constraints.y_restriction[0]) {
+        wYLimit[0] = wYCenter;
+      } 
+      if (true == this.Knob.constraints.y_restriction[1]) {
+        wYLimit[2] = wYCenter;
+      } 
+
       if (true == this.Knob.active) {  
         var wCPList = this.ControlPoints.mControlPointList;
 
@@ -228,8 +83,8 @@ export function GamePadInput(iKnobWidth, iKnobHeight, iX_Center, iY_Center, iCon
             }
             else {
               this.Knob.active = true;
-              this.Knob.x = wCPList[j].x;
-              this.Knob.y = wCPList[j].y;     
+              this.Knob.dx = wCPList[j].x - wXCenter;
+              this.Knob.dy = wCPList[j].y - wYCenter;              
             }
           }
         }
@@ -239,12 +94,6 @@ export function GamePadInput(iKnobWidth, iKnobHeight, iX_Center, iY_Center, iCon
         }
       }
       else {
-        
-        var wXUpperLimit = this.Knob.x - wHalfWidth;
-        var wXLowerLimit = this.Knob.x + wHalfWidth;
-        
-        var wYUpperLimit = this.Knob.y - wHalfHeight;
-        var wYLowerLimit = this.Knob.y + wHalfHeight;
 
         var wCPList = this.ControlPoints.mControlPointList;
 
@@ -256,121 +105,109 @@ export function GamePadInput(iKnobWidth, iKnobHeight, iX_Center, iY_Center, iCon
             continue;
           }
 
-          if ((wCPList[j].x < wXUpperLimit) || (wCPList[j].x > wXLowerLimit)) {
-            continue;
-          }
+          var wXDelta = wCPList[j].x - wXCenter;
+          var wYDelta = wCPList[j].y - wYCenter;
           
-          if ((wCPList[j].y < wYUpperLimit) || (wCPList[j].y > wYLowerLimit)) {
+          var wDxDelta = Math.abs(this.Knob.dx - wXDelta);
+          var wDyDelta = Math.abs(this.Knob.dy - wYDelta);
+          
+          if ((wHalfWidth < wDxDelta) || (wHalfHeight < wDyDelta)) {
             continue;
           }
 
           wIsFound = true;
           this.Knob.active = true;
           this.Knob.active_control_id = wCPList[j].identifier;
-          this.Knob.x = wCPList[j].x;
-          this.Knob.y = wCPList[j].y; 
+          this.Knob.dx = wXDelta;
+          this.Knob.dy = wYDelta; 
+  
         }        
 
         if (wIsFound == false) {
           this.Knob.active = false;
           if (true == this.Knob.constraints.x_recenter) {
-            this.Knob.x += 0.75*(wXCenter - this.Knob.x);
+            this.Knob.dx *= 0.2;
           }
           
           if (true == this.Knob.constraints.y_recenter) {
-            this.Knob.y += 0.75*(wYCenter - this.Knob.y);
+            this.Knob.dy *= 0.2;
           } 
         }
       }
-  
-      if (true == this.Knob.constraints.x_restriction[0]) {
-        if (this.Knob.x < wXCenter) {
-          this.Knob.x = wXCenter;
-        }
-      } 
-      if (true == this.Knob.constraints.x_restriction[1]) {
-        if (this.Knob.x > wXCenter) {
-          this.Knob.x = wXCenter;
-        }
-      } 
-      if (true == this.Knob.constraints.y_restriction[0]) {
-        if (this.Knob.y < wYCenter) {
-          this.Knob.y = wYCenter;
-        }
-      } 
-      if (true == this.Knob.constraints.x_restriction[1]) {
-        if (this.Knob.y > wYCenter) {
-          this.Knob.y = wYCenter;
-        }
-      } 
+      
+      this.Knob.x = this.Knob.dx + wXCenter;
+      this.Knob.y = this.Knob.dy + wYCenter;
 
-      if (this.Knob.x < wHalfWidth) {
-        this.Knob.x = wHalfWidth;
+      if (this.Knob.x < wXLimit[0]) {
+        this.Knob.x = wXLimit[0];
       }
       
-      if (this.Knob.x > this.Canvas.width - wHalfWidth) {
-        this.Knob.x = this.Canvas.width - wHalfWidth;
+      if (this.Knob.x > wXLimit[2]) {
+        this.Knob.x = wXLimit[2];
       }
       
-      if (this.Knob.y < wHalfHeight) {
-        this.Knob.y = wHalfHeight;
+      if (this.Knob.y < wYLimit[0]) {
+        this.Knob.y = wYLimit[0];
       }
       
-      if (this.Knob.y > this.Canvas.height - wHalfHeight) {
-        this.Knob.y = this.Canvas.height - wHalfHeight;
+      if (this.Knob.y > wYLimit[2]) {
+        this.Knob.y = wYLimit[2];
       }
       
+      this.Knob.dx = this.Knob.x - wXCenter;
+      this.Knob.dy = this.Knob.y - wYCenter;
+  
       if (this.Knob.constraints.radius > 1) {
         var wSize = this.Canvas.height < this.Canvas.width ? this.Canvas.height : this.Canvas.width;
         wSize /= 2;
         var wRefRadius = this.Knob.constraints.percentage ? (this.Knob.constraints.radius/100)*wSize : this.Knob.constraints.radius;
-        var wXDelta = this.Knob.x - wXCenter;
-        var wYDelta = this.Knob.y - wYCenter;
-        var wSqMag = wXDelta*wXDelta + wYDelta*wYDelta;
+        this.Knob.radius = wRefRadius;
+        
+        var wSqMag = this.Knob.dx*this.Knob.dx + this.Knob.dy*this.Knob.dy;
         var wSqRefMag = wRefRadius*wRefRadius;
         
         if (wSqRefMag < wSqMag) {
           var wR = Math.sqrt(wSqMag);
           var wScale = wRefRadius/wR;
-          this.Knob.x = wXDelta*wScale + wXCenter;
-          this.Knob.y = wYDelta*wScale + wYCenter;
+          this.Knob.dx *= wScale;
+          this.Knob.dy *= wScale;
         } 
-
-        var wXGain = this.Knob.x - wXCenter;
-        var wYGain = this.Knob.y - wYCenter;
-
-        this.GamePad_State.x = wXGain / wRefRadius;
-        this.GamePad_State.y = wYGain / wRefRadius;
-        this.GamePad_State.active = this.Knob.active;
       }
       else {
-        var wXGain = this.Knob.x - wXCenter;
-        var wYGain = this.Knob.y - wYCenter;
-        
-        
-        var wXDenominator = 1.0;
-        if (wXGain > 0) {
-          wXDenominator = this.Canvas.width - wHalfWidth - wXCenter;
-        }
-        else {
-          wXDenominator = wXCenter - wHalfWidth;  
-        }
-        
-        var wYDenominator = 1.0;
-        if (wYGain > 0) {
-          wYDenominator = this.Canvas.height - wHalfHeight - wYCenter;
-        }
-        else {
-          wYDenominator = wYCenter - wHalfHeight;  
-        }
-  
-        if (wXDenominator < 1) wXDenominator = 1;
-        if (wYDenominator < 1) wYDenominator = 1;
-  
-        this.GamePad_State.x = wXGain / wXDenominator;
-        this.GamePad_State.y = wYGain / wYDenominator;
-        this.GamePad_State.active = this.Knob.active;
+        this.Knob.radius = -1;    
       }
+
+      this.Knob.x = this.Knob.dx + wXCenter;
+      this.Knob.y = this.Knob.dy + wYCenter;
+
+      var wXDenominator = 1.0;
+      if (this.Knob.radius > 0 ) {
+        wXDenominator = this.Knob.radius;
+      }
+      else if (this.Knob.dx > 0) {
+        wXDenominator = wXLimit[2] - wXLimit[1];
+      }
+      else {
+        wXDenominator = wXLimit[1] - wXLimit[0];  
+      }
+      
+      var wYDenominator = 1.0;
+      if (this.Knob.radius > 0 ) {
+        wYDenominator = this.Knob.radius;
+      }
+      else if (this.Knob.dy > 0) {
+        wYDenominator = wYLimit[2] - wYLimit[1];
+      }
+      else {
+        wYDenominator = wYLimit[2] - wYLimit[1];
+      }
+
+      if (wXDenominator < 1) wXDenominator = 1;
+      if (wYDenominator < 1) wYDenominator = 1;
+
+      this.GamePad_State.x = this.Knob.dx / wXDenominator;
+      this.GamePad_State.y = this.Knob.dy / wYDenominator;
+      this.GamePad_State.active = this.Knob.active;
 
       if (null != this.Knob.drawfunction) {
         this.Knob.drawfunction(this.Canvas, this.Knob );
