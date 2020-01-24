@@ -73,7 +73,7 @@ function ControlPoints ( iDOM){
       var wYVal = evt.targetTouches[i].pageY - this.mDOM.offsetTop;
 
       var wIsSet = false;
-      for (var j = 1; j < evt.targetTouches.length ; ++j) {
+      for (var j = 1; j < this.mControlPointList.length ; ++j) {
         if( this.mControlPointList[j].id == evt.targetTouches[i].identifier) {
           this.mControlPointList[j].active = true;
           this.mControlPointList[j].x = wXVal;
