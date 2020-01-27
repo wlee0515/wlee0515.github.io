@@ -53,7 +53,158 @@ function DefaultDrawFunction( iCanvasDOM, iKnob) {
     
   }
 }
+/*
+var GamePadInputType = {
+  eBUTTON = 0,
+  eSWITCH = 1,
+  eSLIDER = 2,
+  eDIAL_SLIDER = 4,
+  eANALOG_STICK = 5
+}
 
+var GamePadExternal = {
+  
+  baseInputType : function (iKnobWidth, iKnobHeight) {
+
+    return {    
+      mInput_State : {  
+        active : false
+      },
+  
+      x: 0,
+      y: 0,
+      active: false,
+      active_control_id: 0,
+      height: iKnobHeight,
+      width: iKnobWidth,
+      constraints: {},
+
+      processHit : function(iCanvasDOM, iControlPointList) {
+
+        if (true == this.active) {  
+          var wIsFound = false;
+          for (j = 0; j < iControlPointList.length ; ++j) {
+            if (this.active_control_id == iControlPointList[j].identifier) {
+              wIsFound = true;
+              if (false == iControlPointList[j].active) {
+                this.active = false;
+              }
+              else {
+                this.active = true;
+                this.x = iControlPointList[j].x;
+                this.y = iControlPointList[j].y;              
+              }
+            }
+          }
+  
+          if (false == wIsFound) {
+            this.active = false;
+          }
+        }
+        else {
+  
+          var wIsFound = false;
+  
+          for (var j = 0; j < iControlPointList.length ; ++j) {
+  
+            if (false == iControlPointList[j].active){
+              continue;
+            }
+  
+            var wDx = Math.abs(this.x - iControlPointList[j].x);
+            var wDy = Math.abs(this.y - iControlPointList[j].y);
+            
+            if ((wHalfWidth < wDx) || (wHalfHeight < wDy)) {
+              continue;
+            }
+  
+            wIsFound = true;
+            this.Knob.active = true;
+            this.Knob.active_control_id = wCPList[j].identifier;
+            this.x = iControlPointList[j].x;
+            this.y = iControlPointList[j].y;
+    
+          }        
+  
+          if (wIsFound == false) {
+            this.Knob.active = false;
+          }
+        }
+      },
+
+      processConstraints : function (iCanvasDOM, iControlPointList) {
+
+      },
+
+      iteration : function (iCanvasDOM, iControlPointList) {
+        this.processHit(iCanvasDOM, iControlPointList);
+        this.processConstraints(iCanvasDOM, iControlPointList);
+      }
+    }
+  },
+
+  button : function(iKnobWidth, iKnobHeight, iParameter) {
+  
+    var wInput = baseInputType(iKnobWidth, iKnobHeight);
+
+    wInput.processConstraints = {}
+
+    return wInput;
+  },
+  
+  createInput : function(iType, iKnobWidth, iKnobHeight, iParameter) {
+
+    switch (iType) {
+      case GamePadInputType.eBUTTON:
+        return this.button(iKnobWidth, iKnobHeight, iCenterX, iCenterY, iParameter);
+      case GamePadInputType.eSWITCH:
+        return this.button(iKnobWidth, iKnobHeight, iCenterX, iCenterY, iParameter);
+      case GamePadInputType.eSLIDER:
+        return this.button(iKnobWidth, iKnobHeight, iCenterX, iCenterY, iParameter);
+      case GamePadInputType.eDIAL_SLIDER:
+        return this.button(iKnobWidth, iKnobHeight, iCenterX, iCenterY, iParameter);
+      case GamePadInputType.eANALOG_STICK:
+        return this.button(iKnobWidth, iKnobHeight, iCenterX, iCenterY, iParameter);
+    }
+
+    return null;
+  },
+
+}
+
+
+function GamePad(iCanvasDOM, iDrawFunction) {
+  this.mCanvas = iCanvasDOM;
+  this.mDrawFunction = null != iDrawFunction ? iDrawFunction : DefaultDrawFunction;
+  this.mControlPoints = new DomTouchControl.DomTouchControl(this.mCanvas);
+
+  this.mInputKnobList = [];
+  this.GamePad_State = [];
+
+  this.addInput = (iType, iKnobWidth, iKnobHeight, iCenterX, iCenterY, iParameter) {
+    var wNewInput = new GamePadExternal.createInput(iType, iKnobWidth, iKnobHeight, iCenterX, iCenterY, iParameter);
+    if (null != wNewInput) {
+      this.mInputKnobList.push(wNewInput);
+      this.GamePad_State.push(wNewInput.mInput_State)
+  
+    }
+  }
+
+  this.iteration = function () {
+    for(var wi = 0; wi < this.mInputKnobList.length; ++wi) {
+      this.mInputKnobList.iteration(this.mCanvas, this.mControlPoints.mControlPointList);
+    }
+
+    if (null != this.mDrawFunction) {
+      this.mDrawFunction(this.mCanvas, this.mInputKnobList);
+    }
+
+    window.requestAnimationFrame(this.iteration.bind(this));
+  }
+
+  this.iteration()
+}
+*/
 export function GamePadInput(iKnobWidth, iKnobHeight, iX_Center, iY_Center, iConstraints, iDrawFunction ) {
 
   var wGamePadInput_Contraints = {
