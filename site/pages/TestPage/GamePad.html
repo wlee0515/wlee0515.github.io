@@ -12,12 +12,16 @@
       padding: 0;
     }
 
+
+    #id_GamePad {
+      width: 100vw;
+      height: 100vx;
+      z-index: 1;
+    }
+
     #id_GameButton {
-      width: 90vw;
-      height: 90vh;
-      position: fixed;
-      top: 5vh;
-      left: 5vw;
+      width: 500px;
+      height: 500px;
       z-index: 1;
     }
   </style>
@@ -27,7 +31,8 @@
     
 
     var gGlobal = {
-      OuputText_Id: "id_TextOut"
+      OuputText_Id: "id_TextOut",
+      OuputDiv_Id: "id_GamePad"
     }
 
     function init() {
@@ -36,19 +41,28 @@
         y_recenter : true,
         x_restriction : [false, false],
         y_restriction : [false, false],
+        trackEnd_x : 90,
+        trackEnd_y : 10,
         percentage : true,
         radius : 80,
       }
+      /*
       var wButton = GamPadObj.GamePadInput(50, 50, 50, 50, wSettings);
       wButton.id = "id_GameButton"
       document.body.append(wButton);
+*/
+      
+      var wGamepad = document.getElementById(gGlobal.OuputDiv_Id);
+
+      var wGamePadControl = new GamPadObj.GamePad(wGamepad);
+      wGamePadControl.addInput(GamPadObj.GamePadInputType.eSWITCH, 50,50,0,50,wSettings)
+
 
       resize();
-      interation();
+     // interation();
     }
 
     function resize() {
-
     }
 
     function interation() {
@@ -75,6 +89,9 @@
     <h1>Game Pad Output : </h1>
     <p id="id_TextOut"></p>
   </div>
+  <div id="id_GamePad">
+  </div>
+  
 </body>
 
 </html>
