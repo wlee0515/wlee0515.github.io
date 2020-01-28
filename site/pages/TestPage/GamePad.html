@@ -44,10 +44,12 @@
         y_recenter : true,
         x_restriction : [false, false],
         y_restriction : [false, false],
-        forward_Dx : -60,
-        backward_Dy : 40,
+        forward_Dx : 5,
+        forward_Dy : 20,
+        backward_Dx : 5,
+        backward_Dy : -20,
         percentage : true,
-        radius : 80,
+        radius : 50,
         forward_state_count : 1,
         backward_state_count : 4,
       }
@@ -60,10 +62,10 @@
       var wGamepad = document.getElementById(gGlobal.OuputDiv_Id);
 
       var wGamePadControl = new GamPadObj.GamePad(wGamepad);
-      wGamePadControl.addInput(GamPadObj.GamePadInputType.eBUTTON, 50,50,50,10,wSettings)
-      wGamePadControl.addInput(GamPadObj.GamePadInputType.eSWITCH, 50,50,50,30,wSettings)
-      wGamePadControl.addInput(GamPadObj.GamePadInputType.eSLIDER, 50,50,50,50,wSettings)
-      //wGamePadControl.addInput(GamPadObj.GamePadInputType.eANALOG_STICK, 50,50,50,60,wSettings)
+      wGamePadControl.addInput(GamPadObj.GamePadInputType.eBUTTON, 50,50,25,20,wSettings)
+      wGamePadControl.addInput(GamPadObj.GamePadInputType.eSWITCH, 50,50,50,20,wSettings)
+      wGamePadControl.addInput(GamPadObj.GamePadInputType.eSLIDER, 50,50,75,20,wSettings)
+      wGamePadControl.addInput(GamPadObj.GamePadInputType.eANALOG_STICK, 50,50,50,75,wSettings)
 
 
       resize();

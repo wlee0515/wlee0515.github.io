@@ -2,20 +2,98 @@
 import DomTouchControl from "./DomTouchControl.mjs"
 
 
-function DrawAnaogStick( iCanvasDOM, iKnob) {
+function DrawKnob( iCanvasDOM, iKnob) {
   
   var wCtx = iCanvasDOM.getContext("2d");
+  
   wCtx.strokeStyle = "lime";
-  if (iKnob.radius > 0) {
-    wCtx.beginPath();
-    wCtx.arc(iKnob.x_center, iKnob.y_center, iKnob.radius, 0, 2 * Math.PI);
-    wCtx.closePath();
-    wCtx.stroke();
-  }
-  else {    
-    
-    wCtx.strokeRect(iKnob.x_frame_limts[0], iKnob.y_frame_limts[0] , iKnob.frame_width, iKnob.frame_height );
-    
+  wCtx.fillStyle = "lime";
+  wCtx.lineWidth = 1;
+  
+  switch (iKnob.InputType) {
+    case GamePadInputType.eSWITCH:
+      {
+        var wBdSlop = {
+          x : iKnob.slider_x_path[0] - iKnob.slider_x_path[1],
+          y : iKnob.slider_y_path[0] - iKnob.slider_y_path[1]
+        }
+
+        var wBdMag = Math.sqrt(wBdSlop.x* wBdSlop.x + wBdSlop.y*wBdSlop.y);
+        wBdSlop.x /= wBdMag;
+        wBdSlop.y /= wBdMag;
+        
+        wBdSlop.x *= 5;
+        wBdSlop.y *= 5;
+
+        wCtx.strokeStyle = "blue";
+        for (var wi = 0; wi < iKnob.switch_x_position[0].length; ++wi) {
+          var wCenterX = iKnob.switch_x_position[0][wi];
+          var wCenterY = iKnob.switch_y_position[0][wi];
+          wCtx.beginPath();
+          wCtx.moveTo( wCenterX - wBdSlop.y, wCenterY + wBdSlop.x);
+          wCtx.lineTo( wCenterX + wBdSlop.y, wCenterY - wBdSlop.x);
+          wCtx.stroke();
+        }
+        
+        var wFdSlop = {
+          x : iKnob.slider_x_path[2] - iKnob.slider_x_path[1],
+          y : iKnob.slider_y_path[2] - iKnob.slider_y_path[1]
+        }
+
+        var wFdMag = Math.sqrt(wFdSlop.x* wFdSlop.x + wFdSlop.y*wFdSlop.y);
+        wFdSlop.x /= wFdMag;
+        wFdSlop.y /= wFdMag;
+        
+        wFdSlop.x *= 5;
+        wFdSlop.y *= 5;
+
+        wCtx.strokeStyle = "blue";
+        for (var wi = 0; wi < iKnob.switch_x_position[1].length; ++wi) {
+          var wCenterX = iKnob.switch_x_position[1][wi];
+          var wCenterY = iKnob.switch_y_position[1][wi];
+          wCtx.beginPath();
+          wCtx.moveTo( wCenterX - wFdSlop.y, wCenterY + wFdSlop.x);
+          wCtx.lineTo( wCenterX + wFdSlop.y, wCenterY - wFdSlop.x);
+          wCtx.stroke();
+        }
+      }
+    case GamePadInputType.eSLIDER:
+      {
+        wCtx.strokeStyle = "blue";
+        wCtx.beginPath();
+        wCtx.moveTo(iKnob.slider_x_path[0],iKnob.slider_y_path[0]);
+        wCtx.lineTo(iKnob.slider_x_path[1],iKnob.slider_y_path[1]);
+        wCtx.stroke();
+
+        wCtx.strokeStyle = "lime";
+        wCtx.beginPath();
+        wCtx.moveTo(iKnob.slider_x_path[1],iKnob.slider_y_path[1]);
+        wCtx.lineTo(iKnob.slider_x_path[2],iKnob.slider_y_path[2]);
+        wCtx.stroke();
+      }
+      break;
+    case GamePadInputType.eRADIAL_DIAL:
+    case GamePadInputType.eANALOG_STICK:
+      {
+        if (iKnob.radius > 0) {
+          wCtx.strokeStyle = "blue";
+          wCtx.beginPath();
+          wCtx.arc(iKnob.x_center, iKnob.y_center, iKnob.radius, 0, 2 * Math.PI);
+          wCtx.closePath();
+          wCtx.stroke();
+          wCtx.strokeStyle = "lime";
+          wCtx.beginPath();
+          wCtx.arc(iKnob.x_center, iKnob.y_center, iKnob.radius + 0.5*iKnob.width, 0, 2 * Math.PI);
+          wCtx.closePath();
+          wCtx.stroke();
+        }
+        else {
+          wCtx.strokeRect(iKnob.x_frame_limts[0], iKnob.y_frame_limts[0] , iKnob.frame_width, iKnob.frame_height );
+        }
+      }
+    case GamePadInputType.eBUTTON:
+    default:
+      break;
   }
 
   if (true == iKnob.active) {
@@ -23,29 +101,20 @@ function DrawAnaogStick( iCanvasDOM, iKnob) {
     wCtx.fillStyle = "red";
     wCtx.lineWidth = 1;
   }
-  else {
-    wCtx.strokeStyle = "lime";
-    wCtx.fillStyle = "lime";
-    wCtx.lineWidth = 1;
-  }
-  
+
   if (iKnob.radius > 0) {
     wCtx.beginPath();
-    wCtx.arc(iKnob.x_center, iKnob.y_center, iKnob.radius + 0.5*iKnob.width, 0, 2 * Math.PI);
-    wCtx.closePath();
-    wCtx.stroke();
-
-    wCtx.beginPath();
-    wCtx.arc(iKnob.x, iKnob.y, 0.5*iKnob.width, 0, 2 * Math.PI);
+    wCtx.arc(iKnob.x, iKnob.y, iKnob.width/2, 0, 2 * Math.PI);
     wCtx.closePath();
     wCtx.stroke();
     wCtx.fill();
   }
-  else {
-    wCtx.strokeRect(iKnob.x_frame_limts[0], iKnob.y_frame_limts[0] , iKnob.frame_width, iKnob.frame_height );
+  else {    
+    
     wCtx.fillRect(iKnob.x - 0.5* iKnob.width, iKnob.y - 0.5*iKnob.height ,iKnob.width,iKnob.height);
     
   }
+  return;
 }
 
 function DefaultDrawFunction( iCanvasDOM, iKnob) {
@@ -54,7 +123,7 @@ function DefaultDrawFunction( iCanvasDOM, iKnob) {
   wCtx.clearRect(0, 0, iCanvasDOM.width, iCanvasDOM.height);
 
   for (var wi = 0; wi < iKnob.length; ++ wi) {
-    DrawAnaogStick( iCanvasDOM, iKnob[wi]);
+    DrawKnob( iCanvasDOM, iKnob[wi]);
   }
 }
 
@@ -353,6 +422,16 @@ var GamePadExternal = {
       
       wInput.processConstraints.push(function (iCanvasDOM, iControlPointList) {
 
+        var wFdTrack = {
+          x : this.slider_x_path[2] - this.slider_x_path[1],
+          y : this.slider_y_path[2] - this.slider_y_path[1],     
+        }
+
+        var wBdTrack = {
+          x : this.slider_x_path[0] - this.slider_x_path[1],
+          y : this.slider_y_path[0] - this.slider_y_path[1],     
+        }
+
         var wTrack = {
           x : 0,
           y : 0
@@ -361,18 +440,12 @@ var GamePadExternal = {
         var wStateCount = 1;
         var wGain = 0.0;
         if (this.mInput_State.value > 0) {
-          wTrack = {
-            x : this.slider_x_path[2] - this.slider_x_path[1],
-            y : this.slider_y_path[2] - this.slider_y_path[1],     
-          }
+          wTrack = wFdTrack;
           wStateCount = wInput.constraints.forward_state_count;
           wGain = this.mInput_State.value;
         }
         else {
-          wTrack = {
-            x : this.slider_x_path[0] - this.slider_x_path[1],
-            y : this.slider_y_path[0] - this.slider_y_path[1],     
-          }
+          wTrack = wBdTrack;
           wStateCount = wInput.constraints.backward_state_count;
           wGain = -this.mInput_State.value;
         }
@@ -400,8 +473,27 @@ var GamePadExternal = {
           this.dy = wGain*wTrack.y;
           this.x = this.x_center + this.dx;
           this.y = this.y_center + this.dy;
-  
         }
+
+        this.switch_x_position = [[],[]];
+        this.switch_y_position = [[],[]];
+
+        if (0 < wInput.constraints.backward_state_count) {
+          var wStep = 1/wInput.constraints.backward_state_count;
+          for(var wi = 1 ; wi < wInput.constraints.backward_state_count + 1; ++wi ){
+            this.switch_x_position[0].push(wi*wStep*wBdTrack.x + this.x_center);
+            this.switch_y_position[0].push(wi*wStep*wBdTrack.y + this.y_center);
+          }
+        }
+
+        if (0 < wInput.constraints.forward_state_count) {
+          var wStep = 1/wInput.constraints.forward_state_count;
+          for(var wi = 1 ; wi < wInput.constraints.forward_state_count + 1; ++wi ){
+            this.switch_x_position[1].push(wi*wStep*wFdTrack.x + this.x_center);
+            this.switch_y_position[1].push(wi*wStep*wFdTrack.y + this.y_center);
+          }
+        }
+
         return;
       }.bind(wInput))
 
@@ -415,10 +507,81 @@ var GamePadExternal = {
     analog_stick: function (iKnobWidth, iKnobHeight, iCenterX, iCenterY, iParameter) {
 
       var wInput = GamePadExternal.InputType.baseInputType(iKnobWidth, iKnobHeight, iCenterX, iCenterY, iParameter);
-      wInput.InputType = GamePadInputType.eSWITCH;
+      wInput.InputType = GamePadInputType.eANALOG_STICK;
       wInput.constraints.radius = null != iParameter.radius? iParameter.radius : -1;
-
+      wInput.constraints.x_restriction = null != iParameter.x_restriction? iParameter.x_restriction : [false, false],
+      wInput.constraints.y_restriction = null != iParameter.y_restriction? iParameter.y_restriction : [false, false],
+      
       wInput.processConstraints.push(function (iCanvasDOM, iControlPointList) {
+
+        this.analogStick_x_limts = [this.x_frame_limts[0], this.x_center ,this.x_frame_limts[1]];
+        this.analogStick_y_limts = [this.y_frame_limts[0], this.y_center ,this.y_frame_limts[1]];
+
+        if (true == this.constraints.x_restriction[0]) {
+          this.analogStick_x_limts[0] = this.analogStick_x_limts[1];
+        } 
+        if (true == this.constraints.x_restriction[1]) {
+          this.analogStick_x_limts[2] = this.analogStick_x_limts[1];
+        } 
+  
+        if (true == this.constraints.y_restriction[0]) {
+          this.analogStick_y_limts[0] = this.analogStick_y_limts[1];
+        } 
+        if (true == this.constraints.y_restriction[1]) {
+          this.analogStick_y_limts[2] = this.analogStick_y_limts[1];
+        } 
+
+
+        if (this.constraints.radius > 1) {
+          var wSize = this.frame_height < this.frame_width ? this.frame_height : this.frame_width;
+          wSize /= 2;
+          var wRefRadius = this.constraints.percentage ? (this.constraints.radius / 100) * wSize : this.constraints.radius;
+          this.radius = wRefRadius;
+
+          var wSqMag = this.dx * this.dx + this.dy * this.dy;
+          var wSqRefMag = wRefRadius * wRefRadius;
+
+          if (wSqRefMag < wSqMag) {
+            var wR = Math.sqrt(wSqMag);
+            var wScale = wRefRadius / wR;
+            this.dx *= wScale;
+            this.dy *= wScale;
+          }
+        }
+        else {
+          this.radius = -1;
+        }
+
+        this.x = this.dx + this.x_center;
+        this.y = this.dy + this.y_center;
+
+        var wXDenominator = 1.0;
+        if (this.radius > 0) {
+          wXDenominator = this.radius;
+        }
+        else if (this.dx > 0) {
+          wXDenominator = this.analogStick_x_limts[2] - this.analogStick_x_limts[1];
+        }
+        else {
+          wXDenominator = this.analogStick_x_limts[1] - this.analogStick_x_limts[0];
+        }
+
+        var wYDenominator = 1.0;
+        if (this.radius > 0) {
+          wYDenominator = this.radius;
+        }
+        else if (this.Knob.dy > 0) {
+          wYDenominator = this.analogStick_y_limts[2] - this.analogStick_y_limts[1];
+        }
+        else {
+          wYDenominator = this.analogStick_y_limts[2] - this.analogStick_y_limts[1];
+        }
+
+        if (wXDenominator < 1) wXDenominator = 1;
+        if (wYDenominator < 1) wYDenominator = 1;
+
+        this.mInput_State.x = this.dx / wXDenominator;
+        this.mInput_State.y = this.dy / wYDenominator;
       }.bind(wInput))
 
       return wInput;
@@ -476,7 +639,6 @@ export function GamePad(iDOM, iDrawFunction) {
         if (true == this.mInputKnobList[wj].active) {
           if (this.mInputKnobList[wj].active_control_id == this.mControlPoints.mControlPointList[wi].identifier) {
             this.mControlPoints.mControlPointList[wi].available = false;
-
           }
         }
       }
