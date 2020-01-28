@@ -371,9 +371,9 @@ var GamePadExternal = {
 
     analog_stick: function (iKnobWidth, iKnobHeight, iCenterX, iCenterY, iParameter) {
 
-      var wInput = GamePadExternal.InputType.baseInputType(iKnobWidth, iKnobHeight, iCenterX, iCenterY);
+      var wInput = GamePadExternal.InputType.baseInputType(iKnobWidth, iKnobHeight, iCenterX, iCenterY, iParameter);
       wInput.InputType = GamePadInputType.eSWITCH;
-      wInput.constraints.radius = null != iConstraints.radius? iConstraints.radius : -1;
+      wInput.constraints.radius = null != iParameter.radius? iParameter.radius : -1;
 
       wInput.processConstraints.push(function (iCanvasDOM, iControlPointList) {
       }.bind(wInput))
