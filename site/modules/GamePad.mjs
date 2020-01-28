@@ -13,9 +13,9 @@ function DrawAnaogStick( iCanvasDOM, iKnob) {
     wCtx.stroke();
   }
   else {    
-    var wEnvelopeWidth = iKnob.x_limts[2] - iKnob.x_limts[0];
-    var wEnvelopeHeight = iKnob.y_limts[2] - iKnob.y_limts[0];
-    wCtx.strokeRect(iKnob.x_limts[0], iKnob.y_limts[0] , wEnvelopeWidth, wEnvelopeHeight );
+    
+    wCtx.strokeRect(iKnob.x_frame_limts[0], iKnob.y_frame_limts[0] , iKnob.frame_width, iKnob.frame_height );
+    
   }
 
   if (true == iKnob.active) {
@@ -42,9 +42,7 @@ function DrawAnaogStick( iCanvasDOM, iKnob) {
     wCtx.fill();
   }
   else {
-    var wEnvelopeWidth = iKnob.x_limts[2] - iKnob.x_limts[0] + iKnob.width;
-    var wEnvelopeHeight = iKnob.y_limts[2] - iKnob.y_limts[0] + iKnob.height;
-    wCtx.strokeRect(iKnob.x_limts[0] - 0.5* iKnob.width, iKnob.y_limts[0] - 0.5*iKnob.height , wEnvelopeWidth, wEnvelopeHeight );
+    wCtx.strokeRect(iKnob.x_frame_limts[0], iKnob.y_frame_limts[0] , iKnob.frame_width, iKnob.frame_height );
     wCtx.fillRect(iKnob.x - 0.5* iKnob.width, iKnob.y - 0.5*iKnob.height ,iKnob.width,iKnob.height);
     
   }
@@ -82,30 +80,47 @@ var GamePadExternal = {
 
         InputType : GamePadInputType.eBASE,
 
-        x : iCenterX,
-        y : iCenterY, 
+        x : 0,
+        y : 0, 
         dx: 0,
         dy: 0,
         x_center: iCenterX,
         y_center: iCenterY,
-        x_limts : [0,0,0],
-        y_limts : [0,0,0],
         active: false,
         active_control_id: -1,
         height: iKnobHeight,
         width: iKnobWidth,
+        x_frame_limts : [0 ,0.0],
+        y_frame_limts : [0 ,0.0], 
+        frame_height: 0,
+        frame_width: 0,
         constraints: {
           x_center : iCenterX,
           y_center : iCenterY,
-          x_restriction : null != iParameter.x_restriction? iParameter.x_restriction : [false, false],
-          y_restriction : null != iParameter.y_restriction? iParameter.y_restriction : [false, false],
           percentage : null != iParameter.percentage? iParameter.percentage : false,
+          x_recenter : null != iParameter.x_recenter? iParameter.x_recenter : true,
+          y_recenter : null != iParameter.y_recenter? iParameter.y_recenter : true,
         },
 
-        processHit: function (iCanvasDOM, iControlPointList) {
+        calculateFrameLimits : function(iCanvasDOM) {
 
-          this.x_center = this.constraints.percentage ? (this.constraints.x_center/100)*iCanvasDOM.width : this.constraints.x_center;
-          this.y_center = this.constraints.percentage ? (this.constraints.y_center/100)*iCanvasDOM.height : this.constraints.y_center;
+          var wHalfWidth = this.width/2;
+          var wHalfHeight = this.height/2;
+    
+          this.x_frame_limts = [wHalfWidth ,iCanvasDOM.width - wHalfWidth];
+          this.y_frame_limts = [wHalfHeight ,iCanvasDOM.height - wHalfHeight]; 
+    
+          this.frame_width  = this.x_frame_limts[1] - this.x_frame_limts[0];
+          this.frame_height = this.y_frame_limts[1] - this.y_frame_limts[0];
+
+          this.x_center = this.constraints.percentage ? (this.constraints.x_center/100)*this.frame_width + this.x_frame_limts[0]: this.constraints.x_center;
+          this.y_center = this.constraints.percentage ? (this.constraints.y_center/100)*this.frame_height + this.y_frame_limts[0]: this.constraints.y_center;
+
+          this.x = this.dx + this.x_center;
+          this.y = this.dy + this.y_center;
+        },
+
+        processHit: function (iControlPointList) {
 
           if (true == this.active) {
             var wIsFound = false;
@@ -116,6 +131,8 @@ var GamePadExternal = {
                   this.active = false;
                 }
                 else {
+                  
+                  iControlPointList[j].available = false;
                   this.active = true;
                   this.x = iControlPointList[j].x;
                   this.y = iControlPointList[j].y;
@@ -138,6 +155,10 @@ var GamePadExternal = {
               if (false == iControlPointList[j].active) {
                 continue;
               }
+              
+              if (false == iControlPointList[j].available) {
+                continue;
+              }
 
               var wDx = Math.abs(this.x - iControlPointList[j].x);
               var wDy = Math.abs(this.y - iControlPointList[j].y);
@@ -146,12 +167,13 @@ var GamePadExternal = {
                 continue;
               }
 
+              iControlPointList[j].available = false;
+
               wIsFound = true;
               this.active = true;
               this.active_control_id = iControlPointList[j].identifier;
               this.x = iControlPointList[j].x;
               this.y = iControlPointList[j].y;
-
             }
 
             if (wIsFound == false) {
@@ -161,45 +183,39 @@ var GamePadExternal = {
           
           this.dx = this.x - this.x_center;
           this.dy = this.y - this.y_center;
+
+          if (false == this.active) {
+            if (true == this.constraints.x_recenter) {
+              this.dx *= 0.2;
+            }
+            
+            if (true == this.constraints.y_recenter) {
+              this.dy *= 0.2;
+            }   
+          }
+          
+          this.x = this.dx + this.x_center;
+          this.y = this.dy + this.y_center;
         },
         
-        processFrameLimits: function (iCanvasDOM, iControlPointList) {
-          var wHalfWidth = this.width/2;
-          var wHalfHeight = this.height/2;
-    
-          this.x_limts = [wHalfWidth, this.x_center ,iCanvasDOM.width - wHalfWidth];
-          this.y_limts = [wHalfHeight, this.y_center ,iCanvasDOM.height - wHalfHeight];
-      
-          if (true == this.constraints.x_restriction[0]) {
-            this.x_limts[0] = this.x_center;
-          } 
-          if (true == this.constraints.x_restriction[1]) {
-            this.x_limts[2] = this.x_center;
-          } 
-    
-          if (true == this.constraints.y_restriction[0]) {
-            this.y_limts[0] = this.y_center;
-          } 
-          if (true == this.constraints.y_restriction[1]) {
-            this.y_limts[2] = this.y_center;
-          } 
-    
-          if (this.x < this.x_limts[0]) {
-            this.x = this.x_limts[0];
+        processFrameLimits: function () {
+          
+          if (this.x < this.x_frame_limts[0]) {
+            this.x = this.x_frame_limts[0];
           }
           
-          if (this.x > this.x_limts[2]) {
-            this.x = this.x_limts[2];
+          if (this.x > this.x_frame_limts[1]) {
+            this.x = this.x_frame_limts[1];
           }
           
-          if (this.y < this.y_limts[0]) {
-            this.y = this.y_limts[0];
+          if (this.y < this.y_frame_limts[0]) {
+            this.y = this.y_frame_limts[0];
           }
           
-          if (this.y > this.y_limts[2]) {
-            this.y = this.y_limts[2];
+          if (this.y > this.y_frame_limts[1]) {
+            this.y = this.y_frame_limts[1];
           }
-          
+
           this.dx = this.x - this.x_center;
           this.dy = this.y - this.y_center;
         },
@@ -207,8 +223,10 @@ var GamePadExternal = {
         processConstraints: [],
 
         iteration: function (iCanvasDOM, iControlPointList) {
-          this.processHit(iCanvasDOM, iControlPointList);
-          this.processFrameLimits(iCanvasDOM, iControlPointList);
+          
+          this.calculateFrameLimits(iCanvasDOM);
+          this.processHit(iControlPointList);
+          this.processFrameLimits();
           for (var wi = 0; wi < this.processConstraints.length; ++ wi){
             this.processConstraints[wi](iCanvasDOM, iControlPointList);
           }
@@ -237,85 +255,87 @@ var GamePadExternal = {
       wInput.InputType = GamePadInputType.eSLIDER;
 
       wInput.constraints.state_count = iParameter.state_count > 1.0 ? Math.floor(iParameter.state_count) : 1;
-      wInput.constraints.track_Dx = null != iParameter.track_Dx ? iParameter.track_Dx : 0;
-      wInput.constraints.track_Dy = null != iParameter.track_Dy ? iParameter.track_Dy : 0;
+      wInput.constraints.forward_Dx = null != iParameter.forward_Dx ? iParameter.forward_Dx : 0;
+      wInput.constraints.forward_Dy = null != iParameter.forward_Dy ? iParameter.forward_Dy : 0;
+      wInput.constraints.backward_Dx = null != iParameter.backward_Dx ? iParameter.backward_Dx : 0;
+      wInput.constraints.backward_Dy = null != iParameter.backward_Dy ? iParameter.backward_Dy : 0;
+      
       
       wInput.processConstraints.push( function (iCanvasDOM, iControlPointList) {
 
-        var wTrackDx = this.constraints.percentage ? (this.constraints.track_Dx/100)*iCanvasDOM.width : this.constraints.track_Dx;
-        var wTrackDy = this.constraints.percentage ? (this.constraints.track_Dy/100)*iCanvasDOM.height : this.constraints.track_Dy;
+        var wFdTrack = {
+          x :  this.constraints.percentage ? (this.constraints.forward_Dx/100)*this.frame_width : this.constraints.forward_Dx,
+          y :  this.constraints.percentage ? (this.constraints.forward_Dy/100)*this.frame_height : this.constraints.forward_Dy
+        };
 
-        if ((Math.abs(wTrackDx) < 1) && (Math.abs(wTrackDy) < 1) ){
-          this.x = this.x_center;
-          this.y = this.y_center;
-          this.dx = 0;
-          this.dy = 0;
-          return;
-        }
+        var wBdTrack = {
+          x :  this.constraints.percentage ? (this.constraints.backward_Dx/100)*this.frame_width : this.constraints.backward_Dx,
+          y :  this.constraints.percentage ? (this.constraints.backward_Dy/100)*this.frame_height : this.constraints.backward_Dy
+        };
 
-        var wt_Limit = [0.0, 1.0]
+        var wFdEnd = {
+          x : wFdTrack.x + this.x_center,
+          y : wFdTrack.y + this.y_center
+        };
 
-        var wt_Limit_Frame = [];
-        if (Math.abs(wTrackDx) >= 1.0) {
-          wt_Limit_Frame.push((this.x_limts[0] - this.x_center) / wTrackDx);
-          wt_Limit_Frame.push((this.x_limts[2] - this.x_center) / wTrackDx);
-        }
+        var wBdEnd = {
+          x : wBdTrack.x + this.x_center,
+          y : wBdTrack.y + this.y_center
+        };
+
+        this.slider_x_path = [wBdEnd.x, this.x_center, wFdEnd.x];
+        this.slider_y_path = [wBdEnd.y, this.y_center, wFdEnd.y];
+
+        var wFdDot = this.dx*wFdTrack.x + this.dy*wFdTrack.y;
+        var wFdSqMag = wFdTrack.x*wFdTrack.x + wFdTrack.y*wFdTrack.y;
+        var wFdRatio = wFdDot / wFdSqMag;
+        var wFdRatioNorm = wFdRatio > 1.0 ? 1.0 : wFdRatio < 0.0 ? 0.0 : wFdRatio;
+
+        var wBdDot = this.dx*wBdTrack.x + this.dy*wBdTrack.y;
+        var wBdSqMag = wBdTrack.x*wBdTrack.x + wBdTrack.y*wBdTrack.y;
+        var wBdRatio = wBdDot / wBdSqMag;
+        var wBdRatioNorm = wBdRatio > 1.0 ? 1.0 : wBdRatio < 0.0 ? 0.0 : wBdRatio;
+
+        var wFdProj = {
+          x: wFdRatioNorm*wFdTrack.x,
+          y: wFdRatioNorm*wFdTrack.y
+        };
+
+        var wFdRang = {
+          x : this.dx - wFdProj.x,
+          y : this.dy - wFdProj.y,
+        };
         
-        if (Math.abs(wTrackDy) >= 1.0) {
-          wt_Limit_Frame.push((this.y_limts[0] - this.y_center) / wTrackDy);
-          wt_Limit_Frame.push((this.y_limts[2] - this.y_center) / wTrackDy);
-        }
+        var wBdProj = {
+          x: wBdRatioNorm*wBdTrack.x,
+          y: wBdRatioNorm*wBdTrack.y
+        };
 
-        for(var wi = 0; wi < wt_Limit_Frame.length; ++wi) {
-          if (wt_Limit_Frame[wi] < 0.5) {
-            if (wt_Limit_Frame[wi] > wt_Limit[0]) {
-              wt_Limit[0] = wt_Limit_Frame[wi];
-            }
-          }
-          else {
-            if (wt_Limit_Frame[wi] < wt_Limit[1]) {
-              wt_Limit[1] = wt_Limit_Frame[wi];
-            }
-          }
-        }
+        var wBdRang = {
+          x : this.dx - wBdProj.x,
+          y : this.dy - wBdProj.y,
+        };
         
-        var wTrackMag = wTrackDx*wTrackDx + wTrackDy*wTrackDy
-        wTrackMag = Math.sqrt(wTrackMag);
+        var wFdRangeSqMag = wFdRang.x*wFdRang.x + wFdRang.y*wFdRang.y;
+        var wBdRangeSqMag = wBdRang.x*wBdRang.x + wBdRang.y*wBdRang.y;
 
-        var wTrackUnitX = wTrackDx/wTrackMag;
-        var wTrackUnitY = wTrackDy/wTrackMag;
-
-        var wDotProduct = this.dx*wTrackUnitX + this.dy*wTrackUnitY;
-        
-        var wDx = wDotProduct*wTrackUnitX;
-        var wDy = wDotProduct*wTrackUnitY;
-        var wT =  0;
-        if (Math.abs(wTrackDx) >= 1.0) {
-          wT = wDx/wTrackDx;
+        if (wFdRangeSqMag < wBdRangeSqMag) {
+          //Point is in front segment
+          this.mInput_State.value = wFdRatioNorm;
+          this.dx = wFdProj.x;
+          this.dy = wFdProj.y;
         }
-        else if (Math.abs(wTrackDy) >= 1.0) {
-          wT = wDy/wTrackDy;
+        else {
+          //Point is in back segment
+          this.mInput_State.value = -wBdRatioNorm;
+          this.dx = wBdProj.x;
+          this.dy = wBdProj.y;
+          
         }
-
-        if (wT < wt_Limit[0]) {
-          wT = wt_Limit[0];
-        }
-        
-        if (wT > wt_Limit[1]) {
-          wT = wt_Limit[1];
-        }
-
-        this.mInput_State.value =  (wT - wt_Limit[0]) /(wt_Limit[1] - wt_Limit[0]);
-
-        wDx = wT*wTrackDx;
-        wDy = wT*wTrackDy;
-
-        this.slider_x_limits = [ wt_Limit[0]*wTrackDx + this.x_center, wt_Limit[1]*wTrackDx + this.x_center];
-        this.slider_y_limits = [ wt_Limit[0]*wTrackDy + this.y_center, wt_Limit[1]*wTrackDy + this.y_center];
-        this.dx = wDx;
-        this.dy = wDy;
         this.x = this.x_center + this.dx;
         this.y = this.y_center + this.dy;
+
+        return;
       }.bind(wInput))
 
       return wInput;
@@ -326,40 +346,63 @@ var GamePadExternal = {
       var wInput = GamePadExternal.InputType.slider(iKnobWidth, iKnobHeight, iCenterX, iCenterY, iParameter);
       wInput.InputType = GamePadInputType.eSWITCH;
 
-      wInput.constraints.state_count = iParameter.state_count > 2.0 ? Math.floor(iParameter.state_count) : 2;
+      wInput.constraints.forward_state_count = iParameter.forward_state_count > 0.0 ? Math.floor(iParameter.forward_state_count) : 0;
+      wInput.constraints.backward_state_count = iParameter.backward_state_count > 0.0 ? Math.floor(iParameter.backward_state_count) : 0;
+      wInput.constraints.x_recenter = false;
+      wInput.constraints.y_recenter = false;
       
       wInput.processConstraints.push(function (iCanvasDOM, iControlPointList) {
-        var wSlider_dx = this.slider_x_limits[1] - this.slider_x_limits[0];
-        var wSlider_dy = this.slider_y_limits[1] - this.slider_y_limits[0];
-        var wStepSize_x = wSlider_dx / (this.constraints.state_count - 1);
-        var wStepSize_y = wSlider_dy / (this.constraints.state_count - 1);
-        
-        var wT_step_cur = 0.0;
 
-        if (Math.abs(wStepSize_x) > 1.0) {
-          wT_step_cur = (this.x - this.slider_x_limits[0]) / wStepSize_x;
-        }
-        else if (Math.abs(wStepSize_y) > 1.0) {
-          wT_step_cur = (this.y - this.slider_y_limits[0]) / wStepSize_y;
+        var wTrack = {
+          x : 0,
+          y : 0
+        };
+
+        var wStateCount = 1;
+        var wGain = 0.0;
+        if (this.mInput_State.value > 0) {
+          wTrack = {
+            x : this.slider_x_path[2] - this.slider_x_path[1],
+            y : this.slider_y_path[2] - this.slider_y_path[1],     
+          }
+          wStateCount = wInput.constraints.forward_state_count;
+          wGain = this.mInput_State.value;
         }
         else {
-          return;
-        }
-        
-        var wT_step_stick = Math.round(wT_step_cur);
-        
-        var wTgt_x = wT_step_stick*wStepSize_x + this.slider_x_limits[0];
-        var wTgt_y = wT_step_stick*wStepSize_y + this.slider_y_limits[0];
-
-        if (false == this.active) {
-          this.x += 0.75*(wTgt_x - this.x);
-          this.y += 0.75*(wTgt_y - this.y);  
+          wTrack = {
+            x : this.slider_x_path[0] - this.slider_x_path[1],
+            y : this.slider_y_path[0] - this.slider_y_path[1],     
+          }
+          wStateCount = wInput.constraints.backward_state_count;
+          wGain = -this.mInput_State.value;
         }
 
-        this.mInput_State.switch_state = wT_step_stick;
-        this.mInput_State.value =  wT_step_stick/this.constraints.state_count - 1;
-        this.dx = this.x - this.x_center;
-        this.dy = this.y - this.y_center;
+        var wCurrentState = 0;
+        if (0 == wStateCount) {
+          wGain = 0;
+        }
+        else {
+          var wGainStep = 1/wStateCount;
+          wCurrentState = Math.round(wGain / wGainStep);
+          var wGainTgt = wCurrentState *wGainStep;
+          wGain += 0.75* (wGainTgt-wGain);
+        }
+        
+        if (this.mInput_State.value > 0) {
+          this.mInput_State.value = wCurrentState;
+        }
+        else {
+          this.mInput_State.value = -wCurrentState;
+        }
+
+        if(false == this.active) {
+          this.dx = wGain*wTrack.x;
+          this.dy = wGain*wTrack.y;
+          this.x = this.x_center + this.dx;
+          this.y = this.y_center + this.dy;
+  
+        }
+        return;
       }.bind(wInput))
 
       return wInput;
@@ -426,6 +469,18 @@ export function GamePad(iDOM, iDrawFunction) {
     
     this.mCanvas.width = this.mCanvas.parentNode.clientWidth;
     this.mCanvas.height = this.mCanvas.parentNode.clientHeight;
+
+    for(var wi = 0; wi < this.mControlPoints.mControlPointList.length; ++wi) {
+      this.mControlPoints.mControlPointList[wi].available = true;
+      for(var wj = 0; wj < this.mInputKnobList.length; ++wj) {
+        if (true == this.mInputKnobList[wj].active) {
+          if (this.mInputKnobList[wj].active_control_id == this.mControlPoints.mControlPointList[wi].identifier) {
+            this.mControlPoints.mControlPointList[wi].available = false;
+
+          }
+        }
+      }
+    }
 
     for(var wi = 0; wi < this.mInputKnobList.length; ++wi) {
       this.mInputKnobList[wi].iteration(this.mCanvas, this.mControlPoints.mControlPointList);
