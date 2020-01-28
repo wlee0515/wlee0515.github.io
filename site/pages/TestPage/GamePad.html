@@ -15,8 +15,11 @@
 
     #id_GamePad {
       width: 100vw;
-      height: 100vx;
+      height: 100vh;
       z-index: 1;
+      position: fixed;
+      top: 0px;
+      left: 0px;
     }
 
     #id_GameButton {
@@ -41,10 +44,10 @@
         y_recenter : true,
         x_restriction : [false, false],
         y_restriction : [false, false],
-        trackEnd_x : 90,
-        trackEnd_y : 10,
+        track_Dx : 80,
         percentage : true,
         radius : 80,
+        state_count : 6,
       }
       /*
       var wButton = GamPadObj.GamePadInput(50, 50, 50, 50, wSettings);
@@ -55,7 +58,10 @@
       var wGamepad = document.getElementById(gGlobal.OuputDiv_Id);
 
       var wGamePadControl = new GamPadObj.GamePad(wGamepad);
-      wGamePadControl.addInput(GamPadObj.GamePadInputType.eSWITCH, 50,50,0,50,wSettings)
+      wGamePadControl.addInput(GamPadObj.GamePadInputType.eBUTTON, 50,50,10,10,wSettings)
+      wGamePadControl.addInput(GamPadObj.GamePadInputType.eSWITCH, 50,50,10,20,wSettings)
+      wGamePadControl.addInput(GamPadObj.GamePadInputType.eSLIDER, 50,50,10,30,wSettings)
+      wGamePadControl.addInput(GamPadObj.GamePadInputType.eANALOG_STICK, 50,50,50,60,wSettings)
 
 
       resize();

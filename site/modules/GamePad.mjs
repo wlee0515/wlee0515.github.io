@@ -5,9 +5,6 @@ import DomTouchControl from "./DomTouchControl.mjs"
 function DrawAnaogStick( iCanvasDOM, iKnob) {
   
   var wCtx = iCanvasDOM.getContext("2d");
-
-  wCtx.clearRect(0, 0, iCanvasDOM.width, iCanvasDOM.height);
-
   wCtx.strokeStyle = "lime";
   if (iKnob.radius > 0) {
     wCtx.beginPath();
@@ -54,6 +51,10 @@ function DrawAnaogStick( iCanvasDOM, iKnob) {
 }
 
 function DefaultDrawFunction( iCanvasDOM, iKnob) {
+  
+  var wCtx = iCanvasDOM.getContext("2d");
+  wCtx.clearRect(0, 0, iCanvasDOM.width, iCanvasDOM.height);
+
   for (var wi = 0; wi < iKnob.length; ++ wi) {
     DrawAnaogStick( iCanvasDOM, iKnob[wi]);
   }
@@ -62,8 +63,8 @@ function DefaultDrawFunction( iCanvasDOM, iKnob) {
 export const GamePadInputType = {
   eBASE : 0,
   eBUTTON : 1,
-  eSWITCH : 2,
-  eSLIDER : 3,
+  eSLIDER : 2,
+  eSWITCH : 3,
   eRADIAL_SWITCH : 4,
   eRADIAL_SLIDER : 5,
   eANALOG_STICK : 6
@@ -170,17 +171,17 @@ var GamePadExternal = {
           this.y_limts = [wHalfHeight, this.y_center ,iCanvasDOM.height - wHalfHeight];
       
           if (true == this.constraints.x_restriction[0]) {
-            this.x_limts[0] = wXCenter;
+            this.x_limts[0] = this.x_center;
           } 
           if (true == this.constraints.x_restriction[1]) {
-            this.x_limts[2] = wXCenter;
+            this.x_limts[2] = this.x_center;
           } 
     
           if (true == this.constraints.y_restriction[0]) {
-            this.y_limts[0] = wYCenter;
+            this.y_limts[0] = this.y_center;
           } 
           if (true == this.constraints.y_restriction[1]) {
-            this.y_limts[2] = wYCenter;
+            this.y_limts[2] = this.y_center;
           } 
     
           if (this.x < this.x_limts[0]) {
@@ -203,14 +204,14 @@ var GamePadExternal = {
           this.dy = this.y - this.y_center;
         },
 
-        processConstraints: function (iCanvasDOM, iControlPointList) {
-
-        },
+        processConstraints: [],
 
         iteration: function (iCanvasDOM, iControlPointList) {
           this.processHit(iCanvasDOM, iControlPointList);
           this.processFrameLimits(iCanvasDOM, iControlPointList);
-          this.processConstraints(iCanvasDOM, iControlPointList);
+          for (var wi = 0; wi < this.processConstraints.length; ++ wi){
+            this.processConstraints[wi](iCanvasDOM, iControlPointList);
+          }
         }
       }
     },
@@ -220,45 +221,49 @@ var GamePadExternal = {
       var wInput = GamePadExternal.InputType.baseInputType(iKnobWidth, iKnobHeight, iCenterX, iCenterY, iParameter);
       wInput.InputType = GamePadInputType.eBUTTON;
 
-      wInput.processConstraints = function (iCanvasDOM, iControlPointList) {
-        
+      wInput.processConstraints.push(function (iCanvasDOM, iControlPointList) {
         this.x = this.x_center;
         this.y = this.y_center;
         this.dx = 0;
         this.dy = 0;
-      }
+      }.bind(wInput))
 
       return wInput;
     },
 
-    switch: function (iKnobWidth, iKnobHeight, iCenterX, iCenterY, iParameter) {
-
+    slider: function (iKnobWidth, iKnobHeight, iCenterX, iCenterY, iParameter) {
+      
       var wInput = GamePadExternal.InputType.baseInputType(iKnobWidth, iKnobHeight, iCenterX, iCenterY, iParameter);
-      wInput.InputType = GamePadInputType.eSWITCH;
+      wInput.InputType = GamePadInputType.eSLIDER;
 
-      wInput.constraints.state_count = iParameter.state_count > 2.0 ? Math.floor(iParameter.state_count) : 2;
-      wInput.constraints.trackEnd_x = null != iParameter.trackEnd_x ? iParameter.trackEnd_x : 0;
-      wInput.constraints.trackEnd_y = null != iParameter.trackEnd_y ? iParameter.trackEnd_y : 0;
+      wInput.constraints.state_count = iParameter.state_count > 1.0 ? Math.floor(iParameter.state_count) : 1;
+      wInput.constraints.track_Dx = null != iParameter.track_Dx ? iParameter.track_Dx : 0;
+      wInput.constraints.track_Dy = null != iParameter.track_Dy ? iParameter.track_Dy : 0;
+      
+      wInput.processConstraints.push( function (iCanvasDOM, iControlPointList) {
 
-      wInput.processConstraints = function (iCanvasDOM, iControlPointList) {
+        var wTrackDx = this.constraints.percentage ? (this.constraints.track_Dx/100)*iCanvasDOM.width : this.constraints.track_Dx;
+        var wTrackDy = this.constraints.percentage ? (this.constraints.track_Dy/100)*iCanvasDOM.height : this.constraints.track_Dy;
 
-        var wTrakeEndX = this.constraints.percentage ? (this.constraints.trackEnd_x/100)*iCanvasDOM.width : this.constraints.trackEnd_x;
-        var wTrakeEndY = this.constraints.percentage ? (this.constraints.trackEnd_x/100)*iCanvasDOM.height : this.constraints.trackEnd_x;
-  
-        var wDSlop_X = wTrakeEndX - this.x_center;
-        var wDSlop_Y = wTrakeEndY - this.y_center;
+        if ((Math.abs(wTrackDx) < 1) && (Math.abs(wTrackDy) < 1) ){
+          this.x = this.x_center;
+          this.y = this.y_center;
+          this.dx = 0;
+          this.dy = 0;
+          return;
+        }
 
         var wt_Limit = [0.0, 1.0]
 
         var wt_Limit_Frame = [];
-        if (Math.abs(wDSlop_X) >= 1.0) {
-          wt_Limit_Frame.push((this.x_limts[0] - this.x_center) / wDSlop_X);
-          wt_Limit_Frame.push((this.x_limts[2] - this.x_center) / wDSlop_X);
+        if (Math.abs(wTrackDx) >= 1.0) {
+          wt_Limit_Frame.push((this.x_limts[0] - this.x_center) / wTrackDx);
+          wt_Limit_Frame.push((this.x_limts[2] - this.x_center) / wTrackDx);
         }
         
-        if (Math.abs(wDSlop_Y) >= 1.0) {
-          wt_Limit_Frame.push((this.y_limts[0] - this.y_center) / wDSlop_Y);
-          wt_Limit_Frame.push((this.y_limts[2] - this.y_center) / wDSlop_Y);
+        if (Math.abs(wTrackDy) >= 1.0) {
+          wt_Limit_Frame.push((this.y_limts[0] - this.y_center) / wTrackDy);
+          wt_Limit_Frame.push((this.y_limts[2] - this.y_center) / wTrackDy);
         }
 
         for(var wi = 0; wi < wt_Limit_Frame.length; ++wi) {
@@ -274,31 +279,92 @@ var GamePadExternal = {
           }
         }
         
-        var wTrackMag = wDSlop_X*wDSlop_X + wDSlop_Y*wDSlop_Y
+        var wTrackMag = wTrackDx*wTrackDx + wTrackDy*wTrackDy
         wTrackMag = Math.sqrt(wTrackMag);
 
-        var wTrackUnitX = wDSlop_X/wTrackMag;
-        var wTrackUnitY = wDSlop_Y/wTrackMag;
+        var wTrackUnitX = wTrackDx/wTrackMag;
+        var wTrackUnitY = wTrackDy/wTrackMag;
 
         var wDotProduct = this.dx*wTrackUnitX + this.dy*wTrackUnitY;
-        wDotProduct /= wTrackMag; 
-        wDotProduct = wDotProduct <= 1.0 ? wDotProduct : 1.0;
-        wDotProduct = wDotProduct >= 0.0 ? wDotProduct : 0.0;
         
-        var wDx = wDotProduct*wTrackMag*wTrackUnitX;
-        var wT =  wDx/wDSlop_X;
+        var wDx = wDotProduct*wTrackUnitX;
+        var wDy = wDotProduct*wTrackUnitY;
+        var wT =  0;
+        if (Math.abs(wTrackDx) >= 1.0) {
+          wT = wDx/wTrackDx;
+        }
+        else if (Math.abs(wTrackDy) >= 1.0) {
+          wT = wDy/wTrackDy;
+        }
 
-        this.dx = wDotProduct*wTrackMag*wTrackUnitX;// + wt_Limit[0]*wDSlop_X;
-        this.dy = wDotProduct*wTrackMag*wTrackUnitY;// + wt_Limit[0]*wDSlop_Y;
+        if (wT < wt_Limit[0]) {
+          wT = wt_Limit[0];
+        }
+        
+        if (wT > wt_Limit[1]) {
+          wT = wt_Limit[1];
+        }
+
+        this.mInput_State.value =  (wT - wt_Limit[0]) /(wt_Limit[1] - wt_Limit[0]);
+
+        wDx = wT*wTrackDx;
+        wDy = wT*wTrackDy;
+
+        this.slider_x_limits = [ wt_Limit[0]*wTrackDx + this.x_center, wt_Limit[1]*wTrackDx + this.x_center];
+        this.slider_y_limits = [ wt_Limit[0]*wTrackDy + this.y_center, wt_Limit[1]*wTrackDy + this.y_center];
+        this.dx = wDx;
+        this.dy = wDy;
         this.x = this.x_center + this.dx;
         this.y = this.y_center + this.dy;
-      }
+      }.bind(wInput))
 
       return wInput;
     },
 
-    slider: function (iKnobWidth, iKnobHeight, iCenterX, iCenterY, iParameter) {
+    switch: function (iKnobWidth, iKnobHeight, iCenterX, iCenterY, iParameter) {
+
+      var wInput = GamePadExternal.InputType.slider(iKnobWidth, iKnobHeight, iCenterX, iCenterY, iParameter);
+      wInput.InputType = GamePadInputType.eSWITCH;
+
+      wInput.constraints.state_count = iParameter.state_count > 2.0 ? Math.floor(iParameter.state_count) : 2;
+      
+      wInput.processConstraints.push(function (iCanvasDOM, iControlPointList) {
+        var wSlider_dx = this.slider_x_limits[1] - this.slider_x_limits[0];
+        var wSlider_dy = this.slider_y_limits[1] - this.slider_y_limits[0];
+        var wStepSize_x = wSlider_dx / (this.constraints.state_count - 1);
+        var wStepSize_y = wSlider_dy / (this.constraints.state_count - 1);
+        
+        var wT_step_cur = 0.0;
+
+        if (Math.abs(wStepSize_x) > 1.0) {
+          wT_step_cur = (this.x - this.slider_x_limits[0]) / wStepSize_x;
+        }
+        else if (Math.abs(wStepSize_y) > 1.0) {
+          wT_step_cur = (this.y - this.slider_y_limits[0]) / wStepSize_y;
+        }
+        else {
+          return;
+        }
+        
+        var wT_step_stick = Math.round(wT_step_cur);
+        
+        var wTgt_x = wT_step_stick*wStepSize_x + this.slider_x_limits[0];
+        var wTgt_y = wT_step_stick*wStepSize_y + this.slider_y_limits[0];
+
+        if (false == this.active) {
+          this.x += 0.75*(wTgt_x - this.x);
+          this.y += 0.75*(wTgt_y - this.y);  
+        }
+
+        this.mInput_State.switch_state = wT_step_stick;
+        this.mInput_State.value =  wT_step_stick/this.constraints.state_count - 1;
+        this.dx = this.x - this.x_center;
+        this.dy = this.y - this.y_center;
+      }.bind(wInput))
+
+      return wInput;
     },
+
 
     radial_dial: function (iKnobWidth, iKnobHeight, iCenterX, iCenterY, iParameter) {
     },
@@ -306,11 +372,11 @@ var GamePadExternal = {
     analog_stick: function (iKnobWidth, iKnobHeight, iCenterX, iCenterY, iParameter) {
 
       var wInput = GamePadExternal.InputType.baseInputType(iKnobWidth, iKnobHeight, iCenterX, iCenterY);
+      wInput.InputType = GamePadInputType.eSWITCH;
+      wInput.constraints.radius = null != iConstraints.radius? iConstraints.radius : -1;
 
-      wInput.processConstraints = function (iCanvasDOM, iControlPointList) {
-        this.x = this.x_center;
-        this.y = this.y_center;
-      }
+      wInput.processConstraints.push(function (iCanvasDOM, iControlPointList) {
+      }.bind(wInput))
 
       return wInput;
     },
@@ -321,10 +387,10 @@ var GamePadExternal = {
     switch (iType) {
       case GamePadInputType.eBUTTON:
         return GamePadExternal.InputType.button(iKnobWidth, iKnobHeight, iCenterX, iCenterY, iParameter);
-      case GamePadInputType.eSWITCH:
-        return GamePadExternal.InputType.switch(iKnobWidth, iKnobHeight, iCenterX, iCenterY, iParameter);
       case GamePadInputType.eSLIDER:
         return GamePadExternal.InputType.slider(iKnobWidth, iKnobHeight, iCenterX, iCenterY, iParameter);
+      case GamePadInputType.eSWITCH:
+        return GamePadExternal.InputType.switch(iKnobWidth, iKnobHeight, iCenterX, iCenterY, iParameter);
       case GamePadInputType.eRADIAL_DIAL:
         return GamePadExternal.InputType.radial_dial(iKnobWidth, iKnobHeight, iCenterX, iCenterY, iParameter);
       case GamePadInputType.eANALOG_STICK:
@@ -335,7 +401,6 @@ var GamePadExternal = {
   },
 
 }
-
 
 export function GamePad(iDOM, iDrawFunction) {
   
