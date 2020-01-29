@@ -9,6 +9,8 @@ function DrawKnob( iCanvasDOM, iKnob) {
   wCtx.strokeStyle = "lime";
   wCtx.fillStyle = "lime";
   wCtx.lineWidth = 1;
+
+  var wKnotchSize = 5;
   
   switch (iKnob.InputType) {
     case GamePadInputType.eSWITCH:
@@ -22,8 +24,8 @@ function DrawKnob( iCanvasDOM, iKnob) {
         wBdSlop.x /= wBdMag;
         wBdSlop.y /= wBdMag;
         
-        wBdSlop.x *= 5;
-        wBdSlop.y *= 5;
+        wBdSlop.x *= wKnotchSize;
+        wBdSlop.y *= wKnotchSize;
 
         wCtx.strokeStyle = "blue";
         for (var wi = 0; wi < iKnob.switch_x_position[0].length; ++wi) {
@@ -44,10 +46,10 @@ function DrawKnob( iCanvasDOM, iKnob) {
         wFdSlop.x /= wFdMag;
         wFdSlop.y /= wFdMag;
         
-        wFdSlop.x *= 5;
-        wFdSlop.y *= 5;
+        wFdSlop.x *= wKnotchSize;
+        wFdSlop.y *= wKnotchSize;
 
-        wCtx.strokeStyle = "blue";
+        wCtx.strokeStyle = "lime";
         for (var wi = 0; wi < iKnob.switch_x_position[1].length; ++wi) {
           var wCenterX = iKnob.switch_x_position[1][wi];
           var wCenterY = iKnob.switch_y_position[1][wi];
@@ -72,7 +74,52 @@ function DrawKnob( iCanvasDOM, iKnob) {
         wCtx.stroke();
       }
       break;
-    case GamePadInputType.eRADIAL_DIAL:
+    case GamePadInputType.eROTARY_SWITCH:
+      { 
+        var wStartRadius = iKnob.radius + wKnotchSize;
+        var wEndRadius = iKnob.radius - wKnotchSize;
+        wCtx.strokeStyle = "blue";
+        for (var wi = 0; wi < iKnob.switch_r_position[0].length; ++wi) {
+          var wCAng = Math.cos(iKnob.switch_r_position[0][wi]);
+          var wSAng = Math.sin(iKnob.switch_r_position[0][wi]);
+          var wStartx = wStartRadius*wCAng + iKnob.x_center;
+          var wStarty = wStartRadius*wSAng + iKnob.y_center;
+          var wEndx = wEndRadius*wCAng + iKnob.x_center;
+          var wEndy = wEndRadius*wSAng + iKnob.y_center;
+          wCtx.beginPath();
+          wCtx.moveTo( wStartx, wStarty);
+          wCtx.lineTo( wEndx, wEndy);
+          wCtx.stroke();
+        }
+        
+        wCtx.strokeStyle = "lime";
+        for (var wi = 0; wi < iKnob.switch_r_position[1].length; ++wi) {
+          var wCAng = Math.cos(iKnob.switch_r_position[1][wi]);
+          var wSAng = Math.sin(iKnob.switch_r_position[1][wi]);
+          var wStartx = wStartRadius*wCAng + iKnob.x_center;
+          var wStarty = wStartRadius*wSAng + iKnob.y_center;
+          var wEndx = wEndRadius*wCAng + iKnob.x_center;
+          var wEndy = wEndRadius*wSAng + iKnob.y_center;
+          wCtx.beginPath();
+          wCtx.moveTo( wStartx, wStarty);
+          wCtx.lineTo( wEndx, wEndy);
+          wCtx.stroke();
+        }
+      }
+    case GamePadInputType.eROTARY_DIAL:
+      {
+        
+        wCtx.strokeStyle = "blue";
+        wCtx.beginPath();
+        wCtx.arc(iKnob.x_center,iKnob.y_center, iKnob.radius, iKnob.r_slider_limits[0], iKnob.r_slider_limits[1]);
+        wCtx.stroke();
+
+        wCtx.strokeStyle = "lime";
+        wCtx.beginPath();
+        wCtx.arc(iKnob.x_center,iKnob.y_center, iKnob.radius, iKnob.r_slider_limits[1], iKnob.r_slider_limits[2]);
+        wCtx.stroke();
+      }
+      break;
     case GamePadInputType.eANALOG_STICK:
       {
         if (iKnob.radius > 0) {
@@ -132,8 +179,8 @@ export const GamePadInputType = {
   eBUTTON : 1,
   eSLIDER : 2,
   eSWITCH : 3,
-  eRADIAL_SWITCH : 4,
-  eRADIAL_SLIDER : 5,
+  eROTARY_DIAL : 4,
+  eROTARY_SWITCH : 5,
   eANALOG_STICK : 6
 }
 
@@ -265,6 +312,7 @@ var GamePadExternal = {
           
           this.x = this.dx + this.x_center;
           this.y = this.dy + this.y_center;
+          this.mInput_State.active = this.active;
         },
         
         processFrameLimits: function () {
@@ -480,7 +528,7 @@ var GamePadExternal = {
 
         if (0 < wInput.constraints.backward_state_count) {
           var wStep = 1/wInput.constraints.backward_state_count;
-          for(var wi = 1 ; wi < wInput.constraints.backward_state_count + 1; ++wi ){
+          for(var wi = 0 ; wi < wInput.constraints.backward_state_count + 1; ++wi ){
             this.switch_x_position[0].push(wi*wStep*wBdTrack.x + this.x_center);
             this.switch_y_position[0].push(wi*wStep*wBdTrack.y + this.y_center);
           }
@@ -488,7 +536,7 @@ var GamePadExternal = {
 
         if (0 < wInput.constraints.forward_state_count) {
           var wStep = 1/wInput.constraints.forward_state_count;
-          for(var wi = 1 ; wi < wInput.constraints.forward_state_count + 1; ++wi ){
+          for(var wi = 0 ; wi < wInput.constraints.forward_state_count + 1; ++wi ){
             this.switch_x_position[1].push(wi*wStep*wFdTrack.x + this.x_center);
             this.switch_y_position[1].push(wi*wStep*wFdTrack.y + this.y_center);
           }
@@ -501,7 +549,175 @@ var GamePadExternal = {
     },
 
 
-    radial_dial: function (iKnobWidth, iKnobHeight, iCenterX, iCenterY, iParameter) {
+    rotary_dial: function (iKnobWidth, iKnobHeight, iCenterX, iCenterY, iParameter) {
+      var wInput = GamePadExternal.InputType.baseInputType(iKnobWidth, iKnobHeight, iCenterX, iCenterY, iParameter);
+      wInput.InputType = GamePadInputType.eROTARY_DIAL;
+      var wRadius = null != iParameter.radius? iParameter.radius : 10;
+      wRadius = wRadius < 10 ? 10 : wRadius;
+
+      wInput.normalizeAngle = function (iAngle) {
+        var wAngle = iAngle;
+        while (wAngle < -Math.PI) wAngle += 2*Math.PI;
+        while (wAngle > Math.PI) wAngle -= 2*Math.PI;
+        return wAngle;
+      }
+
+      wInput.constraints.radius = wRadius;
+      wInput.constraints.r_center = null != iParameter.r_center ? wInput.normalizeAngle(iParameter.r_center): -Math.PI/2;
+      wInput.constraints.forward_Dr = null != iParameter.forward_Dr ? wInput.normalizeAngle(iParameter.forward_Dr) : 0;
+      wInput.constraints.backward_Dr = null != iParameter.backward_Dr ? wInput.normalizeAngle(iParameter.backward_Dr) : 0;
+      wInput.constraints.r_recenter = null != iParameter.r_recenter ? iParameter.r_recenter : wInput.constraints.x_recenter || wInput.constraints.y_recenter;
+      wInput.constraints.x_recenter = false;
+      wInput.constraints.y_recenter = false;
+      wInput.dx = 9000*Math.cos(wInput.constraints.r_center);
+      wInput.dy = 9000*Math.sin(wInput.constraints.r_center);
+      
+
+      wInput.processConstraints.push(function (iCanvasDOM, iControlPointList) {
+        
+        var wSize = this.frame_height < this.frame_width ? this.frame_height : this.frame_width;
+        wSize /= 2;
+        var wRefRadius = this.constraints.percentage ? (this.constraints.radius / 100) * wSize : this.constraints.radius;
+        this.radius = wRefRadius;
+
+        var wFdAng = this.normalizeAngle( this.constraints.r_center + this.constraints.forward_Dr);
+        var wBdAng = this.normalizeAngle( this.constraints.r_center + this.constraints.backward_Dr);
+
+        this.r_slider_limits = [ wBdAng, wInput.constraints.r_center, wFdAng ];
+
+        
+        var wCurrentAngle = Math.atan2(this.dy, this.dx);
+        
+        var wCurrentAngleOff = this.normalizeAngle(  wCurrentAngle - this.r_slider_limits[1]);
+
+        var wOverLimit = false;
+        var wOverLimit_Dr = 0;
+        var wOverlimitIsFwd = false;
+
+        if (0 < wCurrentAngleOff) {
+          if ((0 < this.constraints.forward_Dr) && (wCurrentAngleOff > this.constraints.forward_Dr)) {
+            wOverLimit = true;
+            wOverLimit_Dr = this.constraints.forward_Dr;
+            wOverlimitIsFwd = true;
+        
+          }
+          
+          if ((0 < this.constraints.backward_Dr) && (wCurrentAngleOff > this.constraints.backward_Dr)) {
+            wOverLimit = true;
+            wOverLimit_Dr = this.constraints.backward_Dr;
+            wOverlimitIsFwd = false;
+          }
+        }
+        else {
+          if ((0 > this.constraints.forward_Dr) && (wCurrentAngleOff < this.constraints.forward_Dr)) {
+            wOverLimit = true;
+            wOverLimit_Dr = this.constraints.forward_Dr;
+            wOverlimitIsFwd = true;
+          }
+          
+          if ((0 > this.constraints.backward_Dr) && (wCurrentAngleOff < this.constraints.backward_Dr)) {
+            wOverLimit = true;
+            wOverLimit_Dr = this.constraints.backward_Dr;
+            wOverlimitIsFwd = false;
+          }
+        }
+
+        if (true == wOverLimit) {
+          wCurrentAngleOff = wOverLimit_Dr;
+        }
+
+        var wDenomiator = wOverlimitIsFwd? this.constraints.forward_Dr :  this.constraints.backward_Dr;
+        this.mInput_State.value = wCurrentAngleOff/(wDenomiator);
+        this.mInput_State.value *= wOverlimitIsFwd ? 1 : -1;
+
+        if ((false == this.active) && ( wInput.constraints.r_recenter)){
+          wCurrentAngleOff -= 0.75*wCurrentAngleOff;
+        }
+
+        wCurrentAngle = this.normalizeAngle(this.r_slider_limits[1] + wCurrentAngleOff);
+
+        this.dx = this.radius*Math.cos(wCurrentAngle);
+        this.dy = this.radius*Math.sin(wCurrentAngle);
+        this.x = this.dx + this.x_center;
+        this.y = this.dy + this.y_center;
+      
+      }.bind(wInput))
+
+      return wInput;
+    },
+
+    rotary_switch: function (iKnobWidth, iKnobHeight, iCenterX, iCenterY, iParameter) {
+      var wInput = GamePadExternal.InputType.rotary_dial(iKnobWidth, iKnobHeight, iCenterX, iCenterY, iParameter);
+      wInput.InputType = GamePadInputType.eROTARY_SWITCH;
+      
+      wInput.constraints.forward_state_count = iParameter.forward_state_count > 0.0 ? Math.floor(iParameter.forward_state_count) : 0;
+      wInput.constraints.backward_state_count = iParameter.backward_state_count > 0.0 ? Math.floor(iParameter.backward_state_count) : 0;
+      wInput.constraints.r_recenter = false;
+      
+      wInput.processConstraints.push(function (iCanvasDOM, iControlPointList) {
+      
+        var wFdDr  = this.r_slider_limits[2] - this.r_slider_limits[1];
+        var wBdDr  = this.r_slider_limits[0] - this.r_slider_limits[1];
+
+        var wStateCount = 1;
+        var wGain = 0.0;
+        var wDr = 0.0;
+        if (this.mInput_State.value > 0) {
+          wDr = wFdDr;
+          wStateCount = wInput.constraints.forward_state_count;
+          wGain = this.mInput_State.value;
+        }
+        else {
+          wDr = wBdDr;
+          wStateCount = wInput.constraints.backward_state_count;
+          wGain = -this.mInput_State.value;
+        }
+
+        var wCurrentState = 0;
+        if (0 == wStateCount) {
+          wGain = 0;
+        }
+        else {
+          var wGainStep = 1/wStateCount;
+          wCurrentState = Math.round(wGain / wGainStep);
+          var wGainTgt = wCurrentState *wGainStep;
+          wGain += 0.75* (wGainTgt-wGain);
+        }
+        
+        if (this.mInput_State.value > 0) {
+          this.mInput_State.value = wCurrentState;
+        }
+        else {
+          this.mInput_State.value = -wCurrentState;
+        }
+
+        if(false == this.active) {
+          var wCurentAngle = this.normalizeAngle( this.r_slider_limits[1] + wGain*wDr);
+          this.dx = this.radius*Math.cos(wCurentAngle);
+          this.dy = this.radius*Math.sin(wCurentAngle);
+          this.x = this.dx + this.x_center;
+          this.y = this.dy + this.y_center;
+        }
+
+        this.switch_r_position = [[],[]];
+
+        if (0 < wInput.constraints.backward_state_count) {
+          var wStep = 1/wInput.constraints.backward_state_count;
+          for(var wi = 0 ; wi < wInput.constraints.backward_state_count + 1; ++wi ){
+            this.switch_r_position[0].push(wi*wStep*wBdDr + this.r_slider_limits[1]);
+          }
+        }
+        
+        if (0 < wInput.constraints.forward_state_count) {
+          var wStep = 1/wInput.constraints.forward_state_count;
+          for(var wi = 0 ; wi < wInput.constraints.forward_state_count + 1; ++wi ){
+            this.switch_r_position[1].push(wi*wStep*wFdDr + this.r_slider_limits[1]);;
+          }
+        }
+
+      }.bind(wInput))
+
+      return wInput;
     },
 
     analog_stick: function (iKnobWidth, iKnobHeight, iCenterX, iCenterY, iParameter) {
@@ -597,8 +813,10 @@ var GamePadExternal = {
         return GamePadExternal.InputType.slider(iKnobWidth, iKnobHeight, iCenterX, iCenterY, iParameter);
       case GamePadInputType.eSWITCH:
         return GamePadExternal.InputType.switch(iKnobWidth, iKnobHeight, iCenterX, iCenterY, iParameter);
-      case GamePadInputType.eRADIAL_DIAL:
-        return GamePadExternal.InputType.radial_dial(iKnobWidth, iKnobHeight, iCenterX, iCenterY, iParameter);
+      case GamePadInputType.eROTARY_DIAL:
+        return GamePadExternal.InputType.rotary_dial(iKnobWidth, iKnobHeight, iCenterX, iCenterY, iParameter);
+      case GamePadInputType.eROTARY_SWITCH:
+        return GamePadExternal.InputType.rotary_switch(iKnobWidth, iKnobHeight, iCenterX, iCenterY, iParameter);
       case GamePadInputType.eANALOG_STICK:
         return GamePadExternal.InputType.analog_stick(iKnobWidth, iKnobHeight, iCenterX, iCenterY, iParameter);
     }

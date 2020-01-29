@@ -35,7 +35,8 @@
 
     var gGlobal = {
       OuputText_Id: "id_TextOut",
-      OuputDiv_Id: "id_GamePad"
+      OuputDiv_Id: "id_GamePad",
+      GamePadIO : null
     }
 
     function init() {
@@ -52,6 +53,8 @@
         radius : 50,
         forward_state_count : 1,
         backward_state_count : 4,
+        forward_Dr : Math.PI/2,
+        backward_Dr : -Math.PI/2,
       }
       /*
       var wButton = GamPadObj.GamePadInput(50, 50, 50, 50, wSettings);
@@ -61,27 +64,36 @@
       
       var wGamepad = document.getElementById(gGlobal.OuputDiv_Id);
 
-      var wGamePadControl = new GamPadObj.GamePad(wGamepad);
-      wGamePadControl.addInput(GamPadObj.GamePadInputType.eBUTTON, 50,50,25,20,wSettings)
-      wGamePadControl.addInput(GamPadObj.GamePadInputType.eSWITCH, 50,50,50,20,wSettings)
-      wGamePadControl.addInput(GamPadObj.GamePadInputType.eSLIDER, 50,50,75,20,wSettings)
-      wGamePadControl.addInput(GamPadObj.GamePadInputType.eANALOG_STICK, 50,50,50,75,wSettings)
+      gGlobal.GamePadIO = new GamPadObj.GamePad(wGamepad);
+      gGlobal.GamePadIO.addInput(GamPadObj.GamePadInputType.eBUTTON, 50,50,25,20,wSettings)
+      gGlobal.GamePadIO.addInput(GamPadObj.GamePadInputType.eSWITCH, 50,50,50,20,wSettings)
+      gGlobal.GamePadIO.addInput(GamPadObj.GamePadInputType.eSLIDER, 50,50,75,20,wSettings)
+      gGlobal.GamePadIO.addInput(GamPadObj.GamePadInputType.eANALOG_STICK, 50,50,50,75,wSettings)
 
+      wSettings.radius = 75;
+      gGlobal.GamePadIO.addInput(GamPadObj.GamePadInputType.eROTARY_DIAL, 50,50,50,75,wSettings)
+
+      wSettings.radius = 90;
+      gGlobal.GamePadIO.addInput(GamPadObj.GamePadInputType.eROTARY_SWITCH, 50,50,50,75,wSettings)
 
       resize();
-     // interation();
+      interation();
     }
 
     function resize() {
     }
 
     function interation() {
-      var wButton = document.getElementById("id_GameButton");
-      var wState = wButton.GamePad_State;
+      
+      if (null != gGlobal.GamePadIO) {
 
-      var wOut = document.getElementById(gGlobal.OuputText_Id);
+        var wOut = document.getElementById(gGlobal.OuputText_Id);
 
-      wOut.innerText = " x : " + wState.x  + " y : " + wState.y + " active : " + wState.active;
+        wOut.innerText = JSON.stringify(gGlobal.GamePadIO.GamePad_State);
+
+      }
+
+
       window.requestAnimationFrame(interation);
     }
 
