@@ -1,3 +1,5 @@
+import {getAllParentOffset} from "./Utility.mjs"
+
 function ControlPointStructure ( iId ) {
   return {
     x : 0.0,
@@ -38,8 +40,9 @@ export function DomTouchControl ( iDOM){
   this.processMouse = function(evt) {
     if (!evt) evt = event;
     evt.preventDefault();
-    this.mControlPointList[0].x = evt.pageX - this.mDOM.offsetLeft;
-    this.mControlPointList[0].y = evt.pageY - this.mDOM.offsetTop;
+    var wParentOffset = getAllParentOffset(this.mDOM)
+    this.mControlPointList[0].x = evt.pageX - (this.mDOM.offsetLeft + wParentOffset.offsetLeft);
+    this.mControlPointList[0].y = evt.pageY - (this.mDOM.offsetTop + wParentOffset.offsetTop);
   }
 
   // Touch Event Handling ----------------
@@ -75,12 +78,10 @@ export function DomTouchControl ( iDOM){
     var wTouchMatrix = [];
     for (var i = 0; i < evt.targetTouches.length ; ++i) {
 
-      var wXVal = evt.targetTouches[i].pageX - this.mDOM.offsetLeft;
-      var wYVal = evt.targetTouches[i].pageY - this.mDOM.offsetTop;
+      var wXVal = evt.pageX - (this.mDOM.offsetLeft + wParentOffset.offsetLeft);
+      var wYVal = evt.pageY - (this.mDOM.offsetTop + wParentOffset.offsetTop);
       var wNewRow = [];
 
-      var wClosetIndex = 0;
-      var wClosetRange = 0;
       for (var j = 0; j < wActiveIndex.length ; ++j) {
 
         var wIndex = wActiveIndex[j];
@@ -92,11 +93,6 @@ export function DomTouchControl ( iDOM){
           dy : wDy,
           dr2 : wDr2
         })
-
-        if(wClosetRange > wDr2) {
-          wClosetIndex = j;
-          wClosetRange = wDr2;
-        }
       }
       var wTouchPoint = {
         x : wXVal,

@@ -1,7 +1,6 @@
 
 import DomTouchControl from "./DomTouchControl.mjs"
 
-
 function DrawKnob( iCanvasDOM, iKnob) {
   
   var wCtx = iCanvasDOM.getContext("2d");
@@ -111,12 +110,23 @@ function DrawKnob( iCanvasDOM, iKnob) {
         
         wCtx.strokeStyle = "blue";
         wCtx.beginPath();
-        wCtx.arc(iKnob.x_center,iKnob.y_center, iKnob.radius, iKnob.r_slider_limits[0], iKnob.r_slider_limits[1]);
+        if (iKnob.r_slider_limits[0] >  iKnob.r_slider_limits[1]) {
+          wCtx.arc(iKnob.x_center,iKnob.y_center, iKnob.radius, iKnob.r_slider_limits[0], iKnob.r_slider_limits[1], true);
+        }
+        else {
+          wCtx.arc(iKnob.x_center,iKnob.y_center, iKnob.radius, iKnob.r_slider_limits[0], iKnob.r_slider_limits[1], false);
+        }
+
         wCtx.stroke();
 
         wCtx.strokeStyle = "lime";
         wCtx.beginPath();
-        wCtx.arc(iKnob.x_center,iKnob.y_center, iKnob.radius, iKnob.r_slider_limits[1], iKnob.r_slider_limits[2]);
+        if (iKnob.r_slider_limits[1] >  iKnob.r_slider_limits[2]) {
+          wCtx.arc(iKnob.x_center,iKnob.y_center, iKnob.radius, iKnob.r_slider_limits[1], iKnob.r_slider_limits[2], true);
+        }
+        else {
+          wCtx.arc(iKnob.x_center,iKnob.y_center, iKnob.radius, iKnob.r_slider_limits[1], iKnob.r_slider_limits[2], false);
+        }
         wCtx.stroke();
       }
       break;
@@ -169,8 +179,8 @@ function DefaultDrawFunction( iCanvasDOM, iKnob) {
   var wCtx = iCanvasDOM.getContext("2d");
   wCtx.clearRect(0, 0, iCanvasDOM.width, iCanvasDOM.height);
 
-  for (var wi = 0; wi < iKnob.length; ++ wi) {
-    DrawKnob( iCanvasDOM, iKnob[wi]);
+  for (let wKey in iKnob){
+    DrawKnob( iCanvasDOM, iKnob[wKey]);
   }
 }
 
@@ -786,7 +796,7 @@ var GamePadExternal = {
         if (this.radius > 0) {
           wYDenominator = this.radius;
         }
-        else if (this.Knob.dy > 0) {
+        else if (this.dy > 0) {
           wYDenominator = this.analogStick_y_limts[2] - this.analogStick_y_limts[1];
         }
         else {
@@ -835,14 +845,14 @@ export function GamePad(iDOM, iDrawFunction) {
   this.mDrawFunction = null != iDrawFunction ? iDrawFunction : DefaultDrawFunction;
   this.mControlPoints = new DomTouchControl.DomTouchControl(this.mCanvas);
 
-  this.mInputKnobList = [];
-  this.GamePad_State = [];
+  this.mInputKnobList = {};
+  this.GamePad_State = {};
 
-  this.addInput = function (iType, iKnobWidth, iKnobHeight, iCenterX, iCenterY, iParameter) {
+  this.addInput = function (iKey, iType, iKnobWidth, iKnobHeight, iCenterX, iCenterY, iParameter) {
     var wNewInput = GamePadExternal.createInput(iType, iKnobWidth, iKnobHeight, iCenterX, iCenterY, iParameter);
     if (null != wNewInput) {
-      this.mInputKnobList.push(wNewInput);
-      this.GamePad_State.push(wNewInput.mInput_State);
+      this.mInputKnobList[iKey] = wNewInput;
+      this.GamePad_State[iKey] = wNewInput.mInput_State;
     }
   }
 
@@ -853,17 +863,20 @@ export function GamePad(iDOM, iDrawFunction) {
 
     for(var wi = 0; wi < this.mControlPoints.mControlPointList.length; ++wi) {
       this.mControlPoints.mControlPointList[wi].available = true;
-      for(var wj = 0; wj < this.mInputKnobList.length; ++wj) {
-        if (true == this.mInputKnobList[wj].active) {
-          if (this.mInputKnobList[wj].active_control_id == this.mControlPoints.mControlPointList[wi].identifier) {
+           
+      for (let wKey in this.mInputKnobList){
+        var wKnob = this.mInputKnobList[wKey];
+        if (true == wKnob.active) {
+          if (wKnob.active_control_id == this.mControlPoints.mControlPointList[wi].identifier) {
             this.mControlPoints.mControlPointList[wi].available = false;
           }
         }
       }
     }
 
-    for(var wi = 0; wi < this.mInputKnobList.length; ++wi) {
-      this.mInputKnobList[wi].iteration(this.mCanvas, this.mControlPoints.mControlPointList);
+        
+    for (let wKey in this.mInputKnobList){
+      this.mInputKnobList[wKey].iteration(this.mCanvas, this.mControlPoints.mControlPointList);
     }
 
     if (null != this.mDrawFunction) {
@@ -876,7 +889,75 @@ export function GamePad(iDOM, iDrawFunction) {
   this.iteration()
 }
 
+
+export function ThreeAxisJoystick(iDOM, iRectangular, iZPosition, iDrawFunction) {
+  
+  var wSettings = {
+    x_recenter : true,
+    y_recenter : true,
+    percentage : true,
+  }
+
+  var wZPosition = [0,50];
+  var wfwd_D = [0,-50];
+  var wbwd_D = [0,50];
+  var wDrSign = 1;
+  switch(iZPosition) {
+    case 0:
+      wZPosition = [50,0];
+      wfwd_D = [50,0];
+      wbwd_D = [-50,0];
+      break;
+    case 1:
+      wZPosition = [100,50];
+      wfwd_D = [0,-50];
+      wbwd_D = [0,50];
+      wDrSign = -1;
+      break;
+    case 2:
+      wZPosition = [50,100];
+      wfwd_D = [50,0];
+      wbwd_D = [-50,0];
+      wDrSign = -1;
+      break;
+  }
+  
+  this.mGamepad = new GamePad(iDOM,iDrawFunction);
+  if (true == iRectangular) {
+    
+    wSettings.forward_Dx = wfwd_D[0],
+    wSettings.forward_Dy = wfwd_D[1],
+    wSettings.backward_Dx = wbwd_D[0],
+    wSettings.backward_Dy = wbwd_D[1],
+
+    this.mGamepad.addInput("xy", GamePadInputType.eANALOG_STICK, 25,25,50,50,wSettings);
+    this.mGamepad.addInput("z", GamePadInputType.eSLIDER, 25,25,wZPosition[0],wZPosition[1],wSettings);  
+  }
+  else {
+    wSettings.r_center = Math.atan2(wZPosition[1] - 50,wZPosition[0] - 50);
+    wSettings.radius = 50;
+    this.mGamepad.addInput("xy", GamePadInputType.eANALOG_STICK, 25,25,50,50,wSettings);
+    
+    wSettings.radius = 100;
+    wSettings.forward_Dr = wDrSign*Math.PI/2;
+    wSettings.backward_Dr = wDrSign*-Math.PI/2;
+    this.mGamepad.addInput("z", GamePadInputType.eROTARY_DIAL, 25,25,50,50,wSettings);    
+  }
+
+  this.getAxisPosition = function () {
+    var wXY = this.mGamepad.GamePad_State["xy"];
+    var wZ = this.mGamepad.GamePad_State["z"];
+    return{
+      x : wXY.x, 
+      y : -wXY.y,
+      z : wZ.value
+    }
+  }
+
+}
+
 export default {
   GamePadInputType : GamePadInputType,
-  GamePad : GamePad
+  GamePad : GamePad,
+  ThreeAxisJoystick : ThreeAxisJoystick,
 }

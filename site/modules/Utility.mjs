@@ -58,9 +58,33 @@ export function getAllScroll(iDOM) {
 
 }
 
+export function getAllParentOffset(iDOM) {
+  var wOffsetTop = 0;
+  var wOffsetLeft = 0;
+
+  var wCurrentDOM = iDOM;
+
+  while (wCurrentDOM != document.body) {
+    wCurrentDOM = wCurrentDOM.offsetParent;
+    if (null != wCurrentDOM) {
+      wOffsetTop += parseInt(wCurrentDOM.offsetTop);
+      wOffsetLeft += parseInt(wCurrentDOM.offsetLeft);  
+    }
+    else {
+      break;
+    }
+  }
+
+  return {
+    offsetTop: wOffsetTop,
+    offsetLeft: wOffsetLeft,
+  };
+
+}
+
 export function getDOMRelativeMousePosition(iDOM, iMouseX, iMouseY) {
   
-  var wScroll = getAllScroll(iDOM);
+  var wScroll = getAllParentOffset(iDOM);
   return {
     x: iMouseX - iDOM.offsetLeft + wScroll.x,
     y: iMouseY - iDOM.offsetTop  + wScroll.y

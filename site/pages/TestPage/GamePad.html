@@ -16,7 +16,7 @@
     #id_GamePad {
       width: 100vw;
       height: 100vh;
-      z-index: 1;
+      z-index: -1;
       position: fixed;
       top: 0px;
       left: 0px;
@@ -25,8 +25,27 @@
     #id_GameButton {
       width: 500px;
       height: 500px;
-      z-index: 1;
+      z-index: -1;
     }
+
+    #id_JoyStock_1 {
+      width: 100px;
+      height: 100px;
+      z-index: 100;
+      position: fixed;
+      bottom: 0px;
+      left: 0px;
+    }
+    
+    #id_JoyStock_2 {
+      width: 100px;
+      height: 100px;
+      z-index: 100;
+      position: fixed;
+      bottom: 0px;
+      right: 100px;
+    }
+    
   </style>
   <script type="module">
 
@@ -34,9 +53,17 @@
     
 
     var gGlobal = {
-      OuputText_Id: "id_TextOut",
-      OuputDiv_Id: "id_GamePad",
-      GamePadIO : null
+      OutputText_Id: "id_TextOut",
+      OutputDiv_Id: "id_GamePad",
+      OutputDiv_J1_id : "id_JoyStock_1",
+      OutputDiv_J2_id : "id_JoyStock_2",
+      OutputDiv_J3_id : "id_JoyStock_3",
+      OutputDiv_J4_id : "id_JoyStock_4",
+      GamePadIO : null,
+      Joystick1 : null,
+      Joystick2 : null,
+      Joystick3 : null,
+      Joystick4 : null
     }
 
     function init() {
@@ -62,19 +89,33 @@
       document.body.append(wButton);
 */
       
-      var wGamepad = document.getElementById(gGlobal.OuputDiv_Id);
-
+      var wGamepad = document.getElementById(gGlobal.OutputDiv_Id);
+/*
       gGlobal.GamePadIO = new GamPadObj.GamePad(wGamepad);
-      gGlobal.GamePadIO.addInput(GamPadObj.GamePadInputType.eBUTTON, 50,50,25,20,wSettings)
-      gGlobal.GamePadIO.addInput(GamPadObj.GamePadInputType.eSWITCH, 50,50,50,20,wSettings)
-      gGlobal.GamePadIO.addInput(GamPadObj.GamePadInputType.eSLIDER, 50,50,75,20,wSettings)
-      gGlobal.GamePadIO.addInput(GamPadObj.GamePadInputType.eANALOG_STICK, 50,50,50,75,wSettings)
+      gGlobal.GamePadIO.addInput("IO_1" , GamPadObj.GamePadInputType.eBUTTON, 50,50,25,20,wSettings)
+      gGlobal.GamePadIO.addInput("IO_2" , GamPadObj.GamePadInputType.eSWITCH, 50,50,50,20,wSettings)
+      gGlobal.GamePadIO.addInput("IO_3" , GamPadObj.GamePadInputType.eSLIDER, 50,50,75,20,wSettings)
+      gGlobal.GamePadIO.addInput("IO_4" , GamPadObj.GamePadInputType.eANALOG_STICK, 50,50,50,75,wSettings)
 
       wSettings.radius = 75;
-      gGlobal.GamePadIO.addInput(GamPadObj.GamePadInputType.eROTARY_DIAL, 50,50,50,75,wSettings)
+      gGlobal.GamePadIO.addInput("IO_5", GamPadObj.GamePadInputType.eROTARY_DIAL, 50,50,50,75,wSettings)
 
       wSettings.radius = 90;
-      gGlobal.GamePadIO.addInput(GamPadObj.GamePadInputType.eROTARY_SWITCH, 50,50,50,75,wSettings)
+      gGlobal.GamePadIO.addInput("IO_6", GamPadObj.GamePadInputType.eROTARY_SWITCH, 50,50,50,75,wSettings)
+*/
+      
+      var wJ1 = document.getElementById(gGlobal.OutputDiv_J1_id);
+      gGlobal.Joystick1 = new GamPadObj.ThreeAxisJoystick(wJ1, true, 0);
+
+      var wJ2 = document.getElementById(gGlobal.OutputDiv_J2_id);
+      gGlobal.Joystick2 = new GamPadObj.ThreeAxisJoystick(wJ2, false, 0);
+
+      var wJ3 = document.getElementById(gGlobal.OutputDiv_J3_id);
+      gGlobal.Joystick3 = new GamPadObj.ThreeAxisJoystick(wJ3, true, 4);
+
+      var wJ4 = document.getElementById(gGlobal.OutputDiv_J4_id);
+      gGlobal.Joystick4 = new GamPadObj.ThreeAxisJoystick(wJ4, false, 4);
+
 
       resize();
       interation();
@@ -87,12 +128,20 @@
       
       if (null != gGlobal.GamePadIO) {
 
+        var wOut = document.getElementById(gGlobal.OutputText_Id);
+
+        wOut.innerText = JSON.stringify(gGlobal.GamePadIO.GamePad_State, null , 2);
+
         var wOut = document.getElementById(gGlobal.OuputText_Id);
-
-        wOut.innerText = JSON.stringify(gGlobal.GamePadIO.GamePad_State);
-
+        var wOut = document.getElementById(gGlobal.OuputText_Id);
       }
 
+      if (null != gGlobal.Joystick1) {
+        gGlobal.Joystick1.getAxisPosition();
+        var wOut = document.getElementById(gGlobal.OutputText_Id);
+
+        wOut.innerText = JSON.stringify(gGlobal.Joystick1.getAxisPosition(), null , 2);
+      }
 
       window.requestAnimationFrame(interation);
     }
@@ -112,6 +161,14 @@
     <p id="id_TextOut"></p>
   </div>
   <div id="id_GamePad">
+  </div>
+  <div id="id_JoyStock_1">
+  </div>
+  <div id="id_JoyStock_2">
+  </div>
+  <div id="id_JoyStock_3">
+  </div>
+  <div id="id_JoyStock_4">
   </div>
   
 </body>
