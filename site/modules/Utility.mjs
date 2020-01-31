@@ -43,9 +43,15 @@ export function getAllScroll(iDOM) {
   var wCurrentDOM = iDOM;
 
   while (wCurrentDOM != document.body) {
-    wCurrentDOM = wCurrentDOM.parentNode;
-    wScrollX += parseInt(wCurrentDOM.scrollLeft);
-    wScrollY += parseInt(wCurrentDOM.scrollTop);
+    wCurrentDOM = wCurrentDOM.offsetParent;
+    
+    if (null != wCurrentDOM) {
+      wScrollX += parseInt(wCurrentDOM.scrollLeft);
+      wScrollY += parseInt(wCurrentDOM.scrollTop);
+    }
+    else {
+      break;
+    }
   }
   
 //  wScrollX += parseInt(window.pageXOffset);
@@ -84,10 +90,12 @@ export function getAllParentOffset(iDOM) {
 
 export function getDOMRelativeMousePosition(iDOM, iMouseX, iMouseY) {
   
-  var wScroll = getAllParentOffset(iDOM);
+  var wScroll = getAllScroll(iDOM);
+  var wOffset = getAllParentOffset(iDOM);
+  
   return {
-    x: iMouseX - iDOM.offsetLeft + wScroll.x,
-    y: iMouseY - iDOM.offsetTop  + wScroll.y
+    x: iMouseX - (iDOM.offsetLeft + wOffset.offsetLeft - wScroll.x),
+    y: iMouseY - (iDOM.offsetTop + wOffset.offsetTop - wScroll.y)
   }
 }
 

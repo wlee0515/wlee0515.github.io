@@ -3,6 +3,9 @@
 <head>
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
   <title>Game Pad Test Page</title>
+  <script>
+    var gFramePosition = 1;
+  </script>
   <script type="text/javascript" src="../../global/frame.js"></script>
   
   <style>
@@ -17,9 +20,6 @@
       width: 100vw;
       height: 100vh;
       z-index: -1;
-      position: fixed;
-      top: 0px;
-      left: 0px;
     }
 
     #id_GameButton {
@@ -29,21 +29,27 @@
     }
 
     #id_JoyStock_1 {
-      width: 100px;
-      height: 100px;
+      width: 150px;
+      height: 150px;
       z-index: 100;
       position: fixed;
-      bottom: 0px;
-      left: 0px;
+      bottom: 15px;
+      left: 15px;
     }
     
     #id_JoyStock_2 {
-      width: 100px;
-      height: 100px;
+      width: 150px;
+      height: 150px;
       z-index: 100;
       position: fixed;
-      bottom: 0px;
-      right: 100px;
+      bottom: 15px;
+      right: 15px;
+    }
+
+    .class_joygen {
+      width: 150px;
+      height: 150px;
+      z-index: 100;
     }
     
   </style>
@@ -57,13 +63,9 @@
       OutputDiv_Id: "id_GamePad",
       OutputDiv_J1_id : "id_JoyStock_1",
       OutputDiv_J2_id : "id_JoyStock_2",
-      OutputDiv_J3_id : "id_JoyStock_3",
-      OutputDiv_J4_id : "id_JoyStock_4",
       GamePadIO : null,
       Joystick1 : null,
       Joystick2 : null,
-      Joystick3 : null,
-      Joystick4 : null
     }
 
     function init() {
@@ -90,7 +92,7 @@
 */
       
       var wGamepad = document.getElementById(gGlobal.OutputDiv_Id);
-/*
+
       gGlobal.GamePadIO = new GamPadObj.GamePad(wGamepad);
       gGlobal.GamePadIO.addInput("IO_1" , GamPadObj.GamePadInputType.eBUTTON, 50,50,25,20,wSettings)
       gGlobal.GamePadIO.addInput("IO_2" , GamPadObj.GamePadInputType.eSWITCH, 50,50,50,20,wSettings)
@@ -102,19 +104,13 @@
 
       wSettings.radius = 90;
       gGlobal.GamePadIO.addInput("IO_6", GamPadObj.GamePadInputType.eROTARY_SWITCH, 50,50,50,75,wSettings)
-*/
+
       
       var wJ1 = document.getElementById(gGlobal.OutputDiv_J1_id);
       gGlobal.Joystick1 = new GamPadObj.ThreeAxisJoystick(wJ1, true, 0);
 
       var wJ2 = document.getElementById(gGlobal.OutputDiv_J2_id);
       gGlobal.Joystick2 = new GamPadObj.ThreeAxisJoystick(wJ2, false, 0);
-
-      var wJ3 = document.getElementById(gGlobal.OutputDiv_J3_id);
-      gGlobal.Joystick3 = new GamPadObj.ThreeAxisJoystick(wJ3, true, 4);
-
-      var wJ4 = document.getElementById(gGlobal.OutputDiv_J4_id);
-      gGlobal.Joystick4 = new GamPadObj.ThreeAxisJoystick(wJ4, false, 4);
 
 
       resize();
@@ -158,19 +154,16 @@
 <body>
   <div>
     <h1>Game Pad Output : </h1>
-    <p id="id_TextOut"></p>
   </div>
   <div id="id_GamePad">
+  </div>
+  <div id="id_joycontainer">
   </div>
   <div id="id_JoyStock_1">
   </div>
   <div id="id_JoyStock_2">
   </div>
-  <div id="id_JoyStock_3">
-  </div>
-  <div id="id_JoyStock_4">
-  </div>
-  
+    <p id="id_TextOut"></p>
 </body>
 
 </html>

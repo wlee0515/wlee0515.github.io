@@ -18,8 +18,14 @@ window.addEventListener("load", function(event) {
 //	wDiv.style.background = "black";
 //	wDiv.style.border = "5px solid orange";
 	wDiv.style.position = "fixed";
-	wDiv.style.right = "10px";
-	wDiv.style.bottom = "10px";
+	if ((null != gFramePosition) && (1 == gFramePosition)){
+		wDiv.style.right = "10px";
+		wDiv.style.top = "10px";	
+	}
+	else {
+		wDiv.style.right = "10px";
+		wDiv.style.bottom = "10px";	
+	}
 	wDiv.style.cursor = "pointer";
 	wDiv.style.padding = "0px";
 	wDiv.style.margins = "auto";

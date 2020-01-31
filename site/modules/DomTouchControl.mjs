@@ -1,4 +1,4 @@
-import {getAllParentOffset} from "./Utility.mjs"
+import {getDOMRelativeMousePosition} from "./Utility.mjs"
 
 function ControlPointStructure ( iId ) {
   return {
@@ -40,9 +40,9 @@ export function DomTouchControl ( iDOM){
   this.processMouse = function(evt) {
     if (!evt) evt = event;
     evt.preventDefault();
-    var wParentOffset = getAllParentOffset(this.mDOM);
-    this.mControlPointList[0].x = evt.pageX - (this.mDOM.offsetLeft + wParentOffset.offsetLeft);
-    this.mControlPointList[0].y = evt.pageY - (this.mDOM.offsetTop + wParentOffset.offsetTop);
+    var wRelMousePosition = getDOMRelativeMousePosition(this.mDOM, evt.clientX, evt.clientY);
+    this.mControlPointList[0].x = wRelMousePosition.x;
+    this.mControlPointList[0].y = wRelMousePosition.y;
   }
 
   // Touch Event Handling ----------------
@@ -75,11 +75,13 @@ export function DomTouchControl ( iDOM){
       }
     }
 
-    var wParentOffset = getAllParentOffset(this.mDOM);
     var wTouchMatrix = [];
     for (var i = 0; i < evt.targetTouches.length ; ++i) {
-      var wXVal = evt.pageX - (this.mDOM.offsetLeft + wParentOffset.offsetLeft);
-      var wYVal = evt.pageY - (this.mDOM.offsetTop + wParentOffset.offsetTop);
+      
+      var wRelMousePosition = getDOMRelativeMousePosition(this.mDOM, evt.targetTouches[i].clientX, evt.targetTouches[i].clientY);
+      var wXVal = wRelMousePosition.x;
+      var wYVal= wRelMousePosition.y;
+
       var wNewRow = [];
 
       for (var j = 0; j < wActiveIndex.length ; ++j) {
