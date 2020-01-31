@@ -40,7 +40,7 @@ export function DomTouchControl ( iDOM){
   this.processMouse = function(evt) {
     if (!evt) evt = event;
     evt.preventDefault();
-    var wParentOffset = getAllParentOffset(this.mDOM)
+    var wParentOffset = getAllParentOffset(this.mDOM);
     this.mControlPointList[0].x = evt.pageX - (this.mDOM.offsetLeft + wParentOffset.offsetLeft);
     this.mControlPointList[0].y = evt.pageY - (this.mDOM.offsetTop + wParentOffset.offsetTop);
   }
@@ -75,9 +75,9 @@ export function DomTouchControl ( iDOM){
       }
     }
 
+    var wParentOffset = getAllParentOffset(this.mDOM);
     var wTouchMatrix = [];
     for (var i = 0; i < evt.targetTouches.length ; ++i) {
-
       var wXVal = evt.pageX - (this.mDOM.offsetLeft + wParentOffset.offsetLeft);
       var wYVal = evt.pageY - (this.mDOM.offsetTop + wParentOffset.offsetTop);
       var wNewRow = [];
