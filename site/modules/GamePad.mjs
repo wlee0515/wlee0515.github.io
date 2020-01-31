@@ -1,6 +1,13 @@
 
 import DomTouchControl from "./DomTouchControl.mjs"
 
+function normalizeAngle(iAngle) {
+  var wAngle = iAngle;
+  while (wAngle < -Math.PI) wAngle += 2*Math.PI;
+  while (wAngle > Math.PI) wAngle -= 2*Math.PI;
+  return wAngle;
+}
+
 function DrawKnob( iCanvasDOM, iKnob) {
   
   var wCtx = iCanvasDOM.getContext("2d");
@@ -110,22 +117,24 @@ function DrawKnob( iCanvasDOM, iKnob) {
         
         wCtx.strokeStyle = "blue";
         wCtx.beginPath();
-        if (iKnob.r_slider_limits[0] >  iKnob.r_slider_limits[1]) {
-          wCtx.arc(iKnob.x_center,iKnob.y_center, iKnob.radius, iKnob.r_slider_limits[0], iKnob.r_slider_limits[1], true);
+        var dr = normalizeAngle(iKnob.r_slider_limits[0] -  iKnob.r_slider_limits[1]);
+        if (0 < dr) {
+          wCtx.arc(iKnob.x_center,iKnob.y_center, iKnob.radius, iKnob.r_slider_limits[1], iKnob.r_slider_limits[0], false);
         }
         else {
-          wCtx.arc(iKnob.x_center,iKnob.y_center, iKnob.radius, iKnob.r_slider_limits[0], iKnob.r_slider_limits[1], false);
+          wCtx.arc(iKnob.x_center,iKnob.y_center, iKnob.radius, iKnob.r_slider_limits[1], iKnob.r_slider_limits[0], true);
         }
 
         wCtx.stroke();
 
         wCtx.strokeStyle = "lime";
         wCtx.beginPath();
-        if (iKnob.r_slider_limits[1] >  iKnob.r_slider_limits[2]) {
-          wCtx.arc(iKnob.x_center,iKnob.y_center, iKnob.radius, iKnob.r_slider_limits[1], iKnob.r_slider_limits[2], true);
+        var dr = normalizeAngle(iKnob.r_slider_limits[2] -  iKnob.r_slider_limits[1]);
+        if (0 < dr) {
+          wCtx.arc(iKnob.x_center,iKnob.y_center, iKnob.radius, iKnob.r_slider_limits[1], iKnob.r_slider_limits[2], false);
         }
         else {
-          wCtx.arc(iKnob.x_center,iKnob.y_center, iKnob.radius, iKnob.r_slider_limits[1], iKnob.r_slider_limits[2], false);
+          wCtx.arc(iKnob.x_center,iKnob.y_center, iKnob.radius, iKnob.r_slider_limits[1], iKnob.r_slider_limits[2], true);
         }
         wCtx.stroke();
       }
@@ -565,17 +574,10 @@ var GamePadExternal = {
       var wRadius = null != iParameter.radius? iParameter.radius : 10;
       wRadius = wRadius < 10 ? 10 : wRadius;
 
-      wInput.normalizeAngle = function (iAngle) {
-        var wAngle = iAngle;
-        while (wAngle < -Math.PI) wAngle += 2*Math.PI;
-        while (wAngle > Math.PI) wAngle -= 2*Math.PI;
-        return wAngle;
-      }
-
       wInput.constraints.radius = wRadius;
-      wInput.constraints.r_center = null != iParameter.r_center ? wInput.normalizeAngle(iParameter.r_center): -Math.PI/2;
-      wInput.constraints.forward_Dr = null != iParameter.forward_Dr ? wInput.normalizeAngle(iParameter.forward_Dr) : 0;
-      wInput.constraints.backward_Dr = null != iParameter.backward_Dr ? wInput.normalizeAngle(iParameter.backward_Dr) : 0;
+      wInput.constraints.r_center = null != iParameter.r_center ? normalizeAngle(iParameter.r_center): -Math.PI/2;
+      wInput.constraints.forward_Dr = null != iParameter.forward_Dr ? normalizeAngle(iParameter.forward_Dr) : 0;
+      wInput.constraints.backward_Dr = null != iParameter.backward_Dr ? normalizeAngle(iParameter.backward_Dr) : 0;
       wInput.constraints.r_recenter = null != iParameter.r_recenter ? iParameter.r_recenter : wInput.constraints.x_recenter || wInput.constraints.y_recenter;
       wInput.constraints.x_recenter = false;
       wInput.constraints.y_recenter = false;
@@ -590,15 +592,15 @@ var GamePadExternal = {
         var wRefRadius = this.constraints.percentage ? (this.constraints.radius / 100) * wSize : this.constraints.radius;
         this.radius = wRefRadius;
 
-        var wFdAng = this.normalizeAngle( this.constraints.r_center + this.constraints.forward_Dr);
-        var wBdAng = this.normalizeAngle( this.constraints.r_center + this.constraints.backward_Dr);
+        var wFdAng = normalizeAngle( this.constraints.r_center + this.constraints.forward_Dr);
+        var wBdAng = normalizeAngle( this.constraints.r_center + this.constraints.backward_Dr);
 
         this.r_slider_limits = [ wBdAng, wInput.constraints.r_center, wFdAng ];
 
         
         var wCurrentAngle = Math.atan2(this.dy, this.dx);
         
-        var wCurrentAngleOff = this.normalizeAngle(  wCurrentAngle - this.r_slider_limits[1]);
+        var wCurrentAngleOff = normalizeAngle(  wCurrentAngle - this.r_slider_limits[1]);
 
         var wOverLimit = false;
         var wOverLimit_Dr = 0;
@@ -644,7 +646,7 @@ var GamePadExternal = {
           wCurrentAngleOff -= 0.75*wCurrentAngleOff;
         }
 
-        wCurrentAngle = this.normalizeAngle(this.r_slider_limits[1] + wCurrentAngleOff);
+        wCurrentAngle = normalizeAngle(this.r_slider_limits[1] + wCurrentAngleOff);
 
         this.dx = this.radius*Math.cos(wCurrentAngle);
         this.dy = this.radius*Math.sin(wCurrentAngle);
@@ -702,7 +704,7 @@ var GamePadExternal = {
         }
 
         if(false == this.active) {
-          var wCurentAngle = this.normalizeAngle( this.r_slider_limits[1] + wGain*wDr);
+          var wCurentAngle = normalizeAngle( this.r_slider_limits[1] + wGain*wDr);
           this.dx = this.radius*Math.cos(wCurentAngle);
           this.dy = this.radius*Math.sin(wCurentAngle);
           this.x = this.dx + this.x_center;
@@ -901,7 +903,6 @@ export function ThreeAxisJoystick(iDOM, iRectangular, iZPosition, iDrawFunction)
   var wZPosition = [0,50];
   var wfwd_D = [0,-50];
   var wbwd_D = [0,50];
-  var wDrSign = 1;
   switch(iZPosition) {
     case 0:
       wZPosition = [50,0];
@@ -909,17 +910,45 @@ export function ThreeAxisJoystick(iDOM, iRectangular, iZPosition, iDrawFunction)
       wbwd_D = [-50,0];
       break;
     case 1:
-      wZPosition = [100,50];
+      wZPosition = [100,0];
       wfwd_D = [0,-50];
-      wbwd_D = [0,50];
-      wDrSign = -1;
+      wbwd_D = [-50,0];
       break;
     case 2:
-      wZPosition = [50,100];
-      wfwd_D = [50,0];
-      wbwd_D = [-50,0];
-      wDrSign = -1;
+      wZPosition = [100,50];
+      wfwd_D = [0,50];
+      wbwd_D = [0,-50];
       break;
+    case 3:
+      wZPosition = [100,100];
+      wfwd_D = [-50,0];
+      wbwd_D = [0,-50];
+      break;
+    case 4:
+      wZPosition = [50,100];
+      wfwd_D = [-50,0];
+      wbwd_D = [50,0];
+      break;
+    case 5:
+      wZPosition = [0,100];
+      wfwd_D = [0,-50];
+      wbwd_D = [50,0];
+      break;
+    case 6:
+      wZPosition = [0,50];
+      wfwd_D = [0,-50];
+      wbwd_D = [0,50];
+      break;
+    case 7:
+      wZPosition = [0,0];
+      wfwd_D = [50,0];
+      wbwd_D = [0,50];
+      break;
+    default:
+      wZPosition = [0,50];
+      wfwd_D = [0,-50];
+      wbwd_D = [0,50];
+    break;
   }
   
   this.mGamepad = new GamePad(iDOM,iDrawFunction);
@@ -939,8 +968,8 @@ export function ThreeAxisJoystick(iDOM, iRectangular, iZPosition, iDrawFunction)
     this.mGamepad.addInput("xy", GamePadInputType.eANALOG_STICK, 25,25,50,50,wSettings);
     
     wSettings.radius = 100;
-    wSettings.forward_Dr = wDrSign*Math.PI/2;
-    wSettings.backward_Dr = wDrSign*-Math.PI/2;
+    wSettings.forward_Dr = Math.PI/2;
+    wSettings.backward_Dr = -Math.PI/2;
     this.mGamepad.addInput("z", GamePadInputType.eROTARY_DIAL, 25,25,50,50,wSettings);    
   }
 

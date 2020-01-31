@@ -50,6 +50,15 @@
       width: 150px;
       height: 150px;
       z-index: 100;
+      display: inline-block;
+    }
+    
+    .square {
+      float: left;
+    }
+    
+    .circle {
+      float: right;
     }
     
   </style>
@@ -63,9 +72,11 @@
       OutputDiv_Id: "id_GamePad",
       OutputDiv_J1_id : "id_JoyStock_1",
       OutputDiv_J2_id : "id_JoyStock_2",
+      OutputDiv_JCon_id : "id_joycontainer",
       GamePadIO : null,
       Joystick1 : null,
       Joystick2 : null,
+      JoystickArray : [],
     }
 
     function init() {
@@ -113,6 +124,19 @@
       gGlobal.Joystick2 = new GamPadObj.ThreeAxisJoystick(wJ2, false, 0);
 
 
+      var wJContainer = document.getElementById(gGlobal.OutputDiv_JCon_id);
+
+      for (var i = 0; i < 8; ++i) {
+        var wRect = document.createElement('div');
+        gGlobal.JoystickArray.push(new GamPadObj.ThreeAxisJoystick(wRect, true, i));
+        wJContainer.append(wRect);
+        wRect.className ="class_joygen square";
+
+        var wCir = document.createElement('div');
+        gGlobal.JoystickArray.push(new GamPadObj.ThreeAxisJoystick(wCir, false, i));
+        wJContainer.append(wCir);
+        wCir.className ="class_joygen circle";
+      }
       resize();
       interation();
     }
