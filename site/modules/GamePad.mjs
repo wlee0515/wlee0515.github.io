@@ -154,7 +154,9 @@ function DrawKnob( iCanvasDOM, iKnob) {
           wCtx.stroke();
         }
         else {
-          wCtx.strokeRect(iKnob.x_frame_limts[0], iKnob.y_frame_limts[0] , iKnob.frame_width, iKnob.frame_height );
+          var wWidth = iKnob.analogStick_x_limts[2] - iKnob.analogStick_x_limts[0];
+          var wHeight = iKnob.analogStick_y_limts[2] - iKnob.analogStick_y_limts[0];
+          wCtx.strokeRect(iKnob.analogStick_x_limts[0], iKnob.analogStick_y_limts[0] , wWidth, wHeight );
         }
       }
     case GamePadInputType.eBUTTON:
@@ -739,11 +741,24 @@ var GamePadExternal = {
       wInput.constraints.radius = null != iParameter.radius? iParameter.radius : -1;
       wInput.constraints.x_restriction = null != iParameter.x_restriction? iParameter.x_restriction : [false, false],
       wInput.constraints.y_restriction = null != iParameter.y_restriction? iParameter.y_restriction : [false, false],
-      
+      wInput.constraints.area_height = null != iParameter.area_height? iParameter.area_height : 100 ;
+      wInput.constraints.area_width = null != iParameter.area_width? iParameter.area_width : 100 ;
+
       wInput.processConstraints.push(function (iCanvasDOM, iControlPointList) {
 
-        this.analogStick_x_limts = [this.x_frame_limts[0], this.x_center ,this.x_frame_limts[1]];
-        this.analogStick_y_limts = [this.y_frame_limts[0], this.y_center ,this.y_frame_limts[1]];
+        var wAnalogStickHeight = this.constraints.percentage ? (this.constraints.area_height / 100) * this.frame_height : this.constraints.area_height;
+        var wAnalogStickWidth = this.constraints.percentage ? (this.constraints.area_width / 100) * this.frame_width : this.constraints.area_width;
+        
+        var wHalfWidth = wAnalogStickWidth/2;
+        var xUpperLimit = this.x_center + wHalfWidth;
+        var xLowerLimit = this.x_center - wHalfWidth;
+        
+        var wHalfHeight = wAnalogStickHeight/2;
+        var yUpperLimit = this.y_center + wHalfHeight;
+        var yLowerLimit = this.y_center - wHalfHeight;
+
+        this.analogStick_x_limts = [xLowerLimit, this.x_center ,xUpperLimit];
+        this.analogStick_y_limts = [yLowerLimit, this.y_center ,yUpperLimit];
 
         if (true == this.constraints.x_restriction[0]) {
           this.analogStick_x_limts[0] = this.analogStick_x_limts[1];
@@ -778,6 +793,11 @@ var GamePadExternal = {
         }
         else {
           this.radius = -1;
+          if (this.dx > wHalfWidth) this.dx = wHalfWidth;
+          if (this.dx < -wHalfWidth) this.dx = -wHalfWidth;
+          if (this.dy > wHalfHeight) this.dy = wHalfHeight;
+          if (this.dy < -wHalfHeight) this.dy = -wHalfHeight;
+          
         }
 
         this.x = this.dx + this.x_center;
@@ -911,7 +931,7 @@ export function ThreeAxisJoystick(iDOM, iRectangular, iZPosition, iDrawFunction)
       break;
     case 1:
       wZPosition = [100,0];
-      wfwd_D = [0,-50];
+      wfwd_D = [0,50];
       wbwd_D = [-50,0];
       break;
     case 2:
@@ -954,17 +974,19 @@ export function ThreeAxisJoystick(iDOM, iRectangular, iZPosition, iDrawFunction)
   this.mGamepad = new GamePad(iDOM,iDrawFunction);
   if (true == iRectangular) {
     
+    wSettings.area_height = 75,
+    wSettings.area_width = 75,
+    this.mGamepad.addInput("xy", GamePadInputType.eANALOG_STICK, 25,25,50,50,wSettings);
+
     wSettings.forward_Dx = wfwd_D[0],
     wSettings.forward_Dy = wfwd_D[1],
     wSettings.backward_Dx = wbwd_D[0],
-    wSettings.backward_Dy = wbwd_D[1],
-
-    this.mGamepad.addInput("xy", GamePadInputType.eANALOG_STICK, 25,25,50,50,wSettings);
+    wSettings.backward_Dy = wbwd_D[1],    
     this.mGamepad.addInput("z", GamePadInputType.eSLIDER, 25,25,wZPosition[0],wZPosition[1],wSettings);  
   }
   else {
     wSettings.r_center = Math.atan2(wZPosition[1] - 50,wZPosition[0] - 50);
-    wSettings.radius = 50;
+    wSettings.radius = 75;
     this.mGamepad.addInput("xy", GamePadInputType.eANALOG_STICK, 25,25,50,50,wSettings);
     
     wSettings.radius = 100;

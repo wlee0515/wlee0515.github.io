@@ -33,8 +33,9 @@
       height: 150px;
       z-index: 100;
       position: fixed;
-      bottom: 15px;
-      left: 15px;
+      bottom: 10px;
+      left: 10px;
+      background-color: grey;
     }
     
     #id_JoyStock_2 {
@@ -42,8 +43,15 @@
       height: 150px;
       z-index: 100;
       position: fixed;
-      bottom: 15px;
-      right: 15px;
+      bottom: 10px;
+      right: 10px;
+      background-color: grey;
+    }
+
+    #id_TextOut_div {
+      display: block;
+      width: 100vw;
+      height: 1000px;
     }
 
     .class_joygen {
@@ -52,14 +60,14 @@
       z-index: 100;
       display: inline-block;
     }
-    
+    /*
     .square {
       float: left;
     }
     
     .circle {
       float: right;
-    }
+    }*/
     
   </style>
   <script type="module">
@@ -91,16 +99,13 @@
         backward_Dy : -20,
         percentage : true,
         radius : 50,
+        area_height : 2*50,
+        area_width : 2*50,
         forward_state_count : 1,
         backward_state_count : 4,
         forward_Dr : Math.PI/2,
         backward_Dr : -Math.PI/2,
       }
-      /*
-      var wButton = GamPadObj.GamePadInput(50, 50, 50, 50, wSettings);
-      wButton.id = "id_GameButton"
-      document.body.append(wButton);
-*/
       
       var wGamepad = document.getElementById(gGlobal.OutputDiv_Id);
 
@@ -118,10 +123,10 @@
 
       
       var wJ1 = document.getElementById(gGlobal.OutputDiv_J1_id);
-      gGlobal.Joystick1 = new GamPadObj.ThreeAxisJoystick(wJ1, true, 0);
+      gGlobal.Joystick1 = new GamPadObj.ThreeAxisJoystick(wJ1, true, 2);
 
       var wJ2 = document.getElementById(gGlobal.OutputDiv_J2_id);
-      gGlobal.Joystick2 = new GamPadObj.ThreeAxisJoystick(wJ2, false, 0);
+      gGlobal.Joystick2 = new GamPadObj.ThreeAxisJoystick(wJ2, false, 7);
 
 
       var wJContainer = document.getElementById(gGlobal.OutputDiv_JCon_id);
@@ -187,7 +192,10 @@
   </div>
   <div id="id_JoyStock_2">
   </div>
+  </br>
+  </div id="id_TextOut_div">
     <p id="id_TextOut"></p>
+  </div>
 </body>
 
 </html>
