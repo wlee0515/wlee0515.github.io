@@ -859,7 +859,7 @@ var GamePadExternal = {
 
 }
 
-export function GamePad(iDOM, iDrawFunction) {
+export function GamePadInput(iDOM, iDrawFunction) {
   
   this.mCanvas = document.createElement("canvas");
   iDOM.append(this.mCanvas);
@@ -972,34 +972,34 @@ export function ThreeAxisJoystick(iDOM, iRectangular, iZPosition, iDrawFunction)
     break;
   }
   
-  this.mGamepad = new GamePad(iDOM,iDrawFunction);
+  this.mGamepadInput = new GamePadInput(iDOM,iDrawFunction);
   var wKnobSize = 30;
   if (true == iRectangular) {
     
     wSettings.area_height = 75,
     wSettings.area_width = 75,
-    this.mGamepad.addInput("xy", GamePadInputType.eANALOG_STICK, wKnobSize,wKnobSize,50,50,wSettings);
+    this.mGamepadInput.addInput("xy", GamePadInputType.eANALOG_STICK, wKnobSize,wKnobSize,50,50,wSettings);
 
     wSettings.forward_Dx = wfwd_D[0],
     wSettings.forward_Dy = wfwd_D[1],
     wSettings.backward_Dx = wbwd_D[0],
     wSettings.backward_Dy = wbwd_D[1],    
-    this.mGamepad.addInput("z", GamePadInputType.eSLIDER, wKnobSize,wKnobSize,wZPosition[0],wZPosition[1],wSettings);  
+    this.mGamepadInput.addInput("z", GamePadInputType.eSLIDER, wKnobSize,wKnobSize,wZPosition[0],wZPosition[1],wSettings);  
   }
   else {
     wSettings.r_center = Math.atan2(wZPosition[1] - 50,wZPosition[0] - 50);
     wSettings.radius = 75;
-    this.mGamepad.addInput("xy", GamePadInputType.eANALOG_STICK, wKnobSize,wKnobSize,50,50,wSettings);
+    this.mGamepadInput.addInput("xy", GamePadInputType.eANALOG_STICK, wKnobSize,wKnobSize,50,50,wSettings);
     
     wSettings.radius = 100;
     wSettings.forward_Dr = Math.PI/2;
     wSettings.backward_Dr = -Math.PI/2;
-    this.mGamepad.addInput("z", GamePadInputType.eROTARY_DIAL, wKnobSize,wKnobSize,50,50,wSettings);    
+    this.mGamepadInput.addInput("z", GamePadInputType.eROTARY_DIAL, wKnobSize,wKnobSize,50,50,wSettings);    
   }
 
   this.getAxisPosition = function () {
-    var wXY = this.mGamepad.GamePad_State["xy"];
-    var wZ = this.mGamepad.GamePad_State["z"];
+    var wXY = this.mGamepadInput.GamePad_State["xy"];
+    var wZ = this.mGamepadInput.GamePad_State["z"];
     return{
       x : wXY.x, 
       y : -wXY.y,
@@ -1011,6 +1011,6 @@ export function ThreeAxisJoystick(iDOM, iRectangular, iZPosition, iDrawFunction)
 
 export default {
   GamePadInputType : GamePadInputType,
-  GamePad : GamePad,
+  GamePadInput : GamePadInput,
   ThreeAxisJoystick : ThreeAxisJoystick,
 }

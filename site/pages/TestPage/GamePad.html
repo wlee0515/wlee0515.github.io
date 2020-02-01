@@ -109,7 +109,7 @@
       
       var wGamepad = document.getElementById(gGlobal.OutputDiv_Id);
 
-      gGlobal.GamePadIO = new GamPadObj.GamePad(wGamepad);
+      gGlobal.GamePadIO = new GamPadObj.GamePadInput(wGamepad);
       gGlobal.GamePadIO.addInput("IO_1" , GamPadObj.GamePadInputType.eBUTTON, 50,50,25,20,wSettings)
       gGlobal.GamePadIO.addInput("IO_2" , GamPadObj.GamePadInputType.eSWITCH, 50,50,50,20,wSettings)
       gGlobal.GamePadIO.addInput("IO_3" , GamPadObj.GamePadInputType.eSLIDER, 50,50,75,20,wSettings)
