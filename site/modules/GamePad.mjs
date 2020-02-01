@@ -142,16 +142,17 @@ function DrawKnob( iCanvasDOM, iKnob) {
     case GamePadInputType.eANALOG_STICK:
       {
         if (iKnob.radius > 0) {
-          wCtx.strokeStyle = "blue";
+          wCtx.strokeStyle = "lime";
           wCtx.beginPath();
           wCtx.arc(iKnob.x_center, iKnob.y_center, iKnob.radius, 0, 2 * Math.PI);
           wCtx.closePath();
           wCtx.stroke();
+          /*
           wCtx.strokeStyle = "lime";
           wCtx.beginPath();
           wCtx.arc(iKnob.x_center, iKnob.y_center, iKnob.radius + 0.5*iKnob.width, 0, 2 * Math.PI);
           wCtx.closePath();
-          wCtx.stroke();
+          wCtx.stroke();*/
         }
         else {
           var wWidth = iKnob.analogStick_x_limts[2] - iKnob.analogStick_x_limts[0];
@@ -972,27 +973,28 @@ export function ThreeAxisJoystick(iDOM, iRectangular, iZPosition, iDrawFunction)
   }
   
   this.mGamepad = new GamePad(iDOM,iDrawFunction);
+  var wKnobSize = 30;
   if (true == iRectangular) {
     
     wSettings.area_height = 75,
     wSettings.area_width = 75,
-    this.mGamepad.addInput("xy", GamePadInputType.eANALOG_STICK, 25,25,50,50,wSettings);
+    this.mGamepad.addInput("xy", GamePadInputType.eANALOG_STICK, wKnobSize,wKnobSize,50,50,wSettings);
 
     wSettings.forward_Dx = wfwd_D[0],
     wSettings.forward_Dy = wfwd_D[1],
     wSettings.backward_Dx = wbwd_D[0],
     wSettings.backward_Dy = wbwd_D[1],    
-    this.mGamepad.addInput("z", GamePadInputType.eSLIDER, 25,25,wZPosition[0],wZPosition[1],wSettings);  
+    this.mGamepad.addInput("z", GamePadInputType.eSLIDER, wKnobSize,wKnobSize,wZPosition[0],wZPosition[1],wSettings);  
   }
   else {
     wSettings.r_center = Math.atan2(wZPosition[1] - 50,wZPosition[0] - 50);
     wSettings.radius = 75;
-    this.mGamepad.addInput("xy", GamePadInputType.eANALOG_STICK, 25,25,50,50,wSettings);
+    this.mGamepad.addInput("xy", GamePadInputType.eANALOG_STICK, wKnobSize,wKnobSize,50,50,wSettings);
     
     wSettings.radius = 100;
     wSettings.forward_Dr = Math.PI/2;
     wSettings.backward_Dr = -Math.PI/2;
-    this.mGamepad.addInput("z", GamePadInputType.eROTARY_DIAL, 25,25,50,50,wSettings);    
+    this.mGamepad.addInput("z", GamePadInputType.eROTARY_DIAL, wKnobSize,wKnobSize,50,50,wSettings);    
   }
 
   this.getAxisPosition = function () {
