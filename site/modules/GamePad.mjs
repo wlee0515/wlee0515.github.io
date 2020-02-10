@@ -998,13 +998,15 @@ export function ThreeAxisJoystick(iDOM, iRectangular, iZPosition, iDrawFunction)
   }
 
   this.getAxisPosition = function () {
+
+    var wState = {x:0,y:0,z:0};
     var wXY = this.mGamepadInput.GamePad_State["xy"];
     var wZ = this.mGamepadInput.GamePad_State["z"];
-    return{
-      x : wXY.x, 
-      y : -wXY.y,
-      z : wZ.value
-    }
+
+    if (null != wXY.x) wState.x = wXY.x;
+    if (null != wXY.y) wState.y = -wXY.y;
+    if (null != wZ.value) wState.z = wZ.value;
+    return wState;
   }
 
 }

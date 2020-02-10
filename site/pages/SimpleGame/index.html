@@ -1,0 +1,185 @@
+<html>
+
+<head>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
+  <title>Simple Game</title>
+  <script>
+    var gFramePosition = 1;
+  </script>
+  <script type="text/javascript" src="../../global/frame.js"></script>
+  <script type="text/javascript" src="../../thirdparty/three.js"></script>
+  <script>
+    var gGlobal = {
+      ControlInput : {
+        JoyStick1 : null,
+        JoyStick2 : null,
+        OutputDiv_J1_id : "id_JoyStick_1",
+        OutputDiv_J2_id : "id_JoyStick_2",
+      },
+
+      ViewPoint : {
+        CanvasId : "id_OutputCanvas",
+        Scene : null,
+  			Camera : null,
+	  		Renderer : null,
+      }
+    }
+
+
+    function setupViewPoint() {
+			gGlobal.ViewPoint.Scene = new THREE.Scene();
+			gGlobal.ViewPoint.Camera = new THREE.PerspectiveCamera( 75, window.innerWidth / window.innerHeight, 0.1, 1000 );
+			gGlobal.ViewPoint.Camera.position.set( 0, 0, 20 );
+			gGlobal.ViewPoint.Camera.lookAt( 0, 0, 0 );
+
+			var wCanvasDOM = document.getElementById(gGlobal.ViewPoint.CanvasId);
+			if (null != wCanvasDOM) {
+				gGlobal.ViewPoint.Renderer = new THREE.WebGLRenderer({antialias: true, canvas:  wCanvasDOM,  alpha: true });
+			}
+			else {
+				gGlobal.ViewPoint.Renderer = new THREE.WebGLRenderer({antialias: true,  alpha: true });
+				document.body.appendChild( gGlobal.ViewPoint.Renderer.domElement );
+      }
+      gGlobal.ViewPoint.Renderer.setClearColor( 0x000000, 0 );
+			gGlobal.ViewPoint.Renderer.setPixelRatio( window.devicePixelRatio );
+
+      var resizeFunction = function(){
+
+				if (null != gGlobal.ViewPoint.Renderer) {
+					var wWidth = window.innerWidth;
+					var wHeight = window.innerHeight;
+					var wCanvasDOM = document.getElementById(gGlobal.ViewPoint.CanvasId);
+					if (null != wCanvasDOM) {
+					  wWidth = wCanvasDOM.width = wCanvasDOM.parentNode.clientWidth;
+					  wHeight = wCanvasDOM.height = wCanvasDOM.parentNode.clientHeight;
+					}
+					gGlobal.ViewPoint.Renderer.setSize(wWidth, wHeight);
+	
+					if (null != gGlobal.mCamera) {
+						gGlobal.ViewPoint.Camera.aspect = wWidth / wHeight;
+						gGlobal.ViewPoint.Camera.updateProjectionMatrix();
+					}
+				}
+      }
+      
+      resizeFunction();
+      window.addEventListener("resize", resizeFunction);
+    }
+
+    function setupScene() {
+
+      gGlobal.ViewPoint.Scene.add( new THREE.AmbientLight( 0x404040 ) );
+			gGlobal.ViewPoint.Scene.add( new THREE.HemisphereLight( 0xffffbb, 0x080820, 1 ) );
+      gGlobal.ViewPoint.Scene.add(new THREE.DirectionalLight( 0xffffff, 0.5 ));
+      
+      var wGeometry = new THREE.BoxGeometry(1, 1, 1);
+      //var wMaterial = new THREE.MeshBasicMaterial( { color: 0x00ff00 } );
+      var wMaterial = new THREE.MeshLambertMaterial({ color: 0x00ff00 });
+      var wCube = new THREE.Mesh(wGeometry, wMaterial);
+      gGlobal.ViewPoint.Scene.add(wCube)
+      wCube.name = "Cube";
+    }
+
+    function updateScene() {
+			gGlobal.ViewPoint.Renderer.render(gGlobal.ViewPoint.Scene, gGlobal.ViewPoint.Camera);
+    }
+
+    function interation() {
+
+      var wJ1_State = { x:0,y:0,z:0};
+      var wJ2_State = { x:0,y:0,z:0};
+
+      if (null != gGlobal.ControlInput.JoyStick1) {
+        wJ1_State = gGlobal.ControlInput.JoyStick1.getAxisPosition();
+      }
+      
+      if (null != gGlobal.ControlInput.JoyStick2) {
+        wJ2_State = gGlobal.ControlInput.JoyStick2.getAxisPosition();
+      }
+
+      var wDOM = document.getElementById("Temp")
+
+      wDOM.innerText = JSON.stringify(wJ1_State, null ,2) + JSON.stringify(wJ2_State, null ,2);
+
+      wCube = gGlobal.ViewPoint.Scene.getObjectByName( "Cube", true );
+			wCube.rotation.y += wJ2_State.x*0.1;
+			wCube.rotation.x += wJ2_State.y*0.1;
+			wCube.rotation.z += wJ2_State.z*0.1;
+
+
+      updateScene();
+      window.requestAnimationFrame(interation);
+    }
+    
+  </script>
+  <script type="module">
+    import GamePadObj from "../../modules/GamePad.mjs"
+    
+    function init() {
+      
+      if (null != GamePadObj){
+        var wJ1 = document.getElementById(gGlobal.ControlInput.OutputDiv_J1_id);
+        gGlobal.ControlInput.JoyStick1 = new GamePadObj.ThreeAxisJoystick(wJ1, true, 2);
+
+        var wJ2 = document.getElementById(gGlobal.ControlInput.OutputDiv_J2_id);
+        gGlobal.ControlInput.JoyStick2 = new GamePadObj.ThreeAxisJoystick(wJ2, false, 7);
+      }
+
+
+      setupViewPoint();
+  		setupScene();
+      interation();
+    }
+
+    window.addEventListener("load", init);
+  </script>
+
+</head>
+
+<style>
+  body {
+    background: rgb(255, 255, 255);
+    margin: 0;
+    padding: 0;
+  }
+
+  #id_JoyStick_1 {
+    width: 150px;
+    height: 150px;
+    z-index: 100;
+    position: fixed;
+    bottom: 10px;
+    left: 10px;
+  }
+  
+  #id_JoyStick_2 {
+    width: 150px;
+    height: 150px;
+    z-index: 100;
+    position: fixed;
+    bottom: 10px;
+    right: 10px;
+  }
+  
+  #id_OutputCanvasContainer {
+    width: 100vw;
+    height: 100vh;
+    z-index: 100;
+    position: fixed;
+    top: 0px;
+    left: 0px;
+  }
+</style>
+<body>
+  <div id="id_OutputCanvasContainer">
+    <canvas id="id_OutputCanvas"></canvas>
+  </div>
+  <div id="Temp"></div>
+  <div id="id_JoyStick_1">
+  </div>
+  <div id="id_JoyStick_2">
+  </div>
+  </br>
+</body>
+
+</html>
