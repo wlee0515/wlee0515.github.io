@@ -110,16 +110,16 @@
       var wGamepad = document.getElementById(gGlobal.OutputDiv_Id);
 
       gGlobal.GamePadIO = new GamPadObj.GamePadInput(wGamepad);
-      gGlobal.GamePadIO.addInput("IO_1" , GamPadObj.GamePadInputType.eBUTTON, 50,50,25,20,wSettings)
-      gGlobal.GamePadIO.addInput("IO_2" , GamPadObj.GamePadInputType.eSWITCH, 50,50,50,20,wSettings)
-      gGlobal.GamePadIO.addInput("IO_3" , GamPadObj.GamePadInputType.eSLIDER, 50,50,75,20,wSettings)
-      gGlobal.GamePadIO.addInput("IO_4" , GamPadObj.GamePadInputType.eANALOG_STICK, 50,50,50,75,wSettings)
+      gGlobal.GamePadIO.addInput("IO_1" , GamPadObj.GamePadInputType.eBUTTON, 10,10,25,20,wSettings)
+      gGlobal.GamePadIO.addInput("IO_2" , GamPadObj.GamePadInputType.eSWITCH, 10,10,50,20,wSettings)
+      gGlobal.GamePadIO.addInput("IO_3" , GamPadObj.GamePadInputType.eSLIDER, 10,10,75,20,wSettings)
+      gGlobal.GamePadIO.addInput("IO_4" , GamPadObj.GamePadInputType.eANALOG_STICK, 10,10,50,75,wSettings)
 
       wSettings.radius = 75;
-      gGlobal.GamePadIO.addInput("IO_5", GamPadObj.GamePadInputType.eROTARY_DIAL, 50,50,50,75,wSettings)
+      gGlobal.GamePadIO.addInput("IO_5", GamPadObj.GamePadInputType.eROTARY_DIAL, 10,10,50,75,wSettings)
 
       wSettings.radius = 90;
-      gGlobal.GamePadIO.addInput("IO_6", GamPadObj.GamePadInputType.eROTARY_SWITCH, 50,50,50,75,wSettings)
+      gGlobal.GamePadIO.addInput("IO_6", GamPadObj.GamePadInputType.eROTARY_SWITCH, 10,10,50,75,wSettings)
 
       
       var wJ1 = document.getElementById(gGlobal.OutputDiv_J1_id);

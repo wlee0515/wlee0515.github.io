@@ -226,13 +226,15 @@ var GamePadExternal = {
         y_center: iCenterY,
         active: false,
         active_control_id: -1,
-        height: iKnobHeight,
-        width: iKnobWidth,
+        height: 10,
+        width: 10,
         x_frame_limts : [0 ,0.0],
         y_frame_limts : [0 ,0.0], 
         frame_height: 0,
         frame_width: 0,
         constraints: {
+          height: iKnobHeight,
+          width: iKnobWidth,
           x_center : iCenterX,
           y_center : iCenterY,
           percentage : null != iParameter.percentage? iParameter.percentage : false,
@@ -241,6 +243,9 @@ var GamePadExternal = {
         },
 
         calculateFrameLimits : function(iCanvasDOM) {
+
+          this.width = this.constraints.percentage ? ((this.constraints.width/100)/(1 + this.constraints.width/100))*iCanvasDOM.width: this.constraints.width;
+          this.height = this.constraints.percentage ? ((this.constraints.height/100)/(1 + this.constraints.height/100))*iCanvasDOM.height: this.constraints.height;
 
           var wHalfWidth = this.width/2;
           var wHalfHeight = this.height/2;
@@ -973,28 +978,32 @@ export function ThreeAxisJoystick(iDOM, iRectangular, iZPosition, iDrawFunction)
   }
   
   this.mGamepadInput = new GamePadInput(iDOM,iDrawFunction);
-  var wKnobSize = 30;
-  if (true == iRectangular) {
-    
-    wSettings.area_height = 75,
-    wSettings.area_width = 75,
-    this.mGamepadInput.addInput("xy", GamePadInputType.eANALOG_STICK, wKnobSize,wKnobSize,50,50,wSettings);
+  var wKnobSize = 35;
+  var wScale = 1.25;
 
+  if (true == iRectangular) {
+
+    wSettings.area_height = 100 - wScale*wKnobSize,
+    wSettings.area_width = 100 - wScale*wKnobSize,
     wSettings.forward_Dx = wfwd_D[0],
     wSettings.forward_Dy = wfwd_D[1],
     wSettings.backward_Dx = wbwd_D[0],
     wSettings.backward_Dy = wbwd_D[1],    
     this.mGamepadInput.addInput("z", GamePadInputType.eSLIDER, wKnobSize,wKnobSize,wZPosition[0],wZPosition[1],wSettings);  
+    this.mGamepadInput.addInput("xy", GamePadInputType.eANALOG_STICK, wKnobSize,wKnobSize,50,50,wSettings);
+
   }
   else {
-    wSettings.r_center = Math.atan2(wZPosition[1] - 50,wZPosition[0] - 50);
-    wSettings.radius = 75;
-    this.mGamepadInput.addInput("xy", GamePadInputType.eANALOG_STICK, wKnobSize,wKnobSize,50,50,wSettings);
-    
+
+    wSettings.r_center = Math.atan2(wZPosition[1] - 50,wZPosition[0] - 50);    
     wSettings.radius = 100;
     wSettings.forward_Dr = Math.PI/2;
     wSettings.backward_Dr = -Math.PI/2;
     this.mGamepadInput.addInput("z", GamePadInputType.eROTARY_DIAL, wKnobSize,wKnobSize,50,50,wSettings);    
+
+    wSettings.radius = 100 - wScale*wKnobSize;
+    this.mGamepadInput.addInput("xy", GamePadInputType.eANALOG_STICK, wKnobSize,wKnobSize,50,50,wSettings);
+    
   }
 
   this.getAxisPosition = function () {
