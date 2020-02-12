@@ -7,7 +7,8 @@
     var gFramePosition = 1;
   </script>
   <script type="text/javascript" src="../../global/frame.js"></script>
-  <script type="text/javascript" src="../../thirdparty/three.js"></script>
+  <script type="text/javascript" src="../../thirdparty/ThreeJS/three.js"></script>
+  <script type="text/javascript" src="../../thirdparty/ThreeJS/js/loaders/GLTFLoader.js"></script>
   <script>
     var gGlobal = {
       ControlInput : {
@@ -43,6 +44,11 @@
       gGlobal.ViewPoint.Renderer.setClearColor( 0x000000, 0 );
 			gGlobal.ViewPoint.Renderer.setPixelRatio( window.devicePixelRatio );
 
+      gGlobal.ViewPoint.Renderer.toneMapping = THREE.LinearToneMapping;
+      gGlobal.ViewPoint.Renderer.toneMappingExposure = Math.pow( 0.94, 5.0 );
+      gGlobal.ViewPoint.Renderer.shadowMap.enabled = true;
+      gGlobal.ViewPoint.Renderer.shadowMap.type = THREE.PCFShadowMap;
+
       var resizeFunction = function(){
 
 				if (null != gGlobal.ViewPoint.Renderer) {
@@ -55,7 +61,7 @@
 					}
 					gGlobal.ViewPoint.Renderer.setSize(wWidth, wHeight);
 	
-					if (null != gGlobal.mCamera) {
+					if (null != gGlobal.ViewPoint.Camera) {
 						gGlobal.ViewPoint.Camera.aspect = wWidth / wHeight;
 						gGlobal.ViewPoint.Camera.updateProjectionMatrix();
 					}
@@ -68,6 +74,15 @@
 
     function setupScene() {
 
+      
+      var light = new THREE.PointLight( 0xffffcc, 20, 200 );
+      light.position.set( 4, 30, -20 );
+      gGlobal.ViewPoint.Scene.add( light );
+
+      var light2 = new THREE.AmbientLight( 0x20202A, 20, 100 );
+      light2.position.set( 30, -10, 30 );
+      gGlobal.ViewPoint.Scene.add( light2 );
+
       gGlobal.ViewPoint.Scene.add( new THREE.AmbientLight( 0x404040 ) );
 			gGlobal.ViewPoint.Scene.add( new THREE.HemisphereLight( 0xffffbb, 0x080820, 1 ) );
       gGlobal.ViewPoint.Scene.add(new THREE.DirectionalLight( 0xffffff, 0.5 ));
@@ -76,8 +91,25 @@
       //var wMaterial = new THREE.MeshBasicMaterial( { color: 0x00ff00 } );
       var wMaterial = new THREE.MeshLambertMaterial({ color: 0x00ff00 });
       var wCube = new THREE.Mesh(wGeometry, wMaterial);
+      wCube.position.set(5.0, 0, 0.0);
       gGlobal.ViewPoint.Scene.add(wCube)
       wCube.name = "Cube";
+      
+      var wGLTFloader = new THREE.GLTFLoader();
+      wGLTFloader.crossOrigin = true;
+      wGLTFloader.load( 'https://s3-us-west-2.amazonaws.com/s.cdpn.io/39255/ladybug.gltf', function ( iModelData ) {
+        var wModel = iModelData.scene;
+        wModel.position.set(-1.0, -10.5, -1.0);
+        wModel.rotation.set(0, 0, 0);
+
+        var wGroup = new THREE.Group();
+        wGroup.add( wModel );
+        wGroup.name = "Model";
+        wGroup.position.set(-5.0, 0, 0.0);
+        gGlobal.ViewPoint.Scene.add( wGroup );
+
+      });
+
     }
 
     function updateScene() {
@@ -107,13 +139,20 @@
 			wCube.rotation.z += wJ2_State.z*0.1;
 
 
+      var wModel = gGlobal.ViewPoint.Scene.getObjectByName( "Model", true );
+      if (null != wModel) {
+        wModel.rotation.y += wJ1_State.x*0.1;
+  			wModel.rotation.x += wJ1_State.y*0.1;
+	  		wModel.rotation.z += wJ1_State.z*0.1;
+      }
+
       updateScene();
       window.requestAnimationFrame(interation);
     }
     
   </script>
   <script type="module">
-    import GamePadObj from "../../modules/GamePad.mjs"
+    import GamePadObj from "../../modules/GamePad.mjs";
     
     function init() {
       
