@@ -109,10 +109,12 @@
         iModelData.cameras; // Array<THREE.Camera>
         iModelData.asset; // Object
   */
-        var wMixer = new THREE.AnimationMixer( iModelData.scene );
-	      var wAction = wMixer.clipAction( iModelData.animations[ 0 ] );
-        wAction.play();
-        gGlobal.ViewPoint.MixerList.push(wMixer);
+        if (0 != iModelData.animations.length) {
+          var wMixer = new THREE.AnimationMixer( iModelData.scene );
+	        var wAction = wMixer.clipAction( iModelData.animations[ 0 ] );
+          wAction.play();
+          gGlobal.ViewPoint.MixerList.push(wMixer);
+        }
   
         var wModel = iModelData.scene;
         //wModel.position.set(-1.0, -10.5, -1.0);
