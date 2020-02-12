@@ -11,6 +11,9 @@
   <script type="text/javascript" src="../../thirdparty/ThreeJS/js/loaders/GLTFLoader.js"></script>
   <script>
     var gGlobal = {
+      Time : {
+        LastTimeStamp : (new Date()).getTime()
+      },
       ControlInput : {
         JoyStick1 : null,
         JoyStick2 : null,
@@ -22,7 +25,8 @@
         CanvasId : "id_OutputCanvas",
         Scene : null,
   			Camera : null,
-	  		Renderer : null,
+        Renderer : null,
+        MixerList : []
       }
     }
 
@@ -98,6 +102,18 @@
       var wGLTFloader = new THREE.GLTFLoader();
       wGLTFloader.crossOrigin = true;
       wGLTFloader.load( './Horse.glb', function ( iModelData ) {
+    /*    
+        iModelData.animations; // Array<THREE.AnimationClip>
+        iModelData.scene; // THREE.Scene
+		    iModelData.scenes; // Array<THREE.Scene>
+        iModelData.cameras; // Array<THREE.Camera>
+        iModelData.asset; // Object
+  */
+        var wMixer = new THREE.AnimationMixer( iModelData.scene );
+	      var wAction = wMixer.clipAction( iModelData.animations[ 0 ] );
+        wAction.play();
+        gGlobal.ViewPoint.MixerList.push(wMixer);
+  
         var wModel = iModelData.scene;
         //wModel.position.set(-1.0, -10.5, -1.0);
         wModel.position.set(0.0, 0.0, 0.0);
@@ -106,8 +122,8 @@
 
         var wGroup = new THREE.Group();
         wGroup.add( wModel );
-        wGroup.name = "Model";
         wGroup.position.set(-5.0, 0, 0.0);
+        wGroup.name = "Model";
         gGlobal.ViewPoint.Scene.add( wGroup );
 
       });
@@ -115,6 +131,12 @@
     }
 
     function updateScene() {
+      var wTimeStep = (new Date()).getTime() - gGlobal.Time.LastTimeStamp;
+      wTimeStep /= 1000;
+      for (var wi = 0; wi < gGlobal.ViewPoint.MixerList.length; ++wi) {
+        gGlobal.ViewPoint.MixerList[wi].update(wTimeStep);
+      }
+
 			gGlobal.ViewPoint.Renderer.render(gGlobal.ViewPoint.Scene, gGlobal.ViewPoint.Camera);
     }
 
@@ -147,9 +169,11 @@
   			wModel.rotation.x += wJ1_State.y*0.1;
 	  		wModel.rotation.z += wJ1_State.z*0.1;
       }
-
+      
       updateScene();
       window.requestAnimationFrame(interation);
+      gGlobal.Time.LastTimeStamp = (new Date()).getTime()
+
     }
     
   </script>
