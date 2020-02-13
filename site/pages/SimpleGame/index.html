@@ -26,14 +26,15 @@
         Scene : null,
   			Camera : null,
         Renderer : null,
-        MixerList : []
+        LoaderList : [],
+        MixerList : [],
       }
     }
 
 
     function setupViewPoint() {
 			gGlobal.ViewPoint.Scene = new THREE.Scene();
-			gGlobal.ViewPoint.Camera = new THREE.PerspectiveCamera( 75, window.innerWidth / window.innerHeight, 0.1, 1000 );
+			gGlobal.ViewPoint.Camera = new THREE.PerspectiveCamera( 75, window.innerWidth / window.innerHeight, 0.1, 100000 );
 			gGlobal.ViewPoint.Camera.position.set( 0, 0, 20 );
 			gGlobal.ViewPoint.Camera.lookAt( 0, 0, 0 );
 
@@ -52,6 +53,10 @@
       gGlobal.ViewPoint.Renderer.toneMappingExposure = Math.pow( 0.94, 5.0 );
       gGlobal.ViewPoint.Renderer.shadowMap.enabled = true;
       gGlobal.ViewPoint.Renderer.shadowMap.type = THREE.PCFShadowMap;
+
+      var wGLTFloader = new THREE.GLTFLoader();
+      wGLTFloader.crossOrigin = true;
+      gGlobal.ViewPoint.LoaderList["gltf"] = wGLTFloader;
 
       var resizeFunction = function(){
 
@@ -76,32 +81,8 @@
       window.addEventListener("resize", resizeFunction);
     }
 
-    function setupScene() {
-
-      
-      var light = new THREE.PointLight( 0xffffcc, 20, 200 );
-      light.position.set( 4, 30, -20 );
-      gGlobal.ViewPoint.Scene.add( light );
-
-      var light2 = new THREE.AmbientLight( 0x20202A, 20, 100 );
-      light2.position.set( 30, -10, 30 );
-      gGlobal.ViewPoint.Scene.add( light2 );
-
-      gGlobal.ViewPoint.Scene.add( new THREE.AmbientLight( 0x404040 ) );
-			gGlobal.ViewPoint.Scene.add( new THREE.HemisphereLight( 0xffffbb, 0x080820, 1 ) );
-      gGlobal.ViewPoint.Scene.add(new THREE.DirectionalLight( 0xffffff, 0.5 ));
-      
-      var wGeometry = new THREE.BoxGeometry(1, 1, 1);
-      //var wMaterial = new THREE.MeshBasicMaterial( { color: 0x00ff00 } );
-      var wMaterial = new THREE.MeshLambertMaterial({ color: 0x00ff00 });
-      var wCube = new THREE.Mesh(wGeometry, wMaterial);
-      wCube.position.set(5.0, 0, 0.0);
-      gGlobal.ViewPoint.Scene.add(wCube)
-      wCube.name = "Cube";
-      
-      var wGLTFloader = new THREE.GLTFLoader();
-      wGLTFloader.crossOrigin = true;
-      wGLTFloader.load( './Horse.glb', function ( iModelData ) {
+    function loadGLTF(iPath) {
+      gGlobal.ViewPoint.LoaderList["gltf"].load( iPath, function ( iModelData ) {
     /*    
         iModelData.animations; // Array<THREE.AnimationClip>
         iModelData.scene; // THREE.Scene
@@ -117,10 +98,10 @@
         }
   
         var wModel = iModelData.scene;
-        wModel.position.set(-1.0, -10.5, -1.0);
+//        wModel.position.set(-1.0, -10.5, -1.0);
         wModel.position.set(0.0, 0.0, 0.0);
         wModel.rotation.set(0, 0, 0);
-        wModel.scale.set(0.05,0.05,0.05);
+//        wModel.scale.set(0.05,0.05,0.05);
 
         var wGroup = new THREE.Group();
         wGroup.add( wModel );
@@ -129,7 +110,33 @@
         gGlobal.ViewPoint.Scene.add( wGroup );
 
       });
+    }
 
+    function setupScene() {
+
+      
+      var light = new THREE.PointLight( 0xffffcc, 10, 50, 2 );
+      light.position.set( 4, 30, -20 );
+      gGlobal.ViewPoint.Scene.add( light );
+
+      var light2 = new THREE.AmbientLight( 0x20202A, 10 );
+      light2.position.set( 30, -10, 30 );
+      gGlobal.ViewPoint.Scene.add( light2 );
+
+      gGlobal.ViewPoint.Scene.add( new THREE.HemisphereLight( 0xffffbb, 0x080820, 0.01 ) );
+      gGlobal.ViewPoint.Scene.add(new THREE.DirectionalLight( 0xffffff, 0.1 ));
+      
+      var wGeometry = new THREE.BoxGeometry(1, 1, 1);
+      //var wMaterial = new THREE.MeshBasicMaterial( { color: 0x00ff00 } );
+      var wMaterial = new THREE.MeshLambertMaterial({ color: 0x00ff00 });
+      var wCube = new THREE.Mesh(wGeometry, wMaterial);
+      wCube.position.set(5.0, 0, 0.0);
+      gGlobal.ViewPoint.Scene.add(wCube)
+      wCube.name = "Cube";
+      
+      //loadGLTF("../../thirdparty/sampleGLFT/2.0/VC/glTF/VC.gltf")
+      loadGLTF('https://threejsfundamentals.org/threejs/resources/models/cartoon_lowpoly_small_city_free_pack/scene.gltf')
+      
     }
 
     function updateScene() {
@@ -164,13 +171,23 @@
 			wCube.rotation.x += wJ2_State.y*0.1;
 			wCube.rotation.z += wJ2_State.z*0.1;
 
-
+/*
       var wModel = gGlobal.ViewPoint.Scene.getObjectByName( "Model", true );
       if (null != wModel) {
-        wModel.rotation.y += wJ1_State.x*0.1;
-  			wModel.rotation.x += wJ1_State.y*0.1;
-	  		wModel.rotation.z += wJ1_State.z*0.1;
-      }
+  			wModel.rotation.y += wJ2_State.x*0.1;
+	  		wModel.rotation.x += wJ2_State.y*0.1;
+		  	wModel.rotation.z += wJ2_State.z*0.1;
+        wModel.position.x -= wJ1_State.x*5;
+  			wModel.position.y -= wJ1_State.y*5;
+      	wModel.position.z += wJ1_State.z*5;
+      }*/
+      
+  			gGlobal.ViewPoint.Camera.rotation.y -= wJ2_State.x*0.1;
+	  		gGlobal.ViewPoint.Camera.rotation.x -= wJ2_State.y*0.1;
+		  	gGlobal.ViewPoint.Camera.rotation.z += wJ2_State.z*0.1;
+        gGlobal.ViewPoint.Camera.position.x += wJ1_State.x*5;
+  			gGlobal.ViewPoint.Camera.position.y += wJ1_State.y*5;
+      	gGlobal.ViewPoint.Camera.position.z += wJ1_State.z*5;
       
       updateScene();
       window.requestAnimationFrame(interation);
