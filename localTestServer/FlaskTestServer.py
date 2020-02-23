@@ -4,7 +4,7 @@ import time
 import atexit
 from apscheduler.schedulers.background import BackgroundScheduler
 
-app = Flask(__name__, static_url_path='/')
+app = Flask(__name__)
 
 @app.route('/')
 def send_index():
