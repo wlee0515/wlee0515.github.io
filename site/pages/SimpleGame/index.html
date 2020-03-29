@@ -1,5 +1,5 @@
+<!doctype html>
 <html>
-
 <head>
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
   <title>Simple Game</title>
@@ -9,11 +9,15 @@
   <script type="text/javascript" src="../../global/frame.js"></script>
   <script type="text/javascript" src="../../thirdparty/ThreeJS/three.js"></script>
   <script type="text/javascript" src="../../thirdparty/ThreeJS/js/loaders/GLTFLoader.js"></script>
+  <script type="text/javascript" src="http://webrti.herokuapp.com/script/javascript/utility.js"></script>
+  <script type="text/javascript" src="http://webrti.herokuapp.com/script/javascript/WebRTI.js"></script>
+  <script type="text/javascript" src="http://webrti.herokuapp.com/script/javascript/socket.io-1.2.0.js"></script>
   <script>
     var gGlobal = {
       Time : {
         LastTimeStamp : (new Date()).getTime()
       },
+      
       ControlInput : {
         JoyStick1 : null,
         JoyStick2 : null,
@@ -28,6 +32,113 @@
         Renderer : null,
         LoaderList : [],
         MixerList : [],
+      },
+
+      socket: null,
+      webRTI : null,
+
+      EntityManager : null,
+      placeHolder : 0
+    }
+
+    function EntityManager() {
+      this.EntityList = {};
+      
+      this.generateEntityIdString = function (iSource, id ) {
+        return iSource + ' - ' + id;
+      }
+
+      this.createEntity = function (iEntityId) {
+        if (null == this.EntityList[iEntityId]) {
+          var wGeometry = new THREE.BoxGeometry(1, 1, 1);
+          var wMaterial = new THREE.MeshLambertMaterial({ color: hashCode(iEntityId) });
+          var wMesh = new THREE.Mesh(wGeometry, wMaterial);
+
+          gGlobal.ViewPoint.Scene.add(wMesh);
+
+          this.EntityList[iEntityId] = {
+            geometry : wGeometry,
+            wMaterial : wMaterial,
+            mesh : wMesh,
+            model : null,
+            modelPath : ""
+          }
+        }
+      }
+      
+      this.removeEntity = function (iEntityId) {
+        var wEntity = this.EntityList[iEntityId];
+        if (null != wEntity) {
+          wEntity.geometry.dispose();
+          wEntity.material.dispose();
+          wEntity.mesh.dispose();
+          
+          if (null != wEntity.model) {
+            wEntity.model.dispose();
+          }
+
+          delete this.EntityList[iEntityId];
+        }
+      }
+
+      
+      this.getEntity = function (iEntityId) {
+        this.createEntity(iEntityId);
+        return this.EntityList[iEntityId];
+      }
+
+      this.setEntityPosition = function (iEntityId, iLocation) {
+
+        var wEntity = this.getEntity(iEntityId);
+        wEntity.mesh.position.set(iLocation[0],iLocation[1], iLocation[2]);
+
+        
+        if (null != wEntity.model) {
+            wEntity.model.position.set(iLocation[0],iLocation[1], iLocation[2]);
+          }
+
+      }
+
+      this.setEntityModel = function (iEntityId, iModelPath) {
+        
+        var wEntity = this.EntityList[iEntityId];
+        if (null == wEntity) {
+          return;
+        }
+
+        if (wEntity.modelPath == iModelPath) {
+          return;
+        }
+        
+        var wEntityId = iEntityId;
+        wEntity.modelPath = iModelPath;
+
+        gGlobal.ViewPoint.LoaderList["gltf"].load(iModelPath, function (iModelData) {
+          if (0 != iModelData.animations.length) {
+            var wMixer = new THREE.AnimationMixer(iModelData.scene);
+            var wAction = wMixer.clipAction(iModelData.animations[0]);
+            wAction.play();
+            gGlobal.ViewPoint.MixerList.push(wMixer);
+          }
+
+          var wEntity = this.EntityList[wEntityId];
+
+          if (null != wEntity) {
+
+            if (null != wEntity.model) {
+              wEntity.model.dispose();
+            }
+
+            wEntity.model = iModelData.scene;
+            wEntity.model.position.set(0.0, 0.0, 0.0);
+            wEntity.model.rotation.set(0, 0, 0);
+            wEntity.mesh.visible = false;
+            gGlobal.ViewPoint.Scene.add(wEntity.model);
+          }
+          else {
+            iModelData.dispose();
+          }
+        }.bind(this))
       }
     }
 
@@ -113,7 +224,6 @@
     }
 
     function setupScene() {
-
       
       var light = new THREE.PointLight( 0xffffcc, 10, 50, 2 );
       light.position.set( 4, 30, -20 );
@@ -139,18 +249,17 @@
       
     }
 
-    function updateScene() {
-      var wTimeStep = (new Date()).getTime() - gGlobal.Time.LastTimeStamp;
-      wTimeStep /= 1000;
+    function updateScene(iDt) {
+      
       for (var wi = 0; wi < gGlobal.ViewPoint.MixerList.length; ++wi) {
-        gGlobal.ViewPoint.MixerList[wi].update(wTimeStep);
+        gGlobal.ViewPoint.MixerList[wi].update(iDt);
       }
 
 			gGlobal.ViewPoint.Renderer.render(gGlobal.ViewPoint.Scene, gGlobal.ViewPoint.Camera);
     }
-
-    function interation() {
-
+    
+    function updateJoystick(iDt) {
+      
       var wJ1_State = { x:0,y:0,z:0};
       var wJ2_State = { x:0,y:0,z:0};
 
@@ -161,44 +270,91 @@
       if (null != gGlobal.ControlInput.JoyStick2) {
         wJ2_State = gGlobal.ControlInput.JoyStick2.getAxisPosition();
       }
-
+      
       var wDOM = document.getElementById("Temp")
-
       wDOM.innerText = JSON.stringify(wJ1_State, null ,2) + JSON.stringify(wJ2_State, null ,2);
+
+      
+  			gGlobal.ViewPoint.Camera.rotation.y -= wJ2_State.x*0.1;
+	  		gGlobal.ViewPoint.Camera.rotation.x = wJ2_State.y*0.1;
+		  	gGlobal.ViewPoint.Camera.rotation.z = wJ2_State.z*0.1;
+        gGlobal.ViewPoint.Camera.position.x += wJ1_State.x*5;
+  			gGlobal.ViewPoint.Camera.position.y += wJ1_State.y*5;
+      	gGlobal.ViewPoint.Camera.position.z += wJ1_State.z*5;
+        
 
       wCube = gGlobal.ViewPoint.Scene.getObjectByName( "Cube", true );
 			wCube.rotation.y += wJ2_State.x*0.1;
 			wCube.rotation.x += wJ2_State.y*0.1;
 			wCube.rotation.z += wJ2_State.z*0.1;
 
-/*
-      var wModel = gGlobal.ViewPoint.Scene.getObjectByName( "Model", true );
-      if (null != wModel) {
-  			wModel.rotation.y += wJ2_State.x*0.1;
-	  		wModel.rotation.x += wJ2_State.y*0.1;
-		  	wModel.rotation.z += wJ2_State.z*0.1;
-        wModel.position.x -= wJ1_State.x*5;
-  			wModel.position.y -= wJ1_State.y*5;
-      	wModel.position.z += wJ1_State.z*5;
-      }*/
+    }
+
+    function updateEntities(iDt) {
+
+      var wEntityList = [
+        {
+          id:"Ownship",
+          time : (new Date()).getTime(),
+          location : [
+                      gGlobal.ViewPoint.Camera.position.x,
+                      gGlobal.ViewPoint.Camera.position.y,
+                      gGlobal.ViewPoint.Camera.position.z
+                    ],
+
+          modelPath : "https://wlee0515.github.io/site/pages/SimpleGame/Horse.glb"
+        }
+      ]
       
-  			gGlobal.ViewPoint.Camera.rotation.y -= wJ2_State.x*0.1;
-	  		gGlobal.ViewPoint.Camera.rotation.x -= wJ2_State.y*0.1;
-		  	gGlobal.ViewPoint.Camera.rotation.z += wJ2_State.z*0.1;
-        gGlobal.ViewPoint.Camera.position.x += wJ1_State.x*5;
-  			gGlobal.ViewPoint.Camera.position.y += wJ1_State.y*5;
-      	gGlobal.ViewPoint.Camera.position.z += wJ1_State.z*5;
-      
-      updateScene();
-      window.requestAnimationFrame(interation);
-      gGlobal.Time.LastTimeStamp = (new Date()).getTime()
+      gGlobal.webRTI.setObject("EntityManager", "EntityList", wEntityList);
+
+      var wRemote = gGlobal.webRTI.getRemoteObjectList("EntityManager", "EntityList");
+
+      if (null != wRemote) {
+
+        var wEntries = Object.entries(wRemote);
+        
+        for (var wi = 0 ; wi < wEntries.length; ++wi){
+          var wRemoteList = wEntries[wi][1];
+        
+          for (var wj = 0 ; wj < wRemoteList.length; ++wj){
+            var wEntity = wRemoteList[wj];
+            var wEntityId = gGlobal.EntityManger.generateEntityIdString(wEntries[wi][0],wEntity.id );
+            gGlobal.EntityManger.setEntityPosition(wEntityId, wEntity.location);
+            gGlobal.EntityManger.setEntityModel(wEntityId, wEntity.modelPath)
+          }     
+
+        }
+      }
+
+      var wDOM = document.getElementById("Temp")
+      wDOM.innerText += JSON.stringify(wRemote, null ,2);
+
 
     }
-    
+
+    function processTime(iDt) {
+      updateJoystick(iDt);
+      updateEntities(iDt);
+      updateScene(iDt);
+    }
+
+    function tick() {
+
+      var wTimeStep = (new Date()).getTime() - gGlobal.Time.LastTimeStamp;
+      wTimeStep /= 1000;
+      processTime(wTimeStep);
+      window.requestAnimationFrame(tick);
+      gGlobal.Time.LastTimeStamp = (new Date()).getTime();
+
+    }
+
+
   </script>
   <script type="module">
-    import GamePadObj from "../../modules/GamePad.mjs";
     
+    import GamePadObj from "https://wlee0515.github.io/site/modules/GamePad.mjs";
+
     function init() {
       
       if (null != GamePadObj){
@@ -208,11 +364,17 @@
         var wJ2 = document.getElementById(gGlobal.ControlInput.OutputDiv_J2_id);
         gGlobal.ControlInput.JoyStick2 = new GamePadObj.ThreeAxisJoystick(wJ2, false, 7);
       }
+      
 
+
+      gGlobal.socket = io("http://webrti.herokuapp.com");
+//        gGlobal.socket = io("http://localhost");
+      gGlobal.webRTI = new WebRTI(gGlobal.socket);
+      gGlobal.EntityManger = new EntityManager();
 
       setupViewPoint();
   		setupScene();
-      interation();
+      tick();
     }
 
     window.addEventListener("load", init);
