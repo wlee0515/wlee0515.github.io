@@ -29,6 +29,8 @@
         CanvasId : "id_OutputCanvas",
         Scene : null,
   			Camera : null,
+  			CameraPositionOffset : [-500.0,0.0,-500.0],
+  			CameraAngleOffset : [0.0,-20.0,0.0],
         Renderer : null,
         LoaderList : [],
         MixerList : [],
@@ -41,7 +43,12 @@
 
       Ownship : {
         location : [0.0,0.0,0.0],
-        eulerAngle : [0.0,0.0,0.0]
+        eulerAngle : [0.0,0.0,0.0],
+        modelPath : "https://wlee0515.github.io/site/pages/SimpleGame/Horse.glb",
+        modelRotation : [0.0,180.0,0.0],
+        modelOffset : [0.0,-0.05,0.0],
+        modelScale : [1.0,1.0,1.0],
+        
       },
 
       socket: null,
@@ -174,8 +181,9 @@
           var wGeometry = new THREE.BoxGeometry(1, 1, 1);
           var wMaterial = new THREE.MeshLambertMaterial({ color: hashCode(iEntityId) });
           var wMesh = new THREE.Mesh(wGeometry, wMaterial);
-
-          gGlobal.ViewPoint.Scene.add(wMesh);
+          var wGroup =  new THREE.Group();
+          wGroup.add(wMesh);
+          gGlobal.ViewPoint.Scene.add(wGroup);
 
           this.EntityList[iEntityId] = {
             isUpdated : false,
@@ -183,7 +191,11 @@
             material : wMaterial,
             mesh : wMesh,
             model : null,
-            modelPath : ""
+            group : wGroup,
+            modelPath : "",
+            modelRotation: [0.0,0.0,0.0],
+            modelOffset: [0.0,0.0,0.0],
+            modelScale: [1.0,1.0,1.0]
           }
         }
       }
@@ -231,17 +243,12 @@
 
         var wEntity = this.getEntity(iEntityId);
         wEntity.isUpdated = true;
-        wEntity.mesh.position.set(wPosition.x, wPosition.y, wPosition.z);
-        wEntity.mesh.rotation.setFromQuaternion(wEulerQuat);
-
-        if (null != wEntity.model) {
-          wEntity.model.position.set(wPosition.x, wPosition.y, wPosition.z);
-          wEntity.model.rotation.setFromQuaternion(wEulerQuat);
-        }
+        wEntity.group.position.set(wPosition.x, wPosition.y, wPosition.z);
+        wEntity.group.rotation.setFromQuaternion(wEulerQuat);
 
       }
 
-      this.setEntityModel = function (iEntityId, iModelPath) {
+      this.setEntityModel = function (iEntityId, iModelPath, iRotation, iOffset, iScale) {
         
         var wEntity = this.EntityList[iEntityId];
         if (null == wEntity) {
@@ -249,6 +256,29 @@
         }
 
         wEntity.isUpdated = true;
+        
+        if ((wEntity.modelRotation[0] != iRotation[0]) || (wEntity.modelRotation[1] != iRotation[1]) || (wEntity.modelRotation[2] != iRotation[2]) ) {
+          wEntity.modelRotation = [iRotation[0],iRotation[1],iRotation[2]];
+          if (null != wEntity.model){
+            wEntity.model.rotation.set(wEntity.modelRotation[0]*gDegToRad, wEntity.modelRotation[1]*gDegToRad, wEntity.modelRotation[2]*gDegToRad);
+          }
+        }
+        
+        if ((wEntity.modelOffset[0] != iOffset[0]) || (wEntity.modelOffset[1] != iOffset[1]) || (wEntity.modelOffset[2] != iOffset[2]) ) {
+          wEntity.modelOffset = [iOffset[0],iOffset[1],iOffset[2]];
+          if (null != wEntity.model){
+            wEntity.model.position.set(wEntity.modelOffset[0], wEntity.modelOffset[1], wEntity.modelOffset[2]);
+          }
+        }
+
+        if ((wEntity.modelScale[0] != iScale[0]) || (wEntity.modelScale[1] != iScale[1]) || (wEntity.modelScale[2] != iScale[2]) ) {
+          wEntity.modelScale = [iScale[0],iScale[1],iScale[2]];
+          if (null != wEntity.model){
+            var wModelScale = gGlobal.Planet.DrawRadius/gGlobal.Planet.Radius;
+            wEntity.model.scale.set(wEntity.modelScale[0]*wModelScale, wEntity.modelScale[1]*wModelScale, wEntity.modelScale[2]*wModelScale);
+          }
+        }
+
         if (wEntity.modelPath == iModelPath) {
           return;
         }
@@ -272,14 +302,16 @@
               wEntity.model.dispose();
             }
 
+            wEntity.model = iModelData.scene;
+            
             var wModelScale = gGlobal.Planet.DrawRadius/gGlobal.Planet.Radius;
 
-            wEntity.model = iModelData.scene;
-            wEntity.model.position.set(0.0, 0.0, 0.0);
-            wEntity.model.rotation.set(0, 0, 0);
-            wEntity.model.scale.set(wModelScale,wModelScale,wModelScale);
+            wEntity.model.rotation.set(wEntity.modelRotation[0]*gDegToRad, wEntity.modelRotation[1]*gDegToRad, wEntity.modelRotation[2]*gDegToRad);
+            wEntity.model.position.set(wEntity.modelOffset[0], wEntity.modelOffset[1], wEntity.modelOffset[2]);
+            wEntity.model.scale.set(wEntity.modelScale[0]*wModelScale, wEntity.modelScale[1]*wModelScale, wEntity.modelScale[2]*wModelScale);
+
+            wEntity.group.add(wEntity.model);
             wEntity.mesh.visible = false;
-            gGlobal.ViewPoint.Scene.add(wEntity.model);
           }
           else {
             iModelData.dispose();
@@ -486,27 +518,47 @@
 
     }
 
-    function updateEntities(iDt) {
+    function updateCameraLocation(iDt) {
 
-      var wLocation = gGlobal.Ownship.location;
-      var wPosition = convertGeoLocationToCartesian(wLocation[0],wLocation[1],wLocation[2]);
       
-      var wEuler = gGlobal.Ownship.eulerAngle;
-      var wEulerQuat = getEulerQuaternion(wLocation[0],wLocation[1], wEuler[0],wEuler[1],wEuler[2]);
+      var wNewPosition = addBodyVectorToGeoLocation(gGlobal.Ownship.location[0]
+      , gGlobal.Ownship.location[1]
+      , gGlobal.Ownship.location[2]
+      , gGlobal.Ownship.eulerAngle[0]
+      , gGlobal.Ownship.eulerAngle[1]
+      , gGlobal.Ownship.eulerAngle[2]
+      , gGlobal.ViewPoint.CameraPositionOffset);
+
+      var wPosition = convertGeoLocationToCartesian(wNewPosition.latitude,wNewPosition.longitude,wNewPosition.altitude);
+      
+      var wEuler = [ gGlobal.Ownship.eulerAngle[0] + gGlobal.ViewPoint.CameraAngleOffset[0]
+                  ,  gGlobal.Ownship.eulerAngle[1] + gGlobal.ViewPoint.CameraAngleOffset[1]
+                  ,  gGlobal.Ownship.eulerAngle[2] + gGlobal.ViewPoint.CameraAngleOffset[2]];
+
+      var wEulerQuat = getEulerQuaternion(wNewPosition.latitude,wNewPosition.longitude, wEuler[0],wEuler[1],wEuler[2]);
 
       gGlobal.ViewPoint.Camera.position.set(wPosition.x,wPosition.y,wPosition.z);
       gGlobal.ViewPoint.Camera.rotation.setFromQuaternion(wEulerQuat);
+    }
 
+    function updateEntities(iDt) {
       var wEntityList = [
         {
           id:"Ownship",
           time : (new Date()).getTime(),
           location : gGlobal.Ownship.location,
           eulerAngle : gGlobal.Ownship.eulerAngle,
-          modelPath : "https://wlee0515.github.io/site/pages/SimpleGame/Horse.glb"
+          modelPath : gGlobal.Ownship.modelPath,
+          modelRotation : gGlobal.Ownship.modelRotation,
+          modelOffset : gGlobal.Ownship.modelOffset,
+          modelScale : gGlobal.Ownship.modelScale
         }
       ]
       
+      var wEntityId = gGlobal.EntityManger.generateEntityIdString("self", "Ownship" );
+      gGlobal.EntityManger.setEntityPosition(wEntityId, gGlobal.Ownship.location,  gGlobal.Ownship.eulerAngle);
+      gGlobal.EntityManger.setEntityModel(wEntityId, gGlobal.Ownship.modelPath, gGlobal.Ownship.modelRotation, gGlobal.Ownship.modelOffset,  gGlobal.Ownship.modelScale)
+
       gGlobal.webRTI.setObject("EntityManager", "EntityList", wEntityList);
 
       var wRemote = gGlobal.webRTI.getRemoteObjectList("EntityManager", "EntityList");
@@ -522,7 +574,8 @@
             var wEntity = wRemoteList[wj];
             var wEntityId = gGlobal.EntityManger.generateEntityIdString(wEntries[wi][0],wEntity.id );
             gGlobal.EntityManger.setEntityPosition(wEntityId, wEntity.location, wEntity.eulerAngle);
-            gGlobal.EntityManger.setEntityModel(wEntityId, wEntity.modelPath)
+            gGlobal.EntityManger.setEntityModel(wEntityId, wEntity.modelPath, wEntity.modelRotation, wEntity.modelOffset, wEntity.modelScale)
+            
           }     
 
         }
@@ -534,6 +587,7 @@
     function processTime(iDt) {
       updateJoystick(iDt);
       updateEntities(iDt);
+      updateCameraLocation(iDt);
       updateScene(iDt);
     }
 
