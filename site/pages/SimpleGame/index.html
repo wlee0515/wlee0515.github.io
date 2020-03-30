@@ -466,9 +466,6 @@
         wJ2_State = gGlobal.ControlInput.JoyStick2.getAxisPosition();
       }
       
-      var wDOM = document.getElementById("Temp")
-      wDOM.innerText = JSON.stringify(wJ1_State, null ,2) + JSON.stringify(wJ2_State, null ,2);
-
       gGlobal.Ownship.eulerAngle[0] = wJ2_State.z*90;
       gGlobal.Ownship.eulerAngle[1] = wJ2_State.y*90;
       gGlobal.Ownship.eulerAngle[2] += wJ2_State.x;
@@ -496,9 +493,6 @@
       gGlobal.Ownship.location[0] = wNewPosition.latitude;
       gGlobal.Ownship.location[1] = wNewPosition.longitude;
       gGlobal.Ownship.location[2] = wNewPosition.altitude;
-      
-      wDOM.innerText += JSON.stringify(gGlobal.Ownship.location) + '\n' + JSON.stringify(gGlobal.Ownship.eulerAngle) + '\n';
-      wDOM.innerText += JSON.stringify(wPositionChange) + '\n' + JSON.stringify(wNewVector) + '\n';
 
 /*
       
@@ -593,6 +587,9 @@
 
     function tick() {
 
+      var wDOM = document.getElementById("Temp")
+      wDOM.innerText = (new Date()).getTime();
+      
       var wTimeStep = (new Date()).getTime() - gGlobal.Time.LastTimeStamp;
       wTimeStep /= 1000;
       processTime(wTimeStep);
