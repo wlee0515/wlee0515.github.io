@@ -208,8 +208,8 @@
           wEntity.geometry.dispose();
           wEntity.material.dispose();
           
-          if (null != wEntity.model) {
-            gGlobal.ViewPoint.Scene.remove( wEntity.model );
+          if (null != wEntity.group) {
+            gGlobal.ViewPoint.Scene.remove( wEntity.group );
           }
 
           delete this.EntityList[iEntityId];
