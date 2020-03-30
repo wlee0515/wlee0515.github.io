@@ -588,10 +588,13 @@
     function tick() {
 
       var wDOM = document.getElementById("Temp")
-      wDOM.innerText = (new Date()).getTime();
+      wDOM.innerText = "Time : " + (new Date()).getTime() + " ms \n";
       
       var wTimeStep = (new Date()).getTime() - gGlobal.Time.LastTimeStamp;
       wTimeStep /= 1000;
+      
+      wDOM.innerText += "Time Step : " + wTimeStep + " s \n" ;
+
       processTime(wTimeStep);
       window.requestAnimationFrame(tick);
       gGlobal.Time.LastTimeStamp = (new Date()).getTime();
@@ -606,23 +609,37 @@
 
     function init() {
       
+      var wDOM = document.getElementById("Temp")
+      wDOM.innerText = "";
       if (null != GamePadObj){
         var wJ1 = document.getElementById(gGlobal.ControlInput.OutputDiv_J1_id);
         gGlobal.ControlInput.JoyStick1 = new GamePadObj.ThreeAxisJoystick(wJ1, true, 2);
 
         var wJ2 = document.getElementById(gGlobal.ControlInput.OutputDiv_J2_id);
         gGlobal.ControlInput.JoyStick2 = new GamePadObj.ThreeAxisJoystick(wJ2, false, 7);
+        
+        wDOM.innerText += "Joystick Creation Complete \n";
       }
       
 
 
       gGlobal.socket = io("http://webrti.herokuapp.com");
 //        gGlobal.socket = io("http://localhost");
+      wDOM.innerText += "SocketIO Creation Complete \n";
+
       gGlobal.webRTI = new WebRTI(gGlobal.socket);
+      wDOM.innerText += "WebRTI Federate Creation Complete \n";
+
       gGlobal.EntityManger = new EntityManager();
+      wDOM.innerText += "Entity Manager Creation Complete \n";
 
       setupViewPoint();
+      wDOM.innerText += "Setup ViewPoint Complete \n";
+
   		setupScene();
+      wDOM.innerText += "Setup Scene Complete \n";
+      
+      wDOM.innerText += "Starting Tick Complete \n";
       tick();
     }
 
