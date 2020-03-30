@@ -79,7 +79,7 @@
     function getEulerQuaternion (iLatitude, iLongitude, iRoll, iPitch, iYaw ) {
 
 			var wQuat1 = new THREE.Quaternion();
-			var wRefEuler = new THREE.Euler(-iLatitude*gDegToRad + Math.PI/2, -iLongitude*gDegToRad, 0, "ZYX" );
+			var wRefEuler = new THREE.Euler(-iLatitude*gDegToRad + Math.PI/2, iLongitude*gDegToRad, 0, "ZYX" );
 			wQuat1.setFromEuler(wRefEuler);
 
 			var wQuat2 = new THREE.Quaternion();
@@ -426,8 +426,8 @@
       var wPlanetWireframeMaterial = new THREE.LineBasicMaterial( { color: 0xffffff, linewidth: 10 } );
       var wPlanetWireframe = new THREE.LineSegments( wPlanetWireframeGeometry, wPlanetWireframeMaterial );
       wPlanetWireframe.material.depthTest = true;
-      wPlanetWireframe.material.opacity = 0.50;
-      wPlanetWireframe.material.transparent = true;
+      wPlanetWireframe.material.opacity = 1.00;
+      wPlanetWireframe.material.transparent = false;
       wPlanetWireframe.name = "PlanetWireframe";
 
       
@@ -470,7 +470,7 @@
       gGlobal.Ownship.eulerAngle[1] = wJ2_State.y*90;
       gGlobal.Ownship.eulerAngle[2] += wJ2_State.x;
 
-      var wGain = [100.0,100.0,100.0];
+      var wGain = [0.0,10000.0,100.0];
       var wPositionChange = [wJ1_State.y , wJ1_State.x, wJ1_State.z];
       wPositionChange[0] = wPositionChange[0]*wGain[0];
       wPositionChange[1] = wPositionChange[1]*wGain[1];
