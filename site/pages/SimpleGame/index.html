@@ -470,7 +470,7 @@
       gGlobal.Ownship.eulerAngle[1] = wJ2_State.y*90;
       gGlobal.Ownship.eulerAngle[2] += wJ2_State.x;
 
-      var wGain = [0.0,10000.0,100.0];
+      var wGain = [100.0,100.0,100.0];
       var wPositionChange = [wJ1_State.y , wJ1_State.x, wJ1_State.z];
       wPositionChange[0] = wPositionChange[0]*wGain[0];
       wPositionChange[1] = wPositionChange[1]*wGain[1];
@@ -588,19 +588,18 @@
     function tick() {
 
       var wDOM = document.getElementById("Temp")
-      wDOM.innerText = "Time : " + (new Date()).getTime() + " ms \n";
+      //wDOM.innerText = "Time : " + (new Date()).getTime() + " ms \n";
       
       var wTimeStep = (new Date()).getTime() - gGlobal.Time.LastTimeStamp;
       wTimeStep /= 1000;
       
-      wDOM.innerText += "Time Step : " + wTimeStep + " s \n" ;
+      //wDOM.innerText += "Time Step : " + wTimeStep + " s \n" ;
 
       processTime(wTimeStep);
       window.requestAnimationFrame(tick);
       gGlobal.Time.LastTimeStamp = (new Date()).getTime();
 
     }
-
 
   </script>
   <script type="module">
@@ -611,6 +610,17 @@
       
       var wDOM = document.getElementById("Temp")
       wDOM.innerText = "";
+
+      console.stdlog = console.log.bind(console);
+      console.logs = [];
+      console.log = function () {
+        var wDOM = document.getElementById("Temp")
+        wDOM.innerText = "Console : " + Array.from(arguments) + "  \n";
+        console.stdlog.apply(console, arguments);
+      }
+
+      wDOM.innerText += "Consol Setup Complete \n";
+
       if (null != GamePadObj){
         var wJ1 = document.getElementById(gGlobal.ControlInput.OutputDiv_J1_id);
         gGlobal.ControlInput.JoyStick1 = new GamePadObj.ThreeAxisJoystick(wJ1, true, 2);
