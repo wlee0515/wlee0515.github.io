@@ -34,12 +34,53 @@
         MixerList : [],
       },
 
+      Planet : {
+        Radius : 6371000,
+        DrawRadius : 1000
+      },
+
+      Ownship : {
+        location : [0.0,0.0,0.0],
+        eulerAngle : [0.0,0.0,0.0]
+      },
+
       socket: null,
       webRTI : null,
 
       EntityManager : null,
       placeHolder : 0
     }
+
+    function convertGeoLocationToCartesian (iLatitude, iLongitude, iAltitude ) {
+      
+      var wLatitude = iLatitude*(Math.PI/180);
+      var wLongitude = iLongitude*(Math.PI/180);
+
+      var wRadius = (iAltitude + gGlobal.Planet.Radius)*(gGlobal.Planet.DrawRadius/gGlobal.Planet.Radius);
+      var wEquatorRadius = wRadius*Math.cos(wLatitude);
+      
+      return {
+        y : wRadius*Math.sin(wLatitude),
+        x : wEquatorRadius*Math.sin(iLatitude),
+        z : wEquatorRadius*Math.cos(iLongitude)
+      }
+    }
+
+    function getEulerQuaternion (iLatitude, iLongitude, iRoll, iPitch, iYaw ) {
+      
+			var wQuat1 = new THREE.Quaternion();
+			var wRefEuler = new THREE.Euler(-iLatitude + Math.PI/2, iLongitude, 0, "ZYX" );
+			wQuat1.setFromEuler(wRefEuler);
+
+			var wQuat2 = new THREE.Quaternion();
+			var wLocalEuler = new THREE.Euler( iPitch,-iYaw, -iRoll, "YXZ" );
+			wQuat2.setFromEuler(wLocalEuler);
+
+			wQuat1.multiply(wQuat2);
+      
+      return wQuat1;
+    }
+
 
     function EntityManager() {
       this.EntityList = {};
@@ -57,8 +98,9 @@
           gGlobal.ViewPoint.Scene.add(wMesh);
 
           this.EntityList[iEntityId] = {
+            isUpdated : false,
             geometry : wGeometry,
-            wMaterial : wMaterial,
+            material : wMaterial,
             mesh : wMesh,
             model : null,
             modelPath : ""
@@ -69,12 +111,13 @@
       this.removeEntity = function (iEntityId) {
         var wEntity = this.EntityList[iEntityId];
         if (null != wEntity) {
+          
+          gGlobal.ViewPoint.Scene.remove( wEntity.mesh );
           wEntity.geometry.dispose();
           wEntity.material.dispose();
-          wEntity.mesh.dispose();
           
           if (null != wEntity.model) {
-            wEntity.model.dispose();
+            gGlobal.ViewPoint.Scene.remove( wEntity.model );
           }
 
           delete this.EntityList[iEntityId];
@@ -87,15 +130,34 @@
         return this.EntityList[iEntityId];
       }
 
-      this.setEntityPosition = function (iEntityId, iLocation) {
+      this.removeNoneUpdated = function() {
+        var wEntries = Object.entries(this.EntityList);
+        for (var wi=0; wi < wEntries.length; ++wi) {
+          var wEntry = wEntries[wi];
+          if (true == wEntry[1].isUpdated) {
+            wEntry[1].isUpdated = false;
+          }
+          else {
+            this.removeEntity(wEntry[0]);
+          }
+        }
+      }
+
+      this.setEntityPosition = function (iEntityId, iLocation, iEuler) {
+
+        var wPosition = convertGeoLocationToCartesian(iLocation[0],iLocation[1],iLocation[2]);
+
+        var wEulerQuat = getEulerQuaternion(iLocation[0],iLocation[1], iEuler[0],iEuler[1],iEuler[2]);
 
         var wEntity = this.getEntity(iEntityId);
-        wEntity.mesh.position.set(iLocation[0],iLocation[1], iLocation[2]);
+        wEntity.isUpdated = true;
+        wEntity.mesh.position.set(wPosition.x, wPosition.y, wPosition.z);
+        wEntity.mesh.rotation.setFromQuaternion(wEulerQuat);
 
-        
         if (null != wEntity.model) {
-            wEntity.model.position.set(iLocation[0],iLocation[1], iLocation[2]);
-          }
+          wEntity.model.position.set(wPosition.x, wPosition.y, wPosition.z);
+          wEntity.model.rotation.setFromQuaternion(wEulerQuat);
+        }
 
       }
 
@@ -106,6 +168,7 @@
           return;
         }
 
+        wEntity.isUpdated = true;
         if (wEntity.modelPath == iModelPath) {
           return;
         }
@@ -236,14 +299,31 @@
       gGlobal.ViewPoint.Scene.add( new THREE.HemisphereLight( 0xffffbb, 0x080820, 0.01 ) );
       gGlobal.ViewPoint.Scene.add(new THREE.DirectionalLight( 0xffffff, 0.1 ));
       
-      var wGeometry = new THREE.BoxGeometry(1, 1, 1);
-      //var wMaterial = new THREE.MeshBasicMaterial( { color: 0x00ff00 } );
-      var wMaterial = new THREE.MeshLambertMaterial({ color: 0x00ff00 });
-      var wCube = new THREE.Mesh(wGeometry, wMaterial);
-      wCube.position.set(5.0, 0, 0.0);
-      gGlobal.ViewPoint.Scene.add(wCube)
-      wCube.name = "Cube";
+
+      // Setup Planet      
+      var wPlanetGeometry = new THREE.SphereGeometry( gGlobal.Planet.DrawRadius - 0.5, 360, 180 );
+      var wPlanetMaterial = new THREE.MeshLambertMaterial( {color: 0x0000EE} );
+      var wPlanet = new THREE.Mesh( wPlanetGeometry, wPlanetMaterial );
+      wPlanet.name = "PlanetWater";
+
+      var wPlanetWireframeGeometryBuffer = new THREE.SphereBufferGeometry( gGlobal.Planet.DrawRadius, 360, 180 );
+      var wPlanetWireframeGeometry = new THREE.WireframeGeometry( wPlanetWireframeGeometryBuffer );
+      var wPlanetWireframeMaterial = new THREE.LineBasicMaterial( { color: 0xffffff, linewidth: 10 } );
+      var wPlanetWireframe = new THREE.LineSegments( wPlanetWireframeGeometry, wPlanetWireframeMaterial );
+      wPlanetWireframe.material.depthTest = true;
+      wPlanetWireframe.material.opacity = 0.50;
+      wPlanetWireframe.material.transparent = true;
+      wPlanetWireframe.name = "PlanetWireframe";
+
       
+      var wPlanetGroup = new THREE.Group();
+      wPlanetGroup.add( wPlanet );
+      wPlanetGroup.add( wPlanetWireframe );
+      wPlanetGroup.name = "Planet";
+
+      gGlobal.ViewPoint.Scene.add( wPlanetGroup );
+
+
       //loadGLTF("../../thirdparty/sampleGLFT/2.0/VC/glTF/VC.gltf")
       loadGLTF('https://threejsfundamentals.org/threejs/resources/models/cartoon_lowpoly_small_city_free_pack/scene.gltf')
       
@@ -274,6 +354,10 @@
       var wDOM = document.getElementById("Temp")
       wDOM.innerText = JSON.stringify(wJ1_State, null ,2) + JSON.stringify(wJ2_State, null ,2);
 
+      gGlobal.Ownship.eulerAngle[0] = wJ2_State.z;
+      gGlobal.Ownship.eulerAngle[1] = wJ2_State.y;
+      gGlobal.Ownship.eulerAngle[2] += wJ2_State.x*0.1;
+/*
       
   			gGlobal.ViewPoint.Camera.rotation.y -= wJ2_State.x*0.1;
 	  		gGlobal.ViewPoint.Camera.rotation.x = wJ2_State.y*0.1;
@@ -281,27 +365,33 @@
         gGlobal.ViewPoint.Camera.position.x += wJ1_State.x*5;
   			gGlobal.ViewPoint.Camera.position.y += wJ1_State.y*5;
       	gGlobal.ViewPoint.Camera.position.z += wJ1_State.z*5;
-        
-
-      wCube = gGlobal.ViewPoint.Scene.getObjectByName( "Cube", true );
+  */      
+/*
+      wCube = gGlobal.ViewPoint.Scene.getObjectByName( "Planet", true );
 			wCube.rotation.y += wJ2_State.x*0.1;
 			wCube.rotation.x += wJ2_State.y*0.1;
-			wCube.rotation.z += wJ2_State.z*0.1;
+      wCube.rotation.z += wJ2_State.z*0.1;
+      */
 
     }
 
     function updateEntities(iDt) {
 
+      var wLocation = gGlobal.Ownship.location;
+      var wPosition = convertGeoLocationToCartesian(wLocation[0],wLocation[1],wLocation[2]);
+      
+      var wEuler = gGlobal.Ownship.eulerAngle;
+      var wEulerQuat = getEulerQuaternion(wLocation[0],wLocation[1], wEuler[0],wEuler[1],wEuler[2]);
+
+      gGlobal.ViewPoint.Camera.position.set(wPosition.x,wPosition.y,wPosition.z);
+      gGlobal.ViewPoint.Camera.rotation.setFromQuaternion(wEulerQuat);
+
       var wEntityList = [
         {
           id:"Ownship",
           time : (new Date()).getTime(),
-          location : [
-                      gGlobal.ViewPoint.Camera.position.x,
-                      gGlobal.ViewPoint.Camera.position.y,
-                      gGlobal.ViewPoint.Camera.position.z
-                    ],
-
+          location : gGlobal.Ownship.location,
+          eulerAngle : gGlobal.Ownship.eulerAngle,
           modelPath : "https://wlee0515.github.io/site/pages/SimpleGame/Horse.glb"
         }
       ]
@@ -326,10 +416,7 @@
 
         }
       }
-
-      var wDOM = document.getElementById("Temp")
-      wDOM.innerText += JSON.stringify(wRemote, null ,2);
-
+      gGlobal.EntityManger.removeNoneUpdated();
 
     }
 
