@@ -611,15 +611,22 @@
       var wDOM = document.getElementById("Temp")
       wDOM.innerText = "";
 
-      console.stdlog = console.log.bind(console);
-      console.logs = [];
       console.log = function () {
-        var wDOM = document.getElementById("Temp")
-        wDOM.innerText = "Console : " + Array.from(arguments) + "  \n";
-        console.stdlog.apply(console, arguments);
+        var wDOMTemp = document.getElementById("Temp")
+        wDOMTemp.innerText += "Console LOG: " + Array.from(arguments) + "  \n";
       }
 
-      wDOM.innerText += "Consol Setup Complete \n";
+      console.warn = function () {
+        var wDOMTemp = document.getElementById("Temp")
+        wDOMTemp.innerText += "Console WARN : " + Array.from(arguments) + "  \n";
+      }
+
+      console.error = function () {
+        var wDOMTemp = document.getElementById("Temp")
+        wDOMTemp.innerText += "Console ERROR : " + Array.from(arguments) + "  \n";
+      }
+      
+      wDOM.innerText += "Console Setup Complete \n";
 
       if (null != GamePadObj){
         var wJ1 = document.getElementById(gGlobal.ControlInput.OutputDiv_J1_id);
@@ -631,7 +638,6 @@
         wDOM.innerText += "Joystick Creation Complete \n";
       }
       
-
 
       gGlobal.socket = io("http://webrti.herokuapp.com");
 //        gGlobal.socket = io("http://localhost");
