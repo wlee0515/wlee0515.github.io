@@ -586,14 +586,13 @@
     }
 
     function tick() {
-
-      var wDOM = document.getElementById("Temp")
-      //wDOM.innerText = "Time : " + (new Date()).getTime() + " ms \n";
+      clearLog();
+      log( "Time : " + (new Date()).getTime() + " ms");
       
       var wTimeStep = (new Date()).getTime() - gGlobal.Time.LastTimeStamp;
       wTimeStep /= 1000;
       
-      //wDOM.innerText += "Time Step : " + wTimeStep + " s \n" ;
+      log("Time Step : " + wTimeStep + " s");
 
       processTime(wTimeStep);
       window.requestAnimationFrame(tick);
@@ -601,6 +600,16 @@
 
     }
 
+    function log(iLog) {
+      var wDOM = document.getElementById("LogArea")
+      wDOM.value += iLog + "\n";
+    }
+    
+    function clearLog() {
+      var wDOM = document.getElementById("LogArea")
+      wDOM.value = "";
+    }
+    
   </script>
   <script type="module">
     
@@ -608,25 +617,19 @@
 
     function init() {
       
-      var wDOM = document.getElementById("Temp")
-      wDOM.innerText = "";
-
       console.log = function () {
-        var wDOMTemp = document.getElementById("Temp")
-        wDOMTemp.innerText += "Console LOG: " + Array.from(arguments) + "  \n";
+        log("Console LOG: " + Array.from(arguments));
       }
 
       console.warn = function () {
-        var wDOMTemp = document.getElementById("Temp")
-        wDOMTemp.innerText += "Console WARN : " + Array.from(arguments) + "  \n";
+        log("Console WARN: " + Array.from(arguments));
       }
 
       console.error = function () {
-        var wDOMTemp = document.getElementById("Temp")
-        wDOMTemp.innerText += "Console ERROR : " + Array.from(arguments) + "  \n";
+        log("Console ERROR: " + Array.from(arguments));
       }
       
-      wDOM.innerText += "Console Setup Complete \n";
+      log("Console Setup Complete");
 
       if (null != GamePadObj){
         var wJ1 = document.getElementById(gGlobal.ControlInput.OutputDiv_J1_id);
@@ -635,27 +638,27 @@
         var wJ2 = document.getElementById(gGlobal.ControlInput.OutputDiv_J2_id);
         gGlobal.ControlInput.JoyStick2 = new GamePadObj.ThreeAxisJoystick(wJ2, false, 7);
         
-        wDOM.innerText += "Joystick Creation Complete \n";
+        log("Joystick Creation Complete");
       }
       
 
       gGlobal.socket = io("https://webrti.herokuapp.com");
 //        gGlobal.socket = io("http://localhost");
-      wDOM.innerText += "SocketIO Creation Complete \n";
+      log("SocketIO Creation Complete");
 
       gGlobal.webRTI = new WebRTI(gGlobal.socket);
-      wDOM.innerText += "WebRTI Federate Creation Complete \n";
+      log("WebRTI Federate Creation Complete");
 
       gGlobal.EntityManger = new EntityManager();
-      wDOM.innerText += "Entity Manager Creation Complete \n";
+      log("Entity Manager Creation Complete");
 
       setupViewPoint();
-      wDOM.innerText += "Setup ViewPoint Complete \n";
+      log("Setup ViewPoint Complete");
 
   		setupScene();
-      wDOM.innerText += "Setup Scene Complete \n";
+      log("Setup Scene Complete");
       
-      wDOM.innerText += "Starting Tick Complete \n";
+      log("Starting Tick");
       tick();
     }
 
@@ -667,8 +670,8 @@
 <style>
   body {
     background: rgb(255, 255, 255);
-    margin: 0;
-    padding: 0;
+    margin: 0px;
+    padding: 0px;
   }
 
   #id_JoyStick_1 {
@@ -696,13 +699,24 @@
     position: fixed;
     top: 0px;
     left: 0px;
+    margin: 0px;
+    padding: 0px;
+  }
+
+  #LogArea {
+    resize: both;
+    overflow: auto;
+    width: 300px;
+    position: fixed;
+    top: 0px;
+    left: 0px;
   }
 </style>
 <body>
   <div id="id_OutputCanvasContainer">
     <canvas id="id_OutputCanvas"></canvas>
   </div>
-  <div id="Temp"></div>
+  <textarea id="LogArea"></textarea>
   <div id="id_JoyStick_1">
   </div>
   <div id="id_JoyStick_2">
