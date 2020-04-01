@@ -432,8 +432,8 @@
       wPlanetTexture.wrapT = THREE.RepeatWrapping;
       wPlanetTexture.repeat.set( 3600, 1800 );
 
-      var wPlanetGeometry = new THREE.SphereGeometry( gGlobal.Planet.DrawRadius - 0.5, 360, 180 );
-      var wPlanetMaterial = new THREE.MeshLambertMaterial( {map: wPlanetTexture , transparent: true , opacity: 0.75 ,color: 0xffffff, depthTest: true } );
+      var wPlanetGeometry = new THREE.SphereGeometry( gGlobal.Planet.DrawRadius, 360, 180 );
+      var wPlanetMaterial = new THREE.MeshLambertMaterial( {map: wPlanetTexture , transparent: true , opacity: 1.0 ,color: 0xffffff, depthTest: true } );
       var wPlanet = new THREE.Mesh( wPlanetGeometry, wPlanetMaterial );
       wPlanet.name = "PlanetWater";
       wPlanetGroup.add( wPlanet );
