@@ -415,11 +415,17 @@
       gGlobal.ViewPoint.Scene.add(new THREE.DirectionalLight( 0xffffff, 0.1 ));
       
 
-      // Setup Planet      
+      // Setup Planet     
+      
+      var wPlanetGroup = new THREE.Group();
+      wPlanetGroup.name = "Planet";
+      gGlobal.ViewPoint.Scene.add( wPlanetGroup );
+
       var wPlanetGeometry = new THREE.SphereGeometry( gGlobal.Planet.DrawRadius - 0.5, 360, 180 );
       var wPlanetMaterial = new THREE.MeshLambertMaterial( {color: 0x0000EE} );
       var wPlanet = new THREE.Mesh( wPlanetGeometry, wPlanetMaterial );
       wPlanet.name = "PlanetWater";
+      wPlanetGroup.add( wPlanet );
 
       var wPlanetWireframeGeometryBuffer = new THREE.SphereBufferGeometry( gGlobal.Planet.DrawRadius, 360, 180 );
       var wPlanetWireframeGeometry = new THREE.WireframeGeometry( wPlanetWireframeGeometryBuffer );
@@ -429,18 +435,43 @@
       wPlanetWireframe.material.opacity = 1.00;
       wPlanetWireframe.material.transparent = false;
       wPlanetWireframe.name = "PlanetWireframe";
-
-      
-      var wPlanetGroup = new THREE.Group();
-      wPlanetGroup.add( wPlanet );
       wPlanetGroup.add( wPlanetWireframe );
-      wPlanetGroup.name = "Planet";
-
-      gGlobal.ViewPoint.Scene.add( wPlanetGroup );
 
 
+      // load a texture, set wrap mode to repeat
+      //var wRingTexture = new THREE.TextureLoader().load( "./images/ribbon.png" );
+      var wRingTexture = new THREE.TextureLoader().load( "./images/ribbon.png", function ( texture ) {
+
+        texture.magFilter = THREE.NearestFilter;
+        texture.minFilter = THREE.NearestMipmapLinearFilter;
+
+        texture.wrapS = THREE.RepeatWrapping;
+        texture.wrapT = THREE.RepeatWrapping;
+
+        var wVCount = 1;
+        var wRibbonRadius = gGlobal.Planet.DrawRadius + 100;
+        var wRibbonLength = wRibbonRadius*2*Math.PI;
+        var wHCount = Math.ceil(wRibbonLength/texture.image.width);
+        var wScale = (wRibbonLength/wHCount)/texture.image.width;
+        var wRibbonWidth = wScale*wVCount*texture.image.height;
+        texture.repeat.set( -wHCount, wVCount );
+
+        var points = [];
+        for (var i = -1; i <= 1; i++) {
+          points.push(new THREE.Vector2(wRibbonRadius, i * wRibbonWidth / 2));
+        }
+        
+        var wRingGeometry = new THREE.LatheGeometry( points , 360);
+        var wRingMaterial = new THREE.MeshBasicMaterial( { map: wRingTexture  , transparent: true , opacity: 1.0 ,color: 0xffffff, depthTest: true , side : THREE.DoubleSide} ); 
+        var wRing = new THREE.Mesh( wRingGeometry, wRingMaterial );
+        wRing.name = "PlanetRing";
+
+        wPlanetGroup.add( wRing );
+      });
+      wRingTexture.anisotropy = gGlobal.ViewPoint.Renderer.getMaxAnisotropy();
+      
       //loadGLTF("../../thirdparty/sampleGLFT/2.0/VC/glTF/VC.gltf")
-      loadGLTF('https://threejsfundamentals.org/threejs/resources/models/cartoon_lowpoly_small_city_free_pack/scene.gltf')
+      //loadGLTF('https://threejsfundamentals.org/threejs/resources/models/cartoon_lowpoly_small_city_free_pack/scene.gltf')
       
     }
 
