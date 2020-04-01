@@ -423,22 +423,20 @@
       var wPlanetGroup = new THREE.Group();
       wPlanetGroup.name = "Planet";
       gGlobal.ViewPoint.Scene.add( wPlanetGroup );
+      
+      var wPlanetTexture = new THREE.TextureLoader().load( "./images/ground.png");
+      wPlanetTexture.magFilter = THREE.NearestFilter;
+      wPlanetTexture.minFilter = THREE.NearestMipmapLinearFilter;
+      //wPlanetTexture.anisotropy = 16;
+      wPlanetTexture.wrapS = THREE.RepeatWrapping;
+      wPlanetTexture.wrapT = THREE.RepeatWrapping;
+      wPlanetTexture.repeat.set( 3600, 1800 );
 
       var wPlanetGeometry = new THREE.SphereGeometry( gGlobal.Planet.DrawRadius - 0.5, 360, 180 );
-      var wPlanetMaterial = new THREE.MeshLambertMaterial( {color: 0x0000EE} );
+      var wPlanetMaterial = new THREE.MeshLambertMaterial( {map: wPlanetTexture , transparent: true , opacity: 0.75 ,color: 0xffffff, depthTest: true } );
       var wPlanet = new THREE.Mesh( wPlanetGeometry, wPlanetMaterial );
       wPlanet.name = "PlanetWater";
       wPlanetGroup.add( wPlanet );
-
-      var wPlanetWireframeGeometryBuffer = new THREE.SphereBufferGeometry( gGlobal.Planet.DrawRadius, 360, 180 );
-      var wPlanetWireframeGeometry = new THREE.WireframeGeometry( wPlanetWireframeGeometryBuffer );
-      var wPlanetWireframeMaterial = new THREE.LineBasicMaterial( { color: 0xffffff, linewidth: 10 } );
-      var wPlanetWireframe = new THREE.LineSegments( wPlanetWireframeGeometry, wPlanetWireframeMaterial );
-      wPlanetWireframe.material.depthTest = true;
-      wPlanetWireframe.material.opacity = 1.00;
-      wPlanetWireframe.material.transparent = false;
-      wPlanetWireframe.name = "PlanetWireframe";
-      //wPlanetGroup.add( wPlanetWireframe );
 
 
       // load a texture, set wrap mode to repeat
@@ -447,7 +445,7 @@
 
         texture.magFilter = THREE.NearestFilter;
         texture.minFilter = THREE.NearestMipmapLinearFilter;
-
+        //texture.anisotropy = 16;
         texture.wrapS = THREE.RepeatWrapping;
         texture.wrapT = THREE.RepeatWrapping;
 
@@ -486,7 +484,6 @@
           [0.0,270.0,55.0], 
           [0.0,300.0,60.0], 
           [0.0,330.0,65.0], 
-          [0.0,360.0,70.0], 
      //     [0.0,180.0,5.0],
        //   [0.0,240.0,-5.0], 
       //    [0.0,90.0,-45.0], 
@@ -760,7 +757,7 @@
 
 <style>
   body {
-    background: rgb(0, 255, 255);
+    background: rgb(255, 255, 255);
     margin: 0px;
     padding: 0px;
   }
