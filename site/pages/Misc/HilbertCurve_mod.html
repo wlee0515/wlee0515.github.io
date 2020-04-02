@@ -1,0 +1,172 @@
+<HTML>
+<HEAD>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
+  <TITLE>Hilbert Curve Demonstration</TITLE>
+  <script type="text/javascript" src="../../global/frame.js"></script>  
+  <link rel="stylesheet" href="../../css/theme_01.css" />
+
+  <script src="../../javascript/Color.js"></script>
+  <script src="../../javascript/HilbertCurve.js"></script>
+  <script>
+
+    var gGlobal = {
+      InputOrderId : "id_InputOrder",
+      OutputCanvasId : "id_OutputGraphCanvas",
+      OutputTextId : "id_OutputText",
+      CurveMap : HilbertCurve.CurveMap.computeCurveMap(1),
+      CurveMapProcessRange : 10000,
+      CurveMapCurrentIndex : 0,
+    }
+
+    function updateCurveData() {
+      var wInputOrderDom = document.getElementById(gGlobal.InputOrderId);
+      if (null == wInputOrderDom) {
+        alert("Unable to find Input Order for Curve");
+        return;
+      }
+      
+      var wOutputCanvasDom = document.getElementById(gGlobal.OutputCanvasId);
+      if (null == wOutputCanvasDom) {
+        alert("Unable to find Output Canvas for Curve");
+        return;
+      }
+
+      var wCurveOrder = parseInt(wInputOrderDom.value);
+      
+      gGlobal.CurveMap = HilbertCurve.CurveMap.createCurveMapObject(wCurveOrder);
+      gGlobal.CurveMapCurrentIndex = 0;
+
+
+      var iCtx = wOutputCanvasDom.getContext('2d');
+
+      iCtx.clearRect(0,0,wOutputCanvasDom.clientWidth,wOutputCanvasDom.clientHeight);
+
+      var wOutputTextDom = document.getElementById(gGlobal.OutputTextId);
+      if (null == wOutputTextDom) {
+        alert("Unable to find Output Text Display for Curve");
+        return;
+      }
+
+      wOutputTextDom.innerText = printCurveMapData(gGlobal.CurveMap);
+
+    }
+
+    function plotCurveMap(iCurveMap, iCanvasContext, iXStart, iYStart, iWidth, iHeight) {
+      plotCurveMapRange(iCurveMap, iCanvasContext, iXStart, iYStart, iWidth, iHeight, 0, iCurveMap.NumberOfData);
+    }
+
+    function plotCurveMapInterval(iCurveMap, iCanvasContext, iXStart, iYStart, iWidth, iHeight, iStart, iEnd) {
+      var wCellCount = iCurveMap.NumberOfDataPerAxis;
+      var wWidthDelta = iWidth/(wCellCount);
+      var wHeightDelta = iHeight/(wCellCount);
+      var wXStart = iXStart + 0.5*wWidthDelta;
+      var wYStart = iYStart + 0.5*wHeightDelta;
+      
+      var wStart = iStart -1;
+      if (wStart < 0) wStart = 0;
+
+      var wColor = new Color(0,0,0,0);
+
+      wColor.mapValueToColorScale(wi/iCurveMap.NumberOfData);
+        iCanvasContext.strokeStyle = "black";
+        iCanvasContext.lineWidth = 20;
+        iCanvasContext.beginPath();
+        var wXLineStart = iCurveMap.DtoX[0]*wWidthDelta + wXStart;
+        var wYLineStart = iCurveMap.DtoY[0]*wHeightDelta + wYStart;
+
+        var beginY = wYLineStart;
+        iCanvasContext.moveTo(0, beginY);
+        iCanvasContext.lineTo(wXLineStart, wYLineStart);
+
+      for (var wi = wStart; (wi < iEnd-1) && (wi < iCurveMap.NumberOfData - 1); ++wi) {
+         wXLineStart = iCurveMap.DtoX[wi]*wWidthDelta + wXStart;
+         wYLineStart = iCurveMap.DtoY[wi]*wHeightDelta + wYStart;
+        var wXLocation = iCurveMap.DtoX[wi+1]*wWidthDelta + wXStart;
+        var wYLocation = iCurveMap.DtoY[wi+1]*wHeightDelta + wYStart;
+      
+        iCanvasContext.lineTo(wXLocation, wYLocation);
+      }
+      
+      iCanvasContext.lineTo(iWidth, beginY);
+      iCanvasContext.stroke();        
+    }
+    
+    function printCurveMapData(iCurveMap) {
+      var wOutputString = "";
+
+      wOutputString += "Hilbert Curve Information \n";
+      wOutputString += "Curve Order : " + iCurveMap.Order +" \n";
+      wOutputString += "Side Dimension : " + iCurveMap.NumberOfDataPerAxis +" \n";
+      wOutputString += "Total Cell Count : " + iCurveMap.NumberOfData +" \n";
+
+      return wOutputString;
+    }
+
+    function renderCurveMap() {
+
+      if (null != gGlobal.CurveMap) {
+        if(gGlobal.CurveMapCurrentIndex < gGlobal.CurveMap.NumberOfData) {
+          var wNextIndex = gGlobal.CurveMapCurrentIndex + gGlobal.CurveMapProcessRange;
+          gGlobal.CurveMap = HilbertCurve.CurveMap.computeCurveMapInterval(gGlobal.CurveMap.Order, gGlobal.CurveMap, gGlobal.CurveMapCurrentIndex, wNextIndex);
+
+          var wOutputCanvasDom = document.getElementById(gGlobal.OutputCanvasId);
+          if (null != wOutputCanvasDom) {
+            var iCtx = wOutputCanvasDom.getContext('2d');
+            plotCurveMapInterval(gGlobal.CurveMap, iCtx, 0, 0, wOutputCanvasDom.clientWidth, wOutputCanvasDom.clientHeight, gGlobal.CurveMapCurrentIndex, wNextIndex);
+
+          }
+
+          gGlobal.CurveMapCurrentIndex = wNextIndex;
+        }
+      }
+      window.requestAnimationFrame(renderCurveMap);    
+    }
+
+    function Init() {
+      Resize();
+      renderCurveMap();
+    }
+
+    function Resize() {
+      var wCanvas = document.getElementById(gGlobal.OutputCanvasId);
+      var wSize = wCanvas.parentElement.clientWidth;
+
+      wCanvas.height = wSize - 2;
+      wCanvas.width = wSize - 2;
+      
+      updateCurveData();
+    }
+
+  </script>
+  <style>
+
+    #CurveDisplay
+    {
+        width : 90%;
+        margin-top: 30px;
+        margin-bottom: 30px;
+        padding-left: 20;
+    }
+
+    canvas
+    {
+        border: 1px solid blue;
+        background-color: white;
+    }
+
+  </style>
+</HEAD>
+<BODY onload="Init()" onresize ="Resize()">
+  <div id="main-content-div">
+    <h1>Hilbert Curve Demonstration</h1>
+    <p>This demonstration plots the Hilbert Curve from order 1 to order 14.</p>
+    <div name ="CurveOrderControl">
+      <input type="number" id="id_InputOrder" min="1" max="14" value="1" onchange="updateCurveData()">
+      <div id="id_OutputText"></div>
+    </div>
+    <div id="CurveDisplay">
+      <canvas id="id_OutputGraphCanvas" width="500" height="500" style="border:1px solid #000000;"></canvas>
+    </div>
+  </div>
+</BODY>
+</HTML>

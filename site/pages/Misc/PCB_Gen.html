@@ -1,0 +1,491 @@
+<HTML>
+  <HEAD>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
+    <TITLE>Canvas</TITLE>
+    <script type="text/javascript" src="../../global/frame.js"></script>  
+    <script>
+  
+      var gGlobal = {
+        
+        Canvas_Width_Id : "id_Canvas_Width_Input",
+        Canvas_Height_Id : "id_Canvas_Height_Input",
+        Output_Canvas_Id : "id_canvas",
+        Output_Text_Id : "id_text",
+        CircuitGridUnitSize : 10,
+        GenerateCircuitGrid : true,
+        CircuitChip : null,
+        CircuitGrid : null
+      }
+  
+  
+      function Init() {
+        renderCanvas()
+      }
+      
+      function renderCanvas() {
+        window.requestAnimationFrame(renderCanvas);
+        canvasSize();
+        drawCanvas();
+      }
+      
+      function canvasSize() {
+
+        var wWidth = document.getElementById(gGlobal.Canvas_Width_Id);
+        var wHeight = document.getElementById(gGlobal.Canvas_Height_Id);
+        var wCanvas = document.getElementById(gGlobal.Output_Canvas_Id);
+
+        if (wWidth.value != wCanvas.width) {
+          wCanvas.width = wWidth.value;
+          gGlobal.GenerateCircuitGrid = true;
+        }
+        if (wHeight.value != wCanvas.height) {
+          wCanvas.height = wHeight.value;
+          gGlobal.GenerateCircuitGrid = true;
+        }
+      }
+  
+      function drawCanvas() {
+        
+        var wCanvas = document.getElementById(gGlobal.Output_Canvas_Id);
+        var wCtx = wCanvas.getContext('2d');
+        wCtx.clearRect(-10,-10,wCanvas.width + 20, wCanvas.height + 20);
+
+        drawCircuit(wCanvas);
+        cutGrid(wCanvas);
+      }
+
+      function generateChips(iXCount, iYCount) {
+
+        var wDiagonal = Math.sqrt(iXCount*iXCount , iYCount*iYCount);
+        var wChipCount = Math.floor(wDiagonal/5);
+        var wAvgChipSize = 3;
+        var wMaxChipSize = wAvgChipSize+1;
+
+        var wChipSet = [];
+        for(var wp = 0; wp < wChipCount; ++ wp) {
+          var wX = Math.floor(Math.random()*(iXCount - wMaxChipSize - 1) + 1);
+          var wY = Math.floor(Math.random()*(iYCount - wMaxChipSize- 1) + 1);
+          var wChipSize = wAvgChipSize + (Math.floor(Math.random()*3)-1);
+          var wXSize = wChipSize;
+          var wYSize = wChipSize;
+          wChipSet.push([wX,wY,wXSize,wYSize]);
+        }
+
+        var wChipGrid = [];
+        for(var wi = 0; wi < iXCount; ++wi) {
+          var wColumn = [];
+          for(var wj = 0; wj < iYCount; ++wj) {
+            wColumn.push(0);
+          }
+          wChipGrid.push(wColumn);
+        }
+
+
+        for(var wp = 0; wp < wChipSet.length; ++ wp) {
+          var wXMin = wChipSet[wp][0];
+          var wYMin = wChipSet[wp][1];
+          var wXMax = wChipSet[wp][0] + wChipSet[wp][2];
+          var wYMax = wChipSet[wp][1] + wChipSet[wp][3];
+
+          for (var wi = 0; wi < iXCount; ++wi) {
+            for (var wj = 0; wj < iYCount; ++wj) {
+              if ((wi >= wXMin) && (wi < wXMax)) {
+                if ((wj >= wYMin) && (wj < wYMax)) {
+                  wChipGrid[wi][wj]=-1;
+                }  
+              }
+            }
+          }
+        }
+        return  {
+          chipset : wChipSet,
+          grid: wChipGrid
+        };
+      }
+
+      function generateCircuit(iXCount, iYCount) {
+
+        var wCircuitChip = generateChips(iXCount, iYCount);
+        
+        var wCircuitGrid = [];
+        var wHoleRate = 0.05;
+        var wNewLineRate = 0.15;
+        var wLineCounter = 0;
+        for(var wi = 0; wi < iXCount; ++wi) {
+          var wColumn = [];
+          for(var wj = 0; wj < iYCount; ++wj) {
+            var wValueToPush = 0;
+            var wAddLine = false;
+            if ((wi == 0) || (wi == iXCount -1) || (wj == 0) || (wj == iYCount -1)) {
+              wAddLine = true; 
+            }
+            else if (Math.random() < wNewLineRate) {
+              wAddLine = true; 
+            }
+            else if(Math.random() < wHoleRate) {
+              wValueToPush = -1;
+              wAddLine = false; 
+            }
+
+            if (wCircuitChip.grid[wi][wj] == -1) {
+              wValueToPush = -1;
+              wAddLine = false; 
+            }
+
+            if (true == wAddLine) {
+              wValueToPush = ++wLineCounter;
+            }
+            
+            wColumn.push(wValueToPush);
+          }
+          wCircuitGrid.push(wColumn);
+        }
+
+        var wCellCount = 0;
+        var wCurrentLine = [];
+        var wXStep = iXCount;
+        var wYStep = iYCount;
+        var wX = 0;
+        var wY = 0;
+        var wBegin = 0;
+        var wEnd = 0;
+
+        while (true) {
+          
+          wBegin = wX;
+          wEnd = wX + wXStep - 1;
+          for (var wi = 0; wi < wXStep; ++wi) {
+            if ((wCircuitGrid[wX][wY] != -1) && (wCircuitGrid[wX][wY] != 0) ){
+              var wRandom = Math.floor(Math.random() * 3);
+              for (var wk = 0; wk < 3; ++wk) {
+                var wI = wX + (wRandom + wk) % 3 - 1;
+                if ((wI >= wBegin) && (wI <= wEnd)) {
+                  if (wCircuitGrid[wI][wY + 1] == 0) {
+                    wCircuitGrid[wI][wY + 1] = wCircuitGrid[wX][wY];
+                    break;
+                  }
+                }
+              }
+            }
+            wX += 1;
+          }
+
+          wX -= 1;
+          wY += 1;
+
+          wYStep = wYStep - 1;
+          
+          wBegin = wY;
+          wEnd = wY + (wYStep - 1);
+          for (var wi = 0; wi < wYStep; ++wi) {
+            if ((wCircuitGrid[wX][wY] != -1) && (wCircuitGrid[wX][wY] != 0) ){
+              var wRandom = Math.floor(Math.random() * 3);
+              for (var wk = 0; wk < 3; ++wk) {
+                var wI = wY + (wRandom + wk) % 3 - 1;
+                if ((wI >= wBegin) && (wI <= wEnd)) {
+                  if (wCircuitGrid[wX - 1][wI] == 0) {
+                    wCircuitGrid[wX - 1][wI] = wCircuitGrid[wX][wY];
+                    break;
+                  }
+                }
+              }
+            }
+            wY += 1;
+          }
+
+          wY -= 1;
+          wX -= 1;
+
+          wXStep = wXStep - 1;
+          
+          wBegin = wX - (wXStep - 1);
+          wEnd = wX;
+          for (var wi = 0; wi < wXStep; ++wi) {
+            if ((wCircuitGrid[wX][wY] != -1) && (wCircuitGrid[wX][wY] != 0) ){
+              var wRandom = Math.floor(Math.random() * 3);
+              for (var wk = 0; wk < 3; ++wk) {
+                var wI = wX + (wRandom + wk) % 3 - 1;
+                if ((wI >= wBegin) && (wI <= wEnd)) {
+                  if (wCircuitGrid[wI][wY - 1] == 0) {
+                    wCircuitGrid[wI][wY - 1] = wCircuitGrid[wX][wY];
+                    break;
+                  }
+                }
+              }
+            }
+            wX -= 1;
+          }
+
+          wX += 1;
+          wY -= 1;
+
+          wYStep = wYStep - 1;
+          
+          wBegin = wY - (wYStep - 1);
+          wEnd = wY;
+          for (var wi = 0; wi < wYStep; ++wi) {
+            if ((wCircuitGrid[wX][wY] != -1) && (wCircuitGrid[wX][wY] != 0) ){
+              var wRandom = Math.floor(Math.random() * 3);
+              for (var wk = 0; wk < 3; ++wk) {
+                var wI = wY + (wRandom + wk) % 3 - 1;
+                if ((wI >= wBegin) && (wI <= wEnd)) {
+                  if (wCircuitGrid[wX + 1][wI] == 0) {
+                    wCircuitGrid[wX + 1][wI] = wCircuitGrid[wX][wY];
+                    break;
+                  }
+                }
+              }
+            }
+            wY -= 1;
+          }
+
+          wY += 1;
+          wX += 1;
+
+          wXStep = wXStep - 1;
+          if ((0 >= wXStep) || (0 >= wYStep)) {
+            break;
+          }
+        }
+
+
+        var wLineArray = []
+
+        for(var wLineId = 1; wLineId < wLineCounter; ++wLineId) {
+          
+          var wCellCount = 0;
+          var wCurrentLine =[];
+          var wXStep = iXCount;
+          var wYStep = iYCount;
+          var wX = 0;
+          var wY = 0;
+          
+          while (true) {
+            for(var wi = 0; wi < wXStep; ++wi){
+              if (wLineId == wCircuitGrid[wX][wY]) {
+                wCurrentLine.push([wX,wY]);
+              }
+              //wCircuitGrid[wX][wY] = ++wCellCount;
+              wX += 1;
+            }
+
+            wX -= 1;
+            wY += 1;
+
+            wYStep = wYStep-1;
+            for(var wi = 0; wi < wYStep; ++wi){
+              if (wLineId == wCircuitGrid[wX][wY]) {
+                wCurrentLine.push([wX,wY]);
+              }
+              //wCircuitGrid[wX][wY] = ++wCellCount;
+              wY += 1;
+            }
+
+            wY -= 1;
+            wX -= 1;
+            
+            wXStep = wXStep-1;
+            for(var wi = 0; wi < wXStep; ++wi){
+              if (wLineId == wCircuitGrid[wX][wY]) {
+                wCurrentLine.push([wX,wY]);
+              }
+              //wCircuitGrid[wX][wY] = ++wCellCount;
+              wX -= 1;
+            }
+
+            wX += 1;
+            wY -= 1;
+
+            wYStep = wYStep-1;
+            for(var wi = 0; wi < wYStep; ++wi){
+              if (wLineId == wCircuitGrid[wX][wY]) {
+                wCurrentLine.push([wX,wY]);
+              }
+              //wCircuitGrid[wX][wY] = ++wCellCount;
+              wY -= 1;
+            }
+
+            wY += 1;
+            wX += 1;
+
+            wXStep = wXStep-1;
+            if ((0 >= wXStep) || (0 >= wYStep)) {
+              break;
+            }
+          }
+          if (wCurrentLine.length > 1) {
+            wLineArray.push(wCurrentLine)
+          }
+        }
+        
+        var wHTMLString = "";
+        
+        wHTMLString += "<table>";
+        for(var wj = 0; wj < iYCount; ++wj) {
+          wHTMLString += "<tr>";
+          for(var wi = 0; wi < iXCount; ++wi) {
+            wHTMLString += "<td>" + wCircuitGrid[wi][wj] +"</td>";
+
+          }
+          wHTMLString += "</tr>";
+        }
+        wHTMLString += "</table>";
+
+        var wTextDiv = document.getElementById(gGlobal.Output_Text_Id);
+        wTextDiv.innerHTML = wHTMLString;
+
+        return {
+          chips: wCircuitChip,
+          circuit: wLineArray
+        }
+      }
+
+      function drawCircuit(iCanvas) {
+        var wCanvas = iCanvas;
+        var wCtx = wCanvas.getContext('2d');
+        wCtx.fillStyle = "blue";
+        wCtx.fillRect(-10,-10,wCanvas.width + 20, wCanvas.height + 20);
+        
+        wCtx.strokeStyle = "cyan";
+        wCtx.fillStyle = "cyan";
+
+        var wCreateLineObject = function (iLineWidth, iStrokeColor, iFillColor, iRadius, iPoints) {
+          return {
+            lineWidth: iLineWidth,
+            color: iStrokeColor,
+            fill: iFillColor,
+            radius: iRadius,
+            points: iPoints
+          };
+        }
+
+        var wCircuitWidthCount = Math.floor( wCanvas.width /gGlobal.CircuitGridUnitSize);
+        var wCircuitHeightCount = Math.floor( wCanvas.height /gGlobal.CircuitGridUnitSize);
+        
+        if (true == gGlobal.GenerateCircuitGrid ) {
+          gGlobal.GenerateCircuitGrid = false;
+          gGlobal.CircuitGrid = generateCircuit(wCircuitWidthCount,wCircuitHeightCount);
+        }
+        var wCircuitLineArray = gGlobal.CircuitGrid.circuit ;
+        var wChipArray = gGlobal.CircuitGrid.chips ;
+        
+        var wUnitWidth = wCanvas.width/(wCircuitWidthCount - 1);
+        var wUnitHeight = wCanvas.height/(wCircuitHeightCount - 1);
+        
+        var lineArray = [];
+        var wXShift = 0;
+        var wYShift = 0;
+        var wXScale = wUnitWidth;
+        var wYScale = wUnitHeight;
+
+        for (var wi = 0; wi < wChipArray.chipset.length; ++wi) {
+          
+          var wX = (wChipArray.chipset[wi][0]-0.5)*wXScale +  wXShift;
+          var wY = (wChipArray.chipset[wi][1]-0.5)*wYScale +  wYShift;
+          var wWidth = wChipArray.chipset[wi][2]*wXScale;
+          var wHeight = wChipArray.chipset[wi][3]*wYScale;
+
+          var wBorder = 3;
+          wCtx.fillRect(wX + wBorder,wY + wBorder, wWidth - 2*wBorder,  wHeight - 2*wBorder);
+
+        }
+        
+        for (var wi = 0; wi < wCircuitLineArray.length; ++wi) {
+          var wPointList = [];
+          for (var wj = 0; wj < wCircuitLineArray[wi].length; ++wj) {
+            var x = wCircuitLineArray[wi][wj][0]*wXScale +  wXShift;
+            var y = wCircuitLineArray[wi][wj][1]*wYScale +  wYShift;
+
+            wPointList.push([x,y]);
+          }
+
+          lineArray.push(wCreateLineObject(2, "cyan", "blue", 2, wPointList));
+        }
+
+        wCtx.lineCap = "round";
+        wCtx.lineJoin = "round";
+        for (var wp = 0; wp < lineArray.length; ++wp) {
+
+          wCtx.beginPath();
+          wCtx.lineWidth = lineArray[wp].lineWidth;
+          wCtx.strokeStyle = lineArray[wp].color;
+          wCtx.fillStyle = lineArray[wp].fill;
+
+          wCtx.beginPath();
+          var wPointList = lineArray[wp].points;
+          wCtx.moveTo(wPointList[0][0], wPointList[0][1] );
+          for (var wq = 1; wq < wPointList.length; ++wq) {
+            wCtx.lineTo(wPointList[wq][0], wPointList[wq][1] );
+          }
+
+          wCtx.stroke();
+
+          if ((wPointList[0][0] > 0.01) && (wPointList[0][0] < wCanvas.width - 0.01)) {
+            if ((wPointList[0][1] > 0.01) && (wPointList[0][1] < wCanvas.height - 0.01)) {
+              wCtx.beginPath();
+              wCtx.arc(wPointList[0][0], wPointList[0][1], lineArray[wp].radius, 0, 2 * Math.PI, false);
+              wCtx.fill();
+              wCtx.stroke();
+            }
+          }
+
+          var wEndIndex = wPointList.length - 1;
+          if ((wPointList[wEndIndex][0] > 0.01) && (wPointList[wEndIndex][0] < wCanvas.width - 0.01)) {
+            if ((wPointList[wEndIndex][1] > 0.01) && (wPointList[wEndIndex][1] < wCanvas.height - 0.01)) {
+              wCtx.beginPath();
+              wCtx.arc(wPointList[wEndIndex][0], wPointList[wEndIndex][1], lineArray[wp].radius, 0, 2 * Math.PI, false);
+              wCtx.fill();
+              wCtx.stroke();
+            }
+          }
+        }
+      }
+      function cutGrid(iCanvas) {
+        
+        var wCanvas = iCanvas;
+        var wCtx = wCanvas.getContext('2d');
+
+        var wLineWidth = 1;
+        var wHalfLineWidth = wLineWidth/2;
+        var wVerticalLineCount = 10;
+        var wVerticalLineJump = wCanvas.width/wVerticalLineCount;
+
+        for(var wi = 0; wi <= wVerticalLineCount; ++wi) {
+          var wCenterLine = (wi)*wVerticalLineJump;
+          wCtx.clearRect(wCenterLine-wHalfLineWidth,-10, wLineWidth, wCanvas.height + 20);
+        }
+        
+        var wHorizontalLineCount = 10;
+        var wHorizontalLineJump = wCanvas.height/wHorizontalLineCount;
+
+        for(var wi = 0; wi <= wHorizontalLineCount; ++wi) {
+          var wCenterLine = (wi)*wHorizontalLineJump;
+          wCtx.clearRect(-10,wCenterLine-wHalfLineWidth, wCanvas.width + 20, wLineWidth);
+        }
+      }
+    </script>
+    <style>
+  
+      #id_canvas
+      {
+          border: 1px solid blue;
+          background-color: gray;
+      }
+      td
+      {
+        width: 30px;
+      }
+    </style>
+  </HEAD>
+  <BODY onload="Init()">
+    <span>Canvas Width</span><input type="number" value="300" id="id_Canvas_Width_Input"/>
+    <span>Canvas Height</span><input type="number" value="300" id="id_Canvas_Height_Input"/>
+    <button onclick="gGlobal.GenerateCircuitGrid=true">Regenerate</button>
+    <div id="id_canvas_div">
+      <canvas id="id_canvas"></canvas>
+    </div>
+    <div id="id_text">
+    </div>
+  </BODY>
+  </HTML>
+  
