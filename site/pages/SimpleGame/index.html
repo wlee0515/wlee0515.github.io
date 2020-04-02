@@ -557,7 +557,7 @@
       gGlobal.Ownship.eulerAngle[1] = wJ2_State.y*90;
       gGlobal.Ownship.eulerAngle[2] += wJ2_State.x;
 
-      var wOverallGain = 1000;
+      var wOverallGain = 1;
       var wGain = [100.0,100.0,100.0];
       var wPositionChange = [wJ1_State.y , wJ1_State.x, wJ1_State.z];
       wPositionChange[0] = wPositionChange[0]*wGain[0]*wOverallGain;
