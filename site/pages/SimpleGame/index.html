@@ -424,13 +424,13 @@
       wPlanetGroup.name = "Planet";
       gGlobal.ViewPoint.Scene.add( wPlanetGroup );
       
-      var wPlanetTexture = new THREE.TextureLoader().load( "./images/ground03.png");
+      var wPlanetTexture = new THREE.TextureLoader().load( "./images/ground01.png");
       wPlanetTexture.magFilter = THREE.NearestFilter;
       wPlanetTexture.minFilter = THREE.NearestMipmapLinearFilter;
       //wPlanetTexture.anisotropy = 16;
       wPlanetTexture.wrapS = THREE.RepeatWrapping;
       wPlanetTexture.wrapT = THREE.RepeatWrapping;
-      wPlanetTexture.repeat.set( 36*60, 18*60 );
+      wPlanetTexture.repeat.set( 360*60/5, 180*60/5 );
 
       var wPlanetGeometry = new THREE.SphereGeometry( gGlobal.Planet.DrawRadius, 360, 180 );
       var wPlanetMaterial = new THREE.MeshLambertMaterial( {map: wPlanetTexture , transparent: true , opacity: 1.0 ,color: 0xffffff, depthTest: true } );
