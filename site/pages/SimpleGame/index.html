@@ -450,7 +450,7 @@
         texture.wrapT = THREE.RepeatWrapping;
 
         var wPixelPerMeter = 20;
-        var wRibbonRadius = gGlobal.Planet.DrawRadius + 100;
+        var wRibbonRadius = gGlobal.Planet.DrawRadius + 150;
         var wRibbonLength = wRibbonRadius*2*Math.PI;
 
         var wImageWidth = texture.image.width / wPixelPerMeter;
@@ -499,9 +499,9 @@
           wRingContainer.rotation.x = wShiftArray[wi][0]*gDegToRad;
           wRingContainer.rotation.y = wShiftArray[wi][1]*gDegToRad;
           wRingContainer.rotation.z = wShiftArray[wi][2]*gDegToRad;
-          wRingContainer.position.z = wi;
-          wRingContainer.position.x = wi;
-          wRingContainer.position.y = wi;
+          wScale = Math.pow(-1, wi)*0.001 + 1;
+          wRingContainer.scale.z = wScale;
+          wRingContainer.scale.x = wScale;
           wPlanetGroup.add(wRingContainer);
         }
         
@@ -557,7 +557,7 @@
       gGlobal.Ownship.eulerAngle[1] = wJ2_State.y*90;
       gGlobal.Ownship.eulerAngle[2] += wJ2_State.x;
 
-      var wOverallGain = 1;
+      var wOverallGain = 1000;
       var wGain = [100.0,100.0,100.0];
       var wPositionChange = [wJ1_State.y , wJ1_State.x, wJ1_State.z];
       wPositionChange[0] = wPositionChange[0]*wGain[0]*wOverallGain;
