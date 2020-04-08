@@ -1,7 +1,7 @@
 <HTML>
   <HEAD>
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
-    <TITLE>Canvas</TITLE>
+    <TITLE>Circuit Pattern Generator</TITLE>
     <script type="text/javascript" src="../../global/frame.js"></script>  
     <script>
   
@@ -56,21 +56,6 @@
 
       function generateChips(iXCount, iYCount) {
 
-        var wDiagonal = Math.sqrt(iXCount*iXCount , iYCount*iYCount);
-        var wChipCount = Math.floor(wDiagonal/2);
-        var wAvgChipSize = 3;
-        var wMaxChipSize = wAvgChipSize+1;
-
-        var wChipSet = [];
-        for(var wp = 0; wp < wChipCount; ++ wp) {
-          var wX = Math.floor(Math.random()*(iXCount - wMaxChipSize - 1) + 1);
-          var wY = Math.floor(Math.random()*(iYCount - wMaxChipSize- 1) + 1);
-          var wChipSize = wAvgChipSize + (Math.floor(Math.random()*3)-1);
-          var wXSize = wChipSize;
-          var wYSize = wChipSize;
-          wChipSet.push([wX,wY,wXSize,wYSize]);
-        }
-
         var wChipGrid = [];
         for(var wi = 0; wi < iXCount; ++wi) {
           var wColumn = [];
@@ -80,23 +65,73 @@
           wChipGrid.push(wColumn);
         }
 
+        var wDiagonal = Math.sqrt(iXCount*iXCount , iYCount*iYCount);
+        var wChipCount = Math.floor(wDiagonal/1.5);
+        var wAvgChipSize = 3;
+        var wMaxChipSize = wAvgChipSize+1;
 
-        for(var wp = 0; wp < wChipSet.length; ++ wp) {
-          var wXMin = wChipSet[wp][0];
-          var wYMin = wChipSet[wp][1];
-          var wXMax = wChipSet[wp][0] + wChipSet[wp][2];
-          var wYMax = wChipSet[wp][1] + wChipSet[wp][3];
+        var wChipSet = [];
+        for(var wp = 0; wp < wChipCount; ++ wp) {
+          var wTry = true;
+          var wTryCount = 0;
+          while (true == wTry) {
 
-          for (var wi = 0; wi < iXCount; ++wi) {
-            for (var wj = 0; wj < iYCount; ++wj) {
-              if ((wi >= wXMin) && (wi < wXMax)) {
-                if ((wj >= wYMin) && (wj < wYMax)) {
-                  wChipGrid[wi][wj]=-1;
-                }  
+            var wX = Math.floor(Math.random() * (iXCount - wMaxChipSize - 1) + 1);
+            var wY = Math.floor(Math.random() * (iYCount - wMaxChipSize - 1) + 1);
+            var wChipSize = wAvgChipSize + (Math.floor(Math.random() * 3) - 1);
+            var wXSize = wChipSize;
+            var wYSize = wChipSize;
+            var wChip = [wX, wY, wXSize, wYSize];
+
+            var wXMin = wChip[0];
+            var wYMin = wChip[1];
+            var wXMax = wChip[0] + wChip[2];
+            var wYMax = wChip[1] + wChip[3];
+
+            var wIntersecting = false;
+            for (var wi = 0; wi < iXCount; ++wi) {
+              for (var wj = 0; wj < iYCount; ++wj) {
+                if ((wi >= wXMin) && (wi < wXMax)) {
+                  if ((wj >= wYMin) && (wj < wYMax)) {
+                    if (-1 == wChipGrid[wi][wj]) {
+                      wIntersecting = true;
+                      break;
+                    }
+                  }
+                }
+              }
+              if (true == wIntersecting) {
+                break;
+              }
+            }
+
+            if (true == wIntersecting) {
+              wTryCount += 1;
+              if (10 > wTryCount) {
+                wTry = true;
+              }
+              else {
+                wTry = false;
+              }
+            }
+            else {
+              wTry = false;
+              wChipSet.push(wChip);
+
+              for (var wi = 0; wi < iXCount; ++wi) {
+                for (var wj = 0; wj < iYCount; ++wj) {
+                  if ((wi >= wXMin) && (wi < wXMax)) {
+                    if ((wj >= wYMin) && (wj < wYMax)) {
+                      wChipGrid[wi][wj] = -1;
+                    }
+                  }
+                }
               }
             }
           }
+        
         }
+
         return  {
           chipset : wChipSet,
           grid: wChipGrid
@@ -357,11 +392,15 @@
       function drawCircuit(iCanvas) {
         var wCanvas = iCanvas;
         var wCtx = wCanvas.getContext('2d');
-        wCtx.fillStyle = "blue";
+        
+        var wBackgroundColor = document.getElementById("id_Color_BackGround_Input").value;
+        var wCircuitColor = document.getElementById("id_Color_Circuit_Input").value;
+
+        wCtx.fillStyle = wBackgroundColor;
         wCtx.fillRect(-10,-10,wCanvas.width + 20, wCanvas.height + 20);
         
-        wCtx.strokeStyle = "cyan";
-        wCtx.fillStyle = "cyan";
+        wCtx.strokeStyle = wCircuitColor;
+        wCtx.fillStyle = wCircuitColor;
 
         var wEndRadius = 2;
         var wLineWidth = 2;
@@ -416,7 +455,7 @@
             wPointList.push([x,y]);
           }
 
-          lineArray.push(wCreateLineObject(wLineWidth, "cyan", "blue", wEndRadius, wPointList));
+          lineArray.push(wCreateLineObject(wLineWidth, wCircuitColor, wBackgroundColor, wEndRadius, wPointList));
         }
 
         wCtx.lineCap = "round";
@@ -530,20 +569,25 @@
 
         var wLineWidth = 4;
         var wHalfLineWidth = wLineWidth/2;
-        var wVerticalLineCount = 5;
-        var wVerticalLineJump = wCanvas.width/wVerticalLineCount;
+        var wVerticalLineCount = document.getElementById("id_Vertical_Dividers_Input").value;
+        if (0 != wVerticalLineCount){
+          var wVerticalLineJump = wCanvas.width / wVerticalLineCount;
 
-        for(var wi = 0; wi <= wVerticalLineCount; ++wi) {
-          var wCenterLine = (wi)*wVerticalLineJump;
-          wCtx.clearRect(wCenterLine-wHalfLineWidth,-10, wLineWidth, wCanvas.height + 20);
+          for (var wi = 0; wi <= wVerticalLineCount; ++wi) {
+            var wCenterLine = (wi) * wVerticalLineJump;
+            wCtx.clearRect(wCenterLine - wHalfLineWidth, -10, wLineWidth, wCanvas.height + 20);
+          }
+
         }
         
-        var wHorizontalLineCount = 5;
-        var wHorizontalLineJump = wCanvas.height/wHorizontalLineCount;
+        var wHorizontalLineCount = document.getElementById("id_Horizontal_Dividers_Input").value;
+        if (0 != wVerticalLineCount) {
+          var wHorizontalLineJump = wCanvas.height / wHorizontalLineCount;
 
-        for(var wi = 0; wi <= wHorizontalLineCount; ++wi) {
-          var wCenterLine = (wi)*wHorizontalLineJump;
-          wCtx.clearRect(-10,wCenterLine-wHalfLineWidth, wCanvas.width + 20, wLineWidth);
+          for (var wi = 0; wi <= wHorizontalLineCount; ++wi) {
+            var wCenterLine = (wi) * wHorizontalLineJump;
+            wCtx.clearRect(-10, wCenterLine - wHalfLineWidth, wCanvas.width + 20, wLineWidth);
+          }
         }
       }
     </script>
@@ -558,11 +602,24 @@
       {
         width: 30px;
       }
+      #id_text {
+        display: none;
+      }
     </style>
   </HEAD>
   <BODY onload="Init()">
-    <span>Canvas Width</span><input type="number" value="300" id="id_Canvas_Width_Input"/>
-    <span>Canvas Height</span><input type="number" value="300" id="id_Canvas_Height_Input"/>
+    <span>Canvas Width</span><input type="number" value="300" id="id_Canvas_Width_Input" min="300"/>
+    <br/>
+    <span>Canvas Height</span><input type="number" value="300" id="id_Canvas_Height_Input" min="300"/>
+    <br/>
+    <span>Vertical Sections</span><input type="number" value="5" id="id_Vertical_Dividers_Input" min="1"/>
+    <br/>
+    <span>Horizontal Sections</span><input type="number" value="5" id="id_Horizontal_Dividers_Input" min="1"/>
+    <br/>
+    <span>Background Color</span><input type="color" value="#0000ff" id="id_Color_BackGround_Input"/>
+    <br/>
+    <span>Circuit Color</span><input type="color" value="#00ffff" id="id_Color_Circuit_Input"/>
+    <br/>    
     <button onclick="gGlobal.GenerateCircuitGrid=true">Regenerate</button>
     <div id="id_canvas_div">
       <canvas id="id_canvas"></canvas>
