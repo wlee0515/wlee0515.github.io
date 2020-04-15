@@ -1,0 +1,153 @@
+<!DOCTYPE HTML>
+<html>
+
+<head>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
+  <title>Image Compare</title>
+  <script>
+
+    var gGlobal = {
+      RefImage : document.createElement("img"),
+      RefImageSrc : "",
+      RefImageLoaded : false,
+      TargetImage : document.createElement("img"),
+      TargetSrc : "",
+      TargetImageLoaded : false
+    }
+
+    gGlobal.RefImage.onload = function() {
+      gGlobal.RefImageLoaded = true;
+      document.getElementById('id_compare_width').value = gGlobal.RefImage.width;
+      document.getElementById('id_compare_height').value = gGlobal.RefImage.height;
+    }
+    
+    gGlobal.TargetImage.onload = function() {
+      gGlobal.TargetImageLoaded = true;
+    }
+
+    function render() {
+      window.requestAnimationFrame(render);
+
+      var wWidth = document.getElementById('id_compare_width').value;
+      var wHeight = document.getElementById('id_compare_height').value;
+
+      var wCompareCanvas = document.getElementById('id_compare');
+      var wRefCanvas = document.getElementById('id_ref');
+      var wTargetCanvas = document.getElementById('id_target');
+
+      wCompareCanvas.width = wWidth;
+      wCompareCanvas.height = wHeight;
+      
+      wRefCanvas.width = wWidth;
+      wRefCanvas.height = wHeight;
+      
+      wTargetCanvas.width = wWidth;
+      wTargetCanvas.height = wHeight;
+
+      if (true == gGlobal.RefImageLoaded) {
+        var wRefCtx = wRefCanvas.getContext("2d");
+        var wXScale = document.getElementById('id_ref_widthScale').value;
+        var wYScale = document.getElementById('id_ref_heightScale').value;
+        var wXOffset = document.getElementById('id_ref_widthOffset').value;
+        var wYOffset = document.getElementById('id_ref_heightOffset').value;
+        wRefCtx.drawImage(gGlobal.RefImage, wXOffset, wYOffset, wXScale*gGlobal.RefImage.width , wYScale*gGlobal.RefImage.height);
+
+      }
+
+      if (true == gGlobal.TargetImageLoaded) {
+        var wTargetCtx = wTargetCanvas.getContext("2d");
+        var wXScale = document.getElementById('id_target_widthScale').value;
+        var wYScale = document.getElementById('id_target_heightScale').value;
+        var wXOffset = document.getElementById('id_target_widthOffset').value;
+        var wYOffset = document.getElementById('id_target_heightOffset').value;
+        wTargetCtx.drawImage(gGlobal.TargetImage, wXOffset, wYOffset, wXScale*gGlobal.TargetImage.width , wYScale*gGlobal.TargetImage.height);
+
+      }
+      var wCompareCtx = wCompareCanvas.getContext("2d");
+      wCompareCtx.globalAlpha = document.getElementById('id_ref_opacity').value;
+      wCompareCtx.drawImage(wRefCanvas, 0, 0);
+      wCompareCtx.globalAlpha = document.getElementById('id_target_opacity').value;
+      wCompareCtx.drawImage(wTargetCanvas, 0, 0);
+    }
+
+    function init()
+    {
+      document.getElementById('id_ref_upload').addEventListener("click",
+        function () {
+          var wRefAddress = document.getElementById('id_ref_address')
+          if (wRefAddress.files && wRefAddress.files[0]) {
+            gGlobal.RefImage.src = URL.createObjectURL(wRefAddress.files[0]);
+          }
+        }
+      )
+      document.getElementById('id_target_upload').addEventListener("click",
+        function() {
+          var wTargetAddress = document.getElementById('id_target_address')
+          if (wTargetAddress.files && wTargetAddress.files[0]) {
+            gGlobal.TargetImage.src = URL.createObjectURL(wTargetAddress.files[0]);
+          }
+
+        }
+      )
+
+      render();
+    }
+    window.addEventListener("load", init);
+  </script>
+  <style>
+    canvas {
+      border: 1px solid blue;
+    }
+    .class_image_control {
+      display: inline-block;
+    }
+  </style>
+</head>
+<body>
+  <div>
+    <div class="class_image_control">
+      <span>Width : </span><input id="id_compare_width" value="100" type="number" />
+      <br />
+      <span>Height : </span><input id="id_compare_height" value="100" type="number" />
+      <br />
+    </div>
+    <div class="class_image_control">
+      <span>Image Address: </span><input id="id_ref_address" type="file" value="" /><button id="id_ref_upload">Load</button>
+      <br />
+      <span>Width Scale: </span><input id="id_ref_widthScale" type="number" value="1" />
+      <br />
+      <span>Height Scale: </span><input id="id_ref_heightScale" type="number" value="1" />
+      <br />
+      <span>Width offset: </span><input id="id_ref_widthOffset" type="number" value="0" />
+      <br />
+      <span>Height offset: </span><input id="id_ref_heightOffset" type="number" value="0" />
+      <br />
+      <span>Opacity: </span><input id="id_ref_opacity" min="0" max="1" step="0.01" value="0.5" type="number" />
+      <br />
+    </div>
+    <div class="class_image_control">
+      <span>Image Address: </span><input id="id_target_address" type="file" value=""/><button id="id_target_upload">Load</button>
+      <br/>
+      <span>Width Scale: </span><input id="id_target_widthScale" type="number"  value="1"/>
+      <br/>
+      <span>Height Scale: </span><input id="id_target_heightScale" type="number"  value="1"/>
+      <br/>
+      <span>Width offset: </span><input id="id_target_widthOffset" type="number"  value="0"/>
+      <br/>
+      <span>Height offset: </span><input id="id_target_heightOffset" type="number"  value="0"/>
+      <br/>
+      <span>Opacity: </span><input id="id_target_opacity" min="0" max="1" step="0.01" value="0.5" type="number"/>
+      <br/>
+    </div>
+  </div>
+  <div>
+    <canvas id="id_compare"></canvas>  
+  </div>
+  <div>
+    <canvas id="id_ref"></canvas>  
+  </div>
+  <div>
+    <canvas id="id_target"></canvas>
+  </div>
+</body>
+</html>
