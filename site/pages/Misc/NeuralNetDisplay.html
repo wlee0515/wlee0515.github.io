@@ -17,7 +17,7 @@
 
     var gNodeRadius = 10;
     var gNodeDistance = 50;
-    var gLayerDistance = 50;
+    var gLayerDistance = 75;
     var gInputArray = Array(0, 0, 0, 0);
     var gTrainingSet;
 
@@ -154,15 +154,39 @@
   </script>
   <script type="module">
 
-    import { NeuralNetwork, DrawNeuralNetwork } from "../../modules/NeuralNetwork.mjs"
+    import { NeuralNetwork, DrawNeuralNetwork, PrintNeuralNetworkToString } from "../../modules/NeuralNetwork.mjs"
+
+    var gIOSize = 3;
     var gGlobal = {
-      OuputCanvasDivId: "id_OuputCanvas"
-      , NeuralNetwork: new NeuralNetwork([3, 5, 9, 8, 3])
+        NeuralNetwork: new NeuralNetwork([gIOSize, 5, 9, 8, gIOSize])
+      , LearningRate: 0.05
       , NodeRadius: 10
       , NodeDistance: 50
-      , LayerDistance: 50
-
+      , LayerDistance: 75
+      , OperationMode: "test"
+      , InitialInputVector: [0,0,0]
+      , LastInputVector: null
+      , LastOutputVector: null
+      , LastExpectedOutput: null
+      , Id_OuputCanvasDiv: "id_OuputCanvas"
+      , Id_OuputTextArea: "id_TextArea"
+      , Id_InputButtonTrain: "id_button_train"
+      , Id_InputButtonTest: "id_button_test"
+      , Id_InputButtonNext: "id_button_next"
+      , TrainingSequence: []
+      , TrainingSequenceIndex : 0
     };
+
+    function processNeralNet(iInput) {
+      gGlobal.LastInputVector = iInput;
+      gGlobal.LastOutputVector = gGlobal.NeuralNetwork.processInput(gGlobal.LastInputVector);
+    }
+
+    function trainNeralNet(iInput, iOutput) {
+      gGlobal.LastInputVector = iInput;
+      gGlobal.LastExpectedOutput = iOutput;
+      gGlobal.LastOutputVector = gGlobal.NeuralNetwork.trainPair(iInput, iOutput, gGlobal.LearningRate);
+    }
 
     function drawNeuralNet(iDOM, iNeuralNet) {
       var wCtx = iDOM.getContext("2d");
@@ -170,8 +194,8 @@
       var wCanvasWidth = iDOM.width;
 
       wCtx.clearRect(0, 0, wCanvasWidth, wCanvasHeight);
-      var wCanvasHeightCenter = iDOM.height / 2;
-      var wCanvasWidthCenter = iDOM.width / 2;
+      var wCanvasHeightCenter = wCanvasHeight / 2;
+      var wCanvasWidthCenter = wCanvasWidth / 2;
 
       wCtx.translate(wCanvasWidthCenter, wCanvasHeightCenter);
       wCtx.lineWidth = 3;
@@ -181,24 +205,96 @@
       wCtx.translate(-wCanvasWidthCenter, -wCanvasHeightCenter);
     }
 
-    var wLastInput = [1,1,2];
     function loop() {
       window.requestAnimationFrame(loop);
 
-      wLastInput = gGlobal.NeuralNetwork.processInput(wLastInput);
-      var wCanvas = document.getElementById(gGlobal.OuputCanvasDivId);
+      if("test" == gGlobal.OperationMode) {
+      //  wLastInput = gGlobal.NeuralNetwork.processInput(wLastInput);
+      }
+      else if("train" == gGlobal.OperationMode) {
+        gGlobal.TrainingSequenceIndex += 1;
+        gGlobal.TrainingSequenceIndex %= gGlobal.TrainingSequence.length;
+        
+        var wIndex1 = gGlobal.TrainingSequenceIndex ;
+        var wIndex2 = (1 + gGlobal.TrainingSequenceIndex)%gGlobal.TrainingSequence.length;
+        trainNeralNet(gGlobal.TrainingSequence[wIndex1], gGlobal.TrainingSequence[wIndex2]);
+      }
+      
+      var wCanvas = document.getElementById(gGlobal.Id_OuputCanvasDiv);
       drawNeuralNet(wCanvas, gGlobal.NeuralNetwork);
+      
+      if(null != gGlobal.LastInputVector){      
+        var wString = "Operation Mode : " + gGlobal.OperationMode + "\n\n";
 
+        wString += "Input Vector : " + JSON.stringify(gGlobal.LastInputVector);
+        wString += "\n\n";
+        
+        wString += "Expected Output Vector : " + JSON.stringify(gGlobal.LastExpectedOutput);
+        wString += "\n\n";
+    
+        wString += "Output Vector : " + JSON.stringify(gGlobal.LastOutputVector);
+        wString += "\n\n";
+        wString += PrintNeuralNetworkToString(gGlobal.NeuralNetwork);
+        document.getElementById(gGlobal.Id_OuputTextArea).value = wString;
+      }
+      
     }
 
     function init() {
+
+      document.getElementById(gGlobal.Id_InputButtonTrain).addEventListener(
+        "click",
+        function(){
+          gGlobal.OperationMode = "train";
+        }
+      )
+
+      document.getElementById(gGlobal.Id_InputButtonTest).addEventListener(
+        "click",
+        function () {
+          gGlobal.OperationMode = "test";
+        }
+      )
+
+      document.getElementById(gGlobal.Id_InputButtonNext).addEventListener(
+        "click",
+        function () {
+
+          if ("test" == gGlobal.OperationMode) {
+            
+              gGlobal.TrainingSequenceIndex %= gGlobal.TrainingSequence.length;
+              processNeralNet(gGlobal.TrainingSequence[gGlobal.TrainingSequenceIndex]);
+              gGlobal.TrainingSequenceIndex +=1;
+              
+              gGlobal.LastExpectedOutput = gGlobal.TrainingSequence[gGlobal.TrainingSequenceIndex%gGlobal.TrainingSequence.length];
+          }
+        }
+      )
+      
+      var wSetSize = Math.pow(2,gIOSize);
+      var wNumber = 0;
+      gGlobal.TrainingSequence = [];
+      for(var wi = 0; wi < wSetSize; ++wi) {
+        var wSet = [];
+        var wRemainder = wNumber;
+        for(var wj = gIOSize-1; wj >= 0; --wj) {
+          var wMultiplier = Math.pow(2, wj);
+          var wCount = Math.floor(wRemainder/wMultiplier);
+          wRemainder -= wCount*wMultiplier;
+          wSet.push(wCount);
+        }
+        gGlobal.TrainingSequence.push(wSet);
+        wNumber += 1;
+      }
+
+
 
       resize();
       loop();
     }
 
     function resize() {
-      var wCanvas = document.getElementById(gGlobal.OuputCanvasDivId);
+      var wCanvas = document.getElementById(gGlobal.Id_OuputCanvasDiv);
       wCanvas.height = wCanvas.parentElement.clientHeight - 2;
       wCanvas.width = wCanvas.parentElement.clientWidth - 2;
     }
@@ -222,6 +318,9 @@
       height: 100%;
       width: 100%;
     }
+    td {
+      width: 50%;
+    }
 
     textArea {
       background-color: rgb(255, 255, 255);
@@ -239,15 +338,15 @@
   <div>
     <table>
       <tr>
-        <td width="75%">
+        <td>
           <canvas id="id_OuputCanvas"></canvas>
         </td>
         <td>
-          <input type="button" onclick="setTrainFunction()" value="Train" />
-          <input type="button" onclick="setTestFunction()" value="Test" />
-          <input type="button" onclick="processTick()" value="Next" />
+          <input type="button" id="id_button_train" value="Train" />
+          <input type="button" id="id_button_test" value="Test" />
+          <input type="button" id="id_button_next" value="Next" />
           <input type="range" id="timeStep" value="50" max="1000" min="50" onchange="updateSetInterval()" />
-          <textarea id="TextArea"></textarea>
+          <textarea id="id_TextArea"></textarea>
         </td>
       </tr>
     </table>

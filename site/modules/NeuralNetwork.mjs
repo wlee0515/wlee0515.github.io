@@ -4,6 +4,17 @@ function sigmoid(iInput) {
   return 1 / (1 + Math.exp(-iInput));
 }
 
+function inverseSigmoid(iInput) {
+  // wOutput = 1 / (1 + Math.exp(-iInput))
+  // (1 + Math.exp(-iInput)) = 1/wOutput
+  // (Math.exp(-iInput)) = 1/wOutput - 1
+  // -iInput = log(1/wOutput - 1)
+  // iInput = -log(1/wOutput - 1)
+
+  
+  return -Math.log(1/iInput - 1);
+}
+
 function sigmoidDerivative(iInput) {
   var wValue = sigmoid(iInput);
   return wValue*(1.0-wValue);
@@ -11,11 +22,15 @@ function sigmoidDerivative(iInput) {
 
 function NeuralNetwork(iLayerSizeList = []) {
   this.LayerList = [];
+  this.ZList = [];
   this.WeightMatrixList = [];
+  this.BiasList = [];
 
   {
     for (var wi = 0; wi < iLayerSizeList.length; ++wi) {
       this.LayerList.push(new Matrix(iLayerSizeList[wi], 1, 0));
+      this.ZList.push(new Matrix(iLayerSizeList[wi], 1, 0));
+      this.BiasList.push(new Matrix(iLayerSizeList[wi], 1, 1));
     }
 
     for (var wi = 0; wi < iLayerSizeList.length - 1; ++wi) {
@@ -28,23 +43,102 @@ function NeuralNetwork(iLayerSizeList = []) {
 
   this.processInput = function (iInputVector) {
 
-    this.LayerList[0].setColumn(0, iInputVector);
+    this.ZList[0].setColumn(0, iInputVector);
+    this.ZList[0].add(this.BiasList[0]);
+    this.LayerList[0].copy(this.ZList[0]);
     this.LayerList[0].applyFunctionToCell(sigmoid);
     for (var wi = 0; wi < this.WeightMatrixList.length; ++wi) {
-      this.LayerList[wi+1] = this.WeightMatrixList[wi].getMultiply(this.LayerList[wi]);
+      this.ZList[wi+1] = this.WeightMatrixList[wi].getMultiply(this.LayerList[wi]);    
+      this.ZList[wi+1].add(this.BiasList[wi + 1]);
+      this.LayerList[wi + 1].copy(this.ZList[wi + 1]);
       this.LayerList[wi+1].applyFunctionToCell(sigmoid);
+    }
+
+    var wOutputZ = this.ZList[this.LayerList.length-1].getColumn(0);
+    var wOutputNorm = this.LayerList[this.LayerList.length-1].getColumn(0);
+
+    var wReturnRaw = [];
+    var wReturnNorm = [];
+    for(var wi = 0; wi < wOutputNorm.length; ++wi){
+      wReturnRaw.push(wOutputZ[wi]);
+      wReturnNorm.push(wOutputNorm[wi]);
+    }
+
+    return {
+      raw : wReturnRaw,
+      sigmoid : wReturnNorm
+    }
+  }
+  
+
+  this.trainPair = function (iInputVector, iOutputVector, iLearningRate) {
+
+    this.processInput(iInputVector);
+
+    var wDeltaList = [];
+    var wZSlopList = [];
+    for (var wi = 0; wi < this.LayerList.length; ++wi) {
+      wDeltaList.push(this.LayerList[wi].getCopy());
+      wZSlopList.push(this.ZList[wi].getCopy());
+      wZSlopList[wi].applyFunctionToCell(sigmoidDerivative);
+    }
+
+    var wEndIndex = this.LayerList.length - 1;
+    wDeltaList[wEndIndex].setColumn(0,iOutputVector);
+    wDeltaList[wEndIndex].applyFunctionToCell(sigmoid);
+    wDeltaList[wEndIndex].subtract(this.LayerList[wEndIndex]);
+    wDeltaList[wEndIndex].Schur_product(wZSlopList[wEndIndex])
+
+    for (var wi = wEndIndex - 1; wi >= 0; --wi) {
+      var wWeightTranspose = this.WeightMatrixList[wi].getTranspose();
+      wDeltaList[wi] = wWeightTranspose.getMultiply(wDeltaList[wi+1]);  
+      wDeltaList[wi].Schur_product(wZSlopList[wi]);
     }
 
     var wOutput = this.LayerList[this.LayerList.length-1].getColumn(0);
 
-    var wReturn = [];
-    for(var wi = 0; wi < wOutput.length; ++wi){
-      wReturn.push(wOutput[wi]);
+    for(var wi = 0; wi < this.WeightMatrixList.length; ++wi){
+      var wTransposeVec = this.LayerList[wi].getTranspose()
+      var wWeitghtIncrement = wDeltaList[wi+1].getMultiply(wTransposeVec);
+      wWeitghtIncrement.scale(iLearningRate);
+      this.WeightMatrixList[wi].add(wWeitghtIncrement);
     }
 
-    return wReturn;
+    for(var wi = 0; wi < this.BiasList.length; ++wi){
+      wDeltaList[wi].scale(iLearningRate);
+      this.BiasList[wi].add(wDeltaList[wi]);
+    }
+
+    return this.processInput(iInputVector);
   }
 }
+
+
+function PrintNeuralNetworkToString( iNeuralNetwork) {
+
+  var wNNLayers = iNeuralNetwork.LayerList;
+  var wNNBias = iNeuralNetwork.BiasList;
+  var wNNWeights = iNeuralNetwork.WeightMatrixList;
+
+  var wRtrStr = "Layer [0] \n";
+  wRtrStr += wNNLayers[0].printToString()
+  wRtrStr +="\n";
+  wRtrStr += "Bias [0] \n";
+  wRtrStr += wNNBias[0].printToString()
+  for(var wi = 0; wi < wNNWeights.length; ++wi) {
+    wRtrStr +="\n";
+    wRtrStr += "Weights [" + wi + "] \n";
+    wRtrStr += wNNWeights[wi].printToString();
+    wRtrStr +="\n";
+    wRtrStr += "Layer [" + (wi+1) + "] \n";
+    wRtrStr += wNNLayers[wi+1].printToString();
+    wRtrStr +="\n";
+    wRtrStr += "Bias [" + (wi+1) + "] \n";
+    wRtrStr += wNNBias[wi+1].printToString();
+  }
+  return wRtrStr;
+}
+
 
 function DrawNeuralNetwork(iCtx, iNeuralNetwork, iNodeRadius, iNodeSpacing, iLayerSpacing, iPositiveColor, iNegativeColor) {
 
@@ -53,6 +147,7 @@ function DrawNeuralNetwork(iCtx, iNeuralNetwork, iNodeRadius, iNodeSpacing, iLay
   var wOriginalLineWidth = iCtx.lineWidth;
 
   var wNNLayers = iNeuralNetwork.LayerList;
+  var wNNLBias = iNeuralNetwork.BiasList;
   var wDisplayStartX = -((wNNLayers.length - 1) * iLayerSpacing) / 2
 
   var wNodeLocationArray = [];
@@ -70,7 +165,8 @@ function DrawNeuralNetwork(iCtx, iNeuralNetwork, iNodeRadius, iNodeSpacing, iLay
       var iXY = {
         x: wLayerX,
         y: wNodeY,
-        state : wNNLayers[wi].get(wj,0)
+        state : wNNLayers[wi].get(wj,0),
+        bias : wNNLBias[wi].get(wj,0)
       };
       wNewNodeLayer.push(iXY)
     }
@@ -130,8 +226,28 @@ function DrawNeuralNetwork(iCtx, iNeuralNetwork, iNodeRadius, iNodeSpacing, iLay
       iCtx.fill();
       iCtx.globalAlpha = 1.0;
       iCtx.stroke();
+
+      
+      if (wNodeLocationArray[wi][wj].bias < 0) {
+        iCtx.fillStyle = iNegativeColor;
+        iCtx.strokeStyle = iNegativeColor;
+      }
+      else {
+        iCtx.fillStyle = iPositiveColor;
+        iCtx.strokeStyle = iPositiveColor;
+      }
+
+      iCtx.globalAlpha = Math.abs(wNodeLocationArray[wi][wj].bias);
+      iCtx.beginPath();
+      iCtx.lineWidth = wOriginalLineWidth;
+      iCtx.arc(wNodeLocationArray[wi][wj].x + iNodeRadius, wNodeLocationArray[wi][wj].y + iNodeRadius, iNodeRadius/2, 0, 2 * Math.PI);
+      iCtx.fill();
+      iCtx.globalAlpha = 1.0;
+      iCtx.stroke();
     }
   }
+
+
 
   iCtx.fillStyle = wOriginalColorFill;
   iCtx.strokeStyle = wOriginalColorStroke;
@@ -142,5 +258,6 @@ function DrawNeuralNetwork(iCtx, iNeuralNetwork, iNodeRadius, iNodeSpacing, iLay
 
 export {
   NeuralNetwork,
-  DrawNeuralNetwork
+  DrawNeuralNetwork,
+  PrintNeuralNetworkToString
 }

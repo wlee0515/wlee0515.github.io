@@ -206,6 +206,7 @@ function Matrix(iRow=0, iColumn=0, iInit = 0) {
     return wTemp;
   }
   
+  this.Schur_product = this.Hadamard_product;
   this.getSchur_product = this.getHadamard_product;
 
   this.getMultiply = function (iMat) {
@@ -252,6 +253,21 @@ function Matrix(iRow=0, iColumn=0, iInit = 0) {
       wMat.data[i][0] = wIntegrator;
     }
     return wMat;
+  }
+
+  this.printToString = function() {
+    var wRetStr = "Shape : " + this.rows + " x " + this.columns + "\n";
+    for(var wi = 0 ; wi < this.rows; ++wi){
+      wRetStr += "["
+
+      for(var wj = 0 ; wj < this.columns; ++wj){
+        wRetStr += " " + this.data[wj][wi];
+      }
+
+      wRetStr += "]\n";
+    }
+
+    return wRetStr;
   }
 }
 
