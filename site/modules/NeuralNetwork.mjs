@@ -1,7 +1,7 @@
 import { Matrix } from "./Matrix.mjs";
 
 function sigmoid(iInput) {
-  return (1 / (1 + Math.exp(-iInput)) - 0.5)*2;
+  return 1 / (1 + Math.exp(-iInput));
 }
 
 function inverseSigmoid(iInput) {
