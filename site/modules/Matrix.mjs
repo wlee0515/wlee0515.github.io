@@ -1,6 +1,4 @@
-<!--
-
-function matrix(iRow=0, iColumn=0, iInit = 0) {
+function Matrix(iRow=0, iColumn=0, iInit = 0) {
   this.rows = iRow;
   this.columns = iColumn;
   this.data = [];
@@ -12,13 +10,50 @@ function matrix(iRow=0, iColumn=0, iInit = 0) {
     this.data.push(wColumn);
   }
   
+  this.getShape = function () {
+    return {
+      rows : this.rows,
+      columns : this.columns
+    }
+  }
+  this.setZeros = function() {
+    for(var i = 0; i < iColumn; ++i){
+      for(var k = 0; k < iRow; ++k){
+        this.data[i][k] = 0;
+      }
+    }  
+  }
+
+  this.setOnes = function() {
+    for(var i = 0; i < iColumn; ++i){
+      for(var k = 0; k < iRow; ++k){
+        this.data[i][k] = 1;
+      }
+    }  
+  }
+
+  this.setRandom = function(iBase, iRange) {
+    for(var i = 0; i < iColumn; ++i){
+      for(var k = 0; k < iRow; ++k){
+        this.data[i][k] = Math.random()*iRange + iBase;
+      }
+    }  
+  }
+
   this.get = function(iRow, iColumn) {
-    return this.data[iColumn][iRow];
+    if (this.data.length > iColumn) {
+      if (this.data[iColumn].length > iRow) {
+        return this.data[iColumn][iRow];
+      }
+    }
+    
+    alert("Error: 'Matrix.get -> index out of range");
+    return null;
   }
   
   this.getColumn = function(iColumn) {
     if ((iColumn < 0) || (iColumn >= this.columns)){
-      alert("Error: 'matrix.getColumn' -> column our of range");
+      alert("Error: 'Matrix.getColumn' -> column our of range");
       return null;
     }
     return this.data[iColumn];
@@ -34,11 +69,11 @@ function matrix(iRow=0, iColumn=0, iInit = 0) {
   
   this.setColumn = function( iColumn, iValue) {
     if ((iColumn < 0) || (iColumn >= this.columns)){
-      alert("Error: 'matrix.setColumn' -> column our of range");
+      alert("Error: 'Matrix.setColumn' -> column our of range");
       return null;
     }
     if (iValue.length != this.rows) {
-      alert("Error: 'matrix.setColumn' -> 'iValue' length not equal to matrix rows");
+      alert("Error: 'Matrix.setColumn' -> 'iValue' length not equal to Matrix rows");
     }
     if ( iColumn < this.columns) {
       if (iColumn >=0) {
@@ -84,7 +119,7 @@ function matrix(iRow=0, iColumn=0, iInit = 0) {
   }
   
   this.getCopy = function () {
-    var wNewMat = new matrix(0, 0, 0);
+    var wNewMat = new Matrix(0, 0, 0);
     wNewMat.copy(this);
     return wNewMat;
   }
@@ -113,10 +148,10 @@ function matrix(iRow=0, iColumn=0, iInit = 0) {
   
   this.add = function (iMat) {
     if (iMat.rows != this.rows) {
-      alert("Error: 'matrix.add' -> row count mismatch");
+      alert("Error: 'Matrix.add' -> row count mismatch");
     }
     if (iMat.columns != this.columns) {
-      alert("Error: 'matrix.add' -> column count mismatch");
+      alert("Error: 'Matrix.add' -> column count mismatch");
     }    
     for(var i = 0; i < this.columns; ++i){
       for(var k = 0; k < this.rows; ++k){
@@ -133,10 +168,10 @@ function matrix(iRow=0, iColumn=0, iInit = 0) {
   
   this.subtract = function (iMat) {
     if (iMat.rows != this.rows) {
-      alert("Error: 'matrix.subtract' -> row count mismatch");
+      alert("Error: 'Matrix.subtract' -> row count mismatch");
     }
     if (iMat.columns != this.columns) {
-      alert("Error: 'matrix.subtract' -> column count mismatch");
+      alert("Error: 'Matrix.subtract' -> column count mismatch");
     }
     for(var i = 0; i < this.columns; ++i){
       for(var k = 0; k < this.rows; ++k){
@@ -153,10 +188,10 @@ function matrix(iRow=0, iColumn=0, iInit = 0) {
   
   this.Hadamard_product = function (iMat) {
     if (iMat.rows != this.rows) {
-      alert("Error: 'matrix.Hadamard_product' -> row count mismatch");
+      alert("Error: 'Matrix.Hadamard_product' -> row count mismatch");
     }
     if (iMat.columns != this.columns) {
-      alert("Error: 'matrix.Hadamard_product' -> column count mismatch");
+      alert("Error: 'Matrix.Hadamard_product' -> column count mismatch");
     }
     for(var i = 0; i < this.columns; ++i){
       for(var k = 0; k < this.rows; ++k){
@@ -175,10 +210,10 @@ function matrix(iRow=0, iColumn=0, iInit = 0) {
 
   this.getMultiply = function (iMat) {
     if (iMat.rows != this.columns) {
-      alert("Error: 'matrix.getMultiply' -> size mismatch");
+      alert("Error: 'Matrix.getMultiply' -> size mismatch");
     }
 
-    var wNewMat = new matrix(this.rows, iMat.columns, 0);
+    var wNewMat = new Matrix(this.rows, iMat.columns, 0);
     for(var i = 0; i < this.rows; ++i){
       for(var j = 0; j < iMat.columns; ++j){
         var integrator = 0.0;
@@ -192,7 +227,7 @@ function matrix(iRow=0, iColumn=0, iInit = 0) {
   }
   
   this.getTranspose = function() {
-    var wNewMat = new matrix(this.columns, this.rows, 0);
+    var wNewMat = new Matrix(this.columns, this.rows, 0);
     for(var i = 0; i < this.rows; ++i){
       for(var j = 0; j < this.columns; ++j){
         wNewMat.data[i][j] = this.data[j][i];
@@ -203,12 +238,12 @@ function matrix(iRow=0, iColumn=0, iInit = 0) {
   
   this.dotColumn = function (iMat) {
     if (iMat.rows != this.rows) {
-      alert("Error: 'matrix.dotColumn' -> row count mismatch");
+      alert("Error: 'Matrix.dotColumn' -> row count mismatch");
     }
     if (iMat.columns != this.columns) {
-      alert("Error: 'matrix.dotColumn' -> column count mismatch");
+      alert("Error: 'Matrix.dotColumn' -> column count mismatch");
     }
-    var wMat = new matrix(1, this.columns, 0);
+    var wMat = new Matrix(1, this.columns, 0);
     for(var i = 0; i < this.columns; ++i){
       var wIntegrator = 0;
       for(var k = 0; k < this.rows; ++k){
@@ -221,7 +256,7 @@ function matrix(iRow=0, iColumn=0, iInit = 0) {
 }
 
 function applyColumnCalculation(iFunction, iMatrix) {
-    var wNewMat = new matrix( 1, iMatrix.columns, 0);
+    var wNewMat = new Matrix( 1, iMatrix.columns, 0);
     for(var i = 0; i < iMatrix.columns; ++i){
       wNewMat.data[i][0] = iFunction(iMatrix.data[i]);
     }
@@ -231,13 +266,13 @@ function applyColumnCalculation(iFunction, iMatrix) {
 
 function useMatrixAsArg2(iFunction, iMatArg1, iMatArg2) {
     if (iMatArg1.rows != iMatArg2.rows) {
-      alert("Error: 'matrix.useMatrixAsArg2' -> row count mismatch");
+      alert("Error: 'Matrix.useMatrixAsArg2' -> row count mismatch");
     }
     if (iMatArg1.columns != iMatArg2.columns) {
-      alert("Error: 'matrix.useMatrixAsArg2' -> column count mismatch");
+      alert("Error: 'Matrix.useMatrixAsArg2' -> column count mismatch");
     }
     
-    var wNewMat = new matrix( iMatArg1.rows, iMatArg1.columns, 0);
+    var wNewMat = new Matrix( iMatArg1.rows, iMatArg1.columns, 0);
     for(var i = 0; i < iMatArg1.columns; ++i){
       for(var k = 0; k < iMatArg1.rows; ++k){
         wNewMat.data[i][k] = iFunction( iMatArg1.data[i][k],  iMatArg2.data[i][k]);
@@ -246,4 +281,6 @@ function useMatrixAsArg2(iFunction, iMatArg1, iMatArg2) {
     return wNewMat;
 }
 
--->
+export {
+  Matrix
+}

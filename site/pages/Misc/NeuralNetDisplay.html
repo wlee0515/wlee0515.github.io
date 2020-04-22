@@ -1,0 +1,257 @@
+﻿<html>
+
+<head>
+  <script src="JavaScript\NeuralNetwork.js"></script>
+  <meta name="viewport" content="width=400" />
+  <title>Neural Network Display</title>
+  <script type="text/javascript">
+
+    var gIntervalHandle;
+    var gIsTrainning = false;
+    var gTrainIndex = 0;
+
+    var gNeuralNet;
+    var gNNLayerCount = 2;
+    var gNNInputCount = 4;
+    var gNNOutputCount = 4;
+
+    var gNodeRadius = 10;
+    var gNodeDistance = 50;
+    var gLayerDistance = 50;
+    var gInputArray = Array(0, 0, 0, 0);
+    var gTrainingSet;
+
+    function init() {
+      var wCanvas = document.getElementById("OuputCanvas");
+      wCanvas.addEventListener("mousedown", MazeClick, false);
+
+      resize();
+
+      gNeuralNet = new NeuralNet(gNNLayerCount, gNNInputCount, gNNOutputCount);
+
+      gIntervalHandle = setInterval(processTick, 100);
+
+      gTrainingSet = [];
+      var wArray = [];
+      for (var i = 0; i < gNNInputCount; ++i) {
+        wArray.push(0);
+      }
+      gTrainingSet.push(copyArray(wArray));
+
+      var wIsAllOnes = false;
+      while (false == wIsAllOnes) {
+        for (var i = 0; i < gNNInputCount; ++i) {
+          if (0 == wArray[i]) {
+            wArray[i] = 1;
+            break;
+          }
+          else {
+            wArray[i] = 0;
+          }
+        }
+
+        gTrainingSet.push(copyArray(wArray));
+        wIsAllOnes = true;
+        for (var i = 0; i < gNNInputCount; ++i) {
+          if (0 == wArray[i]) {
+            wIsAllOnes = false;
+            break;
+          }
+        }
+      }
+    }
+
+    function updateSetInterval() {
+
+      var wRange = document.getElementById("timeStep");
+      clearInterval(gIntervalHandle);
+
+      gIntervalHandle = setInterval(processTick, wRange.value);
+    }
+
+    function updateSetInterval() {
+
+      var wRange = document.getElementById("timeStep");
+      clearInterval(gIntervalHandle);
+
+      gIntervalHandle = setInterval(processTick, wRange.value);
+    }
+
+    function setTrainFunction() {
+      gIsTrainning = true;
+    }
+
+    function setTestFunction() {
+      gIsTrainning = false;
+    }
+
+    function MazeClick(iEvent) {
+
+      var wCanvas = document.getElementById("OuputCanvas");
+
+      var wSize = wCanvas.parentElement.clientHeight;
+      if (wSize > wCanvas.parentElement.clientWidth) wSize = wCanvas.parentElement.clientWidth;
+
+      var wCellSizeX = wSize / gMazeWidth;
+      var wCellSizeY = wSize / gMazeHeight;
+
+      x = Math.floor((iEvent.x - wCanvas.offsetLeft) / wCellSizeX);
+      y = Math.floor((iEvent.y - wCanvas.offsetTop) / wCellSizeY);
+
+      var wIndex = getMazeIndex(x, y);
+
+      if (wIndex < gMaze.length) {
+        gMaze[wIndex] += 1;
+        gMaze[wIndex] %= 4;
+      }
+    }
+
+    function processTick() {
+
+      var wCanvas = document.getElementById("OuputCanvas");
+
+      if (true == gIsTrainning) {
+        for (var i = 0; i < 50; ++i) {
+          gNeuralNet.trainNeuralNet(gTrainingSet[gTrainIndex % gTrainingSet.length], gTrainingSet[(gTrainIndex + 1) % gTrainingSet.length]);
+          //       gNeuralNet.trainNeuralNet(gTrainingSet[1], gTrainingSet[2]);
+        }
+        ++gTrainIndex;
+      }
+      else {
+
+        for (var i = 0; i < gInputArray.length; ++i) {
+          gInputArray[i] = invSigmoid(gInputArray[i]);
+        }
+        gInputArray = gNeuralNet.computeOutput(gInputArray);
+      }
+
+      drawNeuralNet(wCanvas, gNeuralNet);
+
+
+      var wTextArea = document.getElementById("TextArea");
+      wTextArea.innerHTML = JSON.stringify(gNeuralNet.mLayerValues);
+    }
+
+    function drawNeuralNet(iDOM, iNeuralNet) {
+      var wCtx = iDOM.getContext("2d");
+      var wCanvasHeight = iDOM.height;
+      var wCanvasWidth = iDOM.width;
+
+      wCtx.clearRect(0, 0, wCanvasWidth, wCanvasHeight);
+      var wCanvasHeightCenter = iDOM.height / 2;
+      var wCanvasWidthCenter = iDOM.width / 2;
+
+      wCtx.translate(wCanvasWidthCenter, wCanvasHeightCenter);
+      wCtx.fillStyle = "cyan";
+      wCtx.strokeStyle = "cyan";
+      wCtx.lineWidth = 3;
+
+      iNeuralNet.draw(wCtx, gNodeRadius, gLayerDistance, gNodeDistance, "red", "red");
+
+      wCtx.translate(-wCanvasWidthCenter, -wCanvasHeightCenter);
+    }
+
+  </script>
+  <script type="module">
+
+    import { NeuralNetwork, DrawNeuralNetwork } from "../../modules/NeuralNetwork.mjs"
+    var gGlobal = {
+      OuputCanvasDivId: "id_OuputCanvas"
+      , NeuralNetwork: new NeuralNetwork([3, 5, 9, 8, 3])
+      , NodeRadius: 10
+      , NodeDistance: 50
+      , LayerDistance: 50
+
+    };
+
+    function drawNeuralNet(iDOM, iNeuralNet) {
+      var wCtx = iDOM.getContext("2d");
+      var wCanvasHeight = iDOM.height;
+      var wCanvasWidth = iDOM.width;
+
+      wCtx.clearRect(0, 0, wCanvasWidth, wCanvasHeight);
+      var wCanvasHeightCenter = iDOM.height / 2;
+      var wCanvasWidthCenter = iDOM.width / 2;
+
+      wCtx.translate(wCanvasWidthCenter, wCanvasHeightCenter);
+      wCtx.lineWidth = 3;
+
+      DrawNeuralNetwork(wCtx, iNeuralNet, gGlobal.NodeRadius, gGlobal.NodeDistance, gGlobal.LayerDistance, "cyan", "red");
+
+      wCtx.translate(-wCanvasWidthCenter, -wCanvasHeightCenter);
+    }
+
+    var wLastInput = [1,1,2];
+    function loop() {
+      window.requestAnimationFrame(loop);
+
+      wLastInput = gGlobal.NeuralNetwork.processInput(wLastInput);
+      var wCanvas = document.getElementById(gGlobal.OuputCanvasDivId);
+      drawNeuralNet(wCanvas, gGlobal.NeuralNetwork);
+
+    }
+
+    function init() {
+
+      resize();
+      loop();
+    }
+
+    function resize() {
+      var wCanvas = document.getElementById(gGlobal.OuputCanvasDivId);
+      wCanvas.height = wCanvas.parentElement.clientHeight - 2;
+      wCanvas.width = wCanvas.parentElement.clientWidth - 2;
+    }
+
+
+    window.addEventListener("load", init);
+    window.addEventListener("resize", resize);
+
+  </script>
+  <style>
+    body {
+      background-color: rgb(0, 0, 0);
+    }
+
+    div {
+      height: 100%;
+      width: 100%;
+    }
+
+    table {
+      height: 100%;
+      width: 100%;
+    }
+
+    textArea {
+      background-color: rgb(255, 255, 255);
+      height: 90%;
+      width: 100%;
+    }
+
+    canvas {
+      border: 1px solid blue;
+    }
+  </style>
+</head>
+
+<body>
+  <div>
+    <table>
+      <tr>
+        <td width="75%">
+          <canvas id="id_OuputCanvas"></canvas>
+        </td>
+        <td>
+          <input type="button" onclick="setTrainFunction()" value="Train" />
+          <input type="button" onclick="setTestFunction()" value="Test" />
+          <input type="button" onclick="processTick()" value="Next" />
+          <input type="range" id="timeStep" value="50" max="1000" min="50" onchange="updateSetInterval()" />
+          <textarea id="TextArea"></textarea>
+        </td>
+      </tr>
+    </table>
+  </div>
+</body>
+
+</html>
