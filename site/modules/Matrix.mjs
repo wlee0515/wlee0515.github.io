@@ -3,9 +3,9 @@ function Matrix(iRow=0, iColumn=0, iInit = 0) {
   this.columns = iColumn;
   this.data = [];
   for(var i = 0; i < iColumn; ++i){
-    var wColumn = [];
+    var wColumn = new Float64Array(this.rows);
     for(var k = 0; k < iRow; ++k){
-      wColumn.push(iInit);
+      wColumn[k] = iInit;
     }
     this.data.push(wColumn);
   }
@@ -85,21 +85,26 @@ function Matrix(iRow=0, iColumn=0, iInit = 0) {
   }
   
   this.addRow = function(iCount) {
-    this.rows += iCount;
+    var wNewCount = this.rows + iCount;
     for(var i = 0; i < this.columns ; ++i){
-      for(var k = 0; k < iCount; ++k){
-         this.data[i].push(0);
+      var wColumn = new Float64Array(wNewCount);
+      for(var k = 0; k < this.rows; ++k){
+        wColumn[i] = this.data[i][k];
       }
-      this.data.push(wColumn);
+      for(var k = this.rows; k < wNewCount; ++k){
+        wColumn[i] = 0;
+      }
+      this.data[i] = wColumn;
     }
+    this.rows = wNewCount;
   }
   
   this.addColumn = function(iCount) {
     this.columns += iCount;
     for(var i = 0; i < iCount ; ++i){
-      var wColumn = [];
+      var wColumn = new Float64Array(this.rows);
       for(var k = 0; k < this.rows; ++k){
-        wColumn.push(0);
+        wColumn[k] = 0;
       }
       this.data.push(wColumn);
     }
@@ -110,9 +115,9 @@ function Matrix(iRow=0, iColumn=0, iInit = 0) {
     this.columns = iMat.columns;
     this.data = [];
     for(var i = 0; i < this.columns ; ++i){
-      var wColumn = [];
+      var wColumn = new Float64Array(this.rows);
       for(var k = 0; k < this.rows; ++k){
-        wColumn.push(iMat.data[i][k]);
+        wColumn[k] = iMat.data[i][k];
       }
       this.data.push(wColumn);
     }

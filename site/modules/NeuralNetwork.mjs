@@ -1,74 +1,69 @@
 import { Matrix } from "./Matrix.mjs";
 
 const ActivationFunction = {
-  Direct : {
+  Direct: {
     Name: "Direct",
-    activation : function (iInput) {
+    activation: function (iInput) {
       return iInput;
     },
-
-    derivative : function (iInput) {
+    derivative: function (iInput) {
       return 1;
     }
   },
 
-  Sigmoid : {
+  Sigmoid: {
     Name: "Sigmoid",
-    activation : function (iInput) {
+    activation: function (iInput) {
       return 1 / (1 + Math.exp(-iInput));
-
     },
-    derivative : function (iInput) {
+    derivative: function (iInput) {
       var wValue = 1 / (1 + Math.exp(-iInput));
-      return wValue*(1.0-wValue);
+      return wValue * (1.0 - wValue);
     }
   },
 
-  Tanh : {
+  Tanh: {
     Name: "Tanh",
-    activation : function (iInput) {
+    activation: function (iInput) {
       return Math.tanh(iInput);
-
     },
-    derivative : function (iInput) {
-      var wValue = 1/Math.cosh(iInput);
-      return wValue*wValue;
+    derivative: function (iInput) {
+      var wValue = 1 / Math.cosh(iInput);
+      return wValue * wValue;
     }
   },
-  
-  ReLU : {
+
+  ReLU: {
     Name: "ReLU",
-    activation : function (iInput) {
+    activation: function (iInput) {
       if (iInput > 0.0) return iInput;
       return 0.0;
     },
-
-    derivative : function (iInput) {
+    derivative: function (iInput) {
       if (iInput > 0.0) return 1;
       return 0.0;
     }
   },
-  
-  LeakyReLU : {
-    Name: "ReLU",
-    activation : function (iInput) {
-      if (iInput > 0.0) return iInput;
-      return 0.1*iInput;
-    },
 
-    derivative : function (iInput) {
+  LeakyReLU: {
+    Name: "ReLU",
+    activation: function (iInput) {
+      if (iInput > 0.0) return iInput;
+      return 0.1 * iInput;
+    },
+    derivative: function (iInput) {
       if (iInput > 0.0) return 1;
       return 0.1;
     }
   },
-  SoftPlus : {
+
+  SoftPlus: {
     Name: "SoftPlus",
-    activation : function (iInput) {
+    activation: function (iInput) {
       return Math.log(1 + Math.exp(iInput));
     },
-
-    derivative : function (iInput) {
-      return 1/(1 + Math.exp(-iInput));
+    derivative: function (iInput) {
+      return 1 / (1 + Math.exp(-iInput));
     }
   }
 
@@ -76,7 +71,7 @@ const ActivationFunction = {
 
 function Layer(iNodeCount, iActivationFunction = ActivationFunction.Direct) {
   this.NodeCount = iNodeCount;
-  
+
   this.ActivationFunction = iActivationFunction;
   if (null == this.ActivationFunction) {
     this.ActivationFunction = ActivationFunction.Direct;
@@ -85,7 +80,7 @@ function Layer(iNodeCount, iActivationFunction = ActivationFunction.Direct) {
   this.getSize = function () {
     return this.NodeCount;
   }
-  
+
   this.getActivationFunction = function () {
     return this.ActivationFunction;
   }
@@ -121,28 +116,28 @@ function NeuralNetwork(iLayerSizeList = []) {
     this.LayerList[0].copy(this.ZList[0]);
     this.LayerList[0].applyFunctionToCell(this.LayerDefinition[0].getActivationFunction().activation);
     for (var wi = 0; wi < this.WeightMatrixList.length; ++wi) {
-      this.ZList[wi+1] = this.WeightMatrixList[wi].getMultiply(this.LayerList[wi]);    
-      this.ZList[wi+1].add(this.BiasList[wi + 1]);
+      this.ZList[wi + 1] = this.WeightMatrixList[wi].getMultiply(this.LayerList[wi]);
+      this.ZList[wi + 1].add(this.BiasList[wi + 1]);
       this.LayerList[wi + 1].copy(this.ZList[wi + 1]);
-      this.LayerList[wi+1].applyFunctionToCell(this.LayerDefinition[wi + 1].getActivationFunction().activation);
+      this.LayerList[wi + 1].applyFunctionToCell(this.LayerDefinition[wi + 1].getActivationFunction().activation);
     }
 
-    var wOutputZ = this.ZList[this.LayerList.length-1].getColumn(0);
-    var wOutputNorm = this.LayerList[this.LayerList.length-1].getColumn(0);
+    var wOutputZ = this.ZList[this.LayerList.length - 1].getColumn(0);
+    var wOutputNorm = this.LayerList[this.LayerList.length - 1].getColumn(0);
 
     var wReturnRaw = [];
     var wReturnNorm = [];
-    for(var wi = 0; wi < wOutputNorm.length; ++wi){
+    for (var wi = 0; wi < wOutputNorm.length; ++wi) {
       wReturnRaw.push(wOutputZ[wi]);
       wReturnNorm.push(wOutputNorm[wi]);
     }
 
     return {
-      raw : wReturnRaw,
-      activation : wReturnNorm
+      raw: wReturnRaw,
+      activation: wReturnNorm
     }
   }
-  
+
   this.trainPair = function (iInputVector, iOutputVector, iLearningRate) {
 
     this.processInput(iInputVector);
@@ -156,27 +151,27 @@ function NeuralNetwork(iLayerSizeList = []) {
     }
 
     var wEndIndex = this.LayerList.length - 1;
-    wDeltaList[wEndIndex].setColumn(0,iOutputVector);
+    wDeltaList[wEndIndex].setColumn(0, iOutputVector);
     wDeltaList[wEndIndex].applyFunctionToCell(this.LayerDefinition[wEndIndex].getActivationFunction().activation);
     wDeltaList[wEndIndex].subtract(this.LayerList[wEndIndex]);
     wDeltaList[wEndIndex].Schur_product(wZSlopList[wEndIndex])
 
     for (var wi = wEndIndex - 1; wi >= 0; --wi) {
       var wWeightTranspose = this.WeightMatrixList[wi].getTranspose();
-      wDeltaList[wi] = wWeightTranspose.getMultiply(wDeltaList[wi+1]);  
+      wDeltaList[wi] = wWeightTranspose.getMultiply(wDeltaList[wi + 1]);
       wDeltaList[wi].Schur_product(wZSlopList[wi]);
     }
 
-    var wOutput = this.LayerList[this.LayerList.length-1].getColumn(0);
+    var wOutput = this.LayerList[this.LayerList.length - 1].getColumn(0);
 
-    for(var wi = 0; wi < this.WeightMatrixList.length; ++wi){
+    for (var wi = 0; wi < this.WeightMatrixList.length; ++wi) {
       var wTransposeVec = this.LayerList[wi].getTranspose()
-      var wWeitghtIncrement = wDeltaList[wi+1].getMultiply(wTransposeVec);
+      var wWeitghtIncrement = wDeltaList[wi + 1].getMultiply(wTransposeVec);
       wWeitghtIncrement.scale(iLearningRate);
       this.WeightMatrixList[wi].add(wWeitghtIncrement);
     }
 
-    for(var wi = 0; wi < this.BiasList.length; ++wi){
+    for (var wi = 0; wi < this.BiasList.length; ++wi) {
       wDeltaList[wi].scale(iLearningRate);
       this.BiasList[wi].add(wDeltaList[wi]);
     }
@@ -186,7 +181,7 @@ function NeuralNetwork(iLayerSizeList = []) {
 }
 
 
-function PrintNeuralNetworkToString( iNeuralNetwork) {
+function PrintNeuralNetworkToString(iNeuralNetwork) {
 
   var wNNLayers = iNeuralNetwork.LayerList;
   var wNNBias = iNeuralNetwork.BiasList;
@@ -194,19 +189,19 @@ function PrintNeuralNetworkToString( iNeuralNetwork) {
 
   var wRtrStr = "Layer [0] \n";
   wRtrStr += wNNLayers[0].printToString()
-  wRtrStr +="\n";
+  wRtrStr += "\n";
   wRtrStr += "Bias [0] \n";
   wRtrStr += wNNBias[0].printToString()
-  for(var wi = 0; wi < wNNWeights.length; ++wi) {
-    wRtrStr +="\n";
+  for (var wi = 0; wi < wNNWeights.length; ++wi) {
+    wRtrStr += "\n";
     wRtrStr += "Weights [" + wi + "] \n";
     wRtrStr += wNNWeights[wi].printToString();
-    wRtrStr +="\n";
-    wRtrStr += "Layer [" + (wi+1) + "] \n";
-    wRtrStr += wNNLayers[wi+1].printToString();
-    wRtrStr +="\n";
-    wRtrStr += "Bias [" + (wi+1) + "] \n";
-    wRtrStr += wNNBias[wi+1].printToString();
+    wRtrStr += "\n";
+    wRtrStr += "Layer [" + (wi + 1) + "] \n";
+    wRtrStr += wNNLayers[wi + 1].printToString();
+    wRtrStr += "\n";
+    wRtrStr += "Bias [" + (wi + 1) + "] \n";
+    wRtrStr += wNNBias[wi + 1].printToString();
   }
   return wRtrStr;
 }
@@ -237,8 +232,8 @@ function DrawNeuralNetwork(iCtx, iNeuralNetwork, iNodeRadius, iNodeSpacing, iLay
       var iXY = {
         x: wLayerX,
         y: wNodeY,
-        state : wNNLayers[wi].get(wj,0),
-        bias : wNNLBias[wi].get(wj,0)
+        state: wNNLayers[wi].get(wj, 0),
+        bias: wNNLBias[wi].get(wj, 0)
       };
       wNewNodeLayer.push(iXY)
     }
@@ -253,10 +248,10 @@ function DrawNeuralNetwork(iCtx, iNeuralNetwork, iNodeRadius, iNodeSpacing, iLay
     var wShape = wNNWeights[wi].getShape();
     for (var wj = 0; wj < wShape.columns; ++wj) {
       var wStartLocation = wNodeLocationArray[wi][wj];
-      
+
       var wColumn = wNNWeights[wi].getColumn(wj);
-      for(var wk=0; wk < wColumn.length;++wk) {
-        var wEndLocation = wNodeLocationArray[wi+1][wk];
+      for (var wk = 0; wk < wColumn.length; ++wk) {
+        var wEndLocation = wNodeLocationArray[wi + 1][wk];
 
         if (wColumn[wk] < 0) {
           iCtx.fillStyle = iNegativeColor;
@@ -299,7 +294,7 @@ function DrawNeuralNetwork(iCtx, iNeuralNetwork, iNodeRadius, iNodeSpacing, iLay
       iCtx.globalAlpha = 1.0;
       iCtx.stroke();
 
-      
+
       if (wNodeLocationArray[wi][wj].bias < 0) {
         iCtx.fillStyle = iNegativeColor;
         iCtx.strokeStyle = iNegativeColor;
@@ -312,14 +307,12 @@ function DrawNeuralNetwork(iCtx, iNeuralNetwork, iNodeRadius, iNodeSpacing, iLay
       iCtx.globalAlpha = Math.abs(wNodeLocationArray[wi][wj].bias);
       iCtx.beginPath();
       iCtx.lineWidth = wOriginalLineWidth;
-      iCtx.arc(wNodeLocationArray[wi][wj].x + iNodeRadius, wNodeLocationArray[wi][wj].y + iNodeRadius, iNodeRadius/2, 0, 2 * Math.PI);
+      iCtx.arc(wNodeLocationArray[wi][wj].x + iNodeRadius, wNodeLocationArray[wi][wj].y + iNodeRadius, iNodeRadius / 2, 0, 2 * Math.PI);
       iCtx.fill();
       iCtx.globalAlpha = 1.0;
       iCtx.stroke();
     }
   }
-
-
 
   iCtx.fillStyle = wOriginalColorFill;
   iCtx.strokeStyle = wOriginalColorStroke;
