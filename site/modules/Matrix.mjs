@@ -261,7 +261,7 @@ function Matrix(iRow=0, iColumn=0, iInit = 0) {
       wRetStr += "["
 
       for(var wj = 0 ; wj < this.columns; ++wj){
-        wRetStr += " " + this.data[wj][wi];
+        wRetStr += " " + this.data[wj][wi].toPrecision(8);
       }
 
       wRetStr += "]\n";
