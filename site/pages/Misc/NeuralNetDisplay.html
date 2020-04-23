@@ -1,15 +1,18 @@
 ﻿<html>
 
 <head>
-  <meta name="viewport" content="width=400" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
   <title>Neural Network Display</title>
   <script type="module">
 
-    import { NeuralNetwork, DrawNeuralNetwork, PrintNeuralNetworkToString } from "../../modules/NeuralNetwork.mjs"
+    import * as NN from "../../modules/NeuralNetwork.mjs"
 
     var gIOSize = 3;
     var gGlobal = {
-        NeuralNetwork: new NeuralNetwork([gIOSize, 5, 5, gIOSize])
+        NeuralNetwork: new NN.NeuralNetwork([ new NN.Layer(gIOSize, NN.ActivationFunction.Direct)
+                                            , new NN.Layer(5, NN.ActivationFunction.SoftPlus)
+                                            , new NN.Layer(5, NN.ActivationFunction.SoftPlus)
+                                            , new NN.Layer(gIOSize, NN.ActivationFunction.Tanh)])
       , LearningRate: 0.05
       , NodeRadius: 10
       , NodeDistance: 50
@@ -51,13 +54,13 @@
       wCtx.translate(wCanvasWidthCenter, wCanvasHeightCenter);
       wCtx.lineWidth = 3;
 
-      DrawNeuralNetwork(wCtx, iNeuralNet, gGlobal.NodeRadius, gGlobal.NodeDistance, gGlobal.LayerDistance, "cyan", "red");
+      NN.DrawNeuralNetwork(wCtx, iNeuralNet, gGlobal.NodeRadius, gGlobal.NodeDistance, gGlobal.LayerDistance, "cyan", "red");
 
       wCtx.translate(-wCanvasWidthCenter, -wCanvasHeightCenter);
     }
 
     function loop() {
-      window.requestAnimationFrame(loop);
+      //window.requestAnimationFrame(loop);
 
       if("test" == gGlobal.OperationMode) {
       //  wLastInput = gGlobal.NeuralNetwork.processInput(wLastInput);
@@ -68,7 +71,9 @@
         
         var wIndex1 = gGlobal.TrainingSequenceIndex ;
         var wIndex2 = (1 + gGlobal.TrainingSequenceIndex)%gGlobal.TrainingSequence.length;
-        trainNeralNet(gGlobal.TrainingSequence[wIndex1], gGlobal.TrainingSequence[wIndex2]);
+        for (var wi = 0 ; wi <100; ++wi){
+          trainNeralNet(gGlobal.TrainingSequence[wIndex1], gGlobal.TrainingSequence[wIndex2]);
+        }
       }
       
       var wCanvas = document.getElementById(gGlobal.Id_OuputCanvasDiv);
@@ -77,15 +82,15 @@
       if(null != gGlobal.LastInputVector){      
         var wString = "Operation Mode : " + gGlobal.OperationMode + "\n\n";
 
-        wString += "Input Vector : " + JSON.stringify(gGlobal.LastInputVector);
+        wString += "Input Vector : " + JSON.stringify(gGlobal.LastInputVector, null, 2);
         wString += "\n\n";
         
-        wString += "Expected Output Vector : " + JSON.stringify(gGlobal.LastExpectedOutput);
+        wString += "Expected Output Vector : " + JSON.stringify(gGlobal.LastExpectedOutput, null, 2);
         wString += "\n\n";
     
-        wString += "Output Vector : " + JSON.stringify(gGlobal.LastOutputVector);
+        wString += "Output Vector : " + JSON.stringify(gGlobal.LastOutputVector, null, 2);
         wString += "\n\n";
-        wString += PrintNeuralNetworkToString(gGlobal.NeuralNetwork);
+        wString += NN.PrintNeuralNetworkToString(gGlobal.NeuralNetwork);
         document.getElementById(gGlobal.Id_OuputTextArea).value = wString;
       }
       
@@ -141,7 +146,7 @@
 
 
       resize();
-      loop();
+      setInterval(loop, 10);
     }
 
     function resize() {
@@ -160,17 +165,9 @@
       background-color: rgb(0, 0, 0);
     }
 
-    div {
-      height: 100%;
-      width: 100%;
-    }
-
-    table {
-      height: 100%;
-      width: 100%;
-    }
-    td {
-      width: 50%;
+    #id_CanvasDiv {
+      height: 100vw;
+      width: 100vw;
     }
 
     textArea {
@@ -179,28 +176,22 @@
       width: 100%;
     }
 
-    canvas {
-      border: 1px solid blue;
-    }
   </style>
 </head>
-
 <body>
+  <div id="id_CanvasDiv">
+    <canvas id="id_OuputCanvas"></canvas>
+  </div>
   <div>
-    <table>
-      <tr>
-        <td>
-          <canvas id="id_OuputCanvas"></canvas>
-        </td>
-        <td>
-          <input type="button" id="id_button_train" value="Train" />
-          <input type="button" id="id_button_test" value="Test" />
-          <input type="button" id="id_button_next" value="Next" />
-          <input type="range" id="timeStep" value="50" max="1000" min="50" onchange="updateSetInterval()" />
-          <textarea id="id_TextArea"></textarea>
-        </td>
-      </tr>
-    </table>
+    <div>
+      <input type="button" id="id_button_train" value="Train" />
+      <input type="button" id="id_button_test" value="Test" />
+      <input type="button" id="id_button_next" value="Next" />
+      <input type="range" id="timeStep" value="50" max="1000" min="50" onchange="updateSetInterval()" />
+    </div>
+    <div>
+      <textarea id="id_TextArea"></textarea>
+    </div>
   </div>
 </body>
 

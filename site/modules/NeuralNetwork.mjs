@@ -1,40 +1,101 @@
 import { Matrix } from "./Matrix.mjs";
 
-function sigmoid(iInput) {
-  return 1 / (1 + Math.exp(-iInput));
-}
+const ActivationFunction = {
+  Direct : {
+    Name: "Direct",
+    activation : function (iInput) {
+      return iInput;
+    },
 
-function inverseSigmoid(iInput) {
-  // wOutput = 1 / (1 + Math.exp(-iInput))
-  // (1 + Math.exp(-iInput)) = 1/wOutput
-  // (Math.exp(-iInput)) = 1/wOutput - 1
-  // -iInput = log(1/wOutput - 1)
-  // iInput = -log(1/wOutput - 1)
+    derivative : function (iInput) {
+      return 1;
+    }
+  },
 
+  Sigmoid : {
+    Name: "Sigmoid",
+    activation : function (iInput) {
+      return 1 / (1 + Math.exp(-iInput));
+
+    },
+    derivative : function (iInput) {
+      var wValue = 1 / (1 + Math.exp(-iInput));
+      return wValue*(1.0-wValue);
+    }
+  },
+
+  Tanh : {
+    Name: "Tanh",
+    activation : function (iInput) {
+      return Math.tanh(iInput);
+
+    },
+    derivative : function (iInput) {
+      var wValue = 1/Math.cosh(iInput);
+      return wValue*wValue;
+    }
+  },
   
-  return -Math.log(1/iInput - 1);
+  ReLU : {
+    Name: "ReLU",
+    activation : function (iInput) {
+      if (iInput > 0.0) return iInput;
+      return 0.0;
+    },
+
+    derivative : function (iInput) {
+      if (iInput > 0.0) return 1;
+      return 0.0;
+    }
+  },
+  
+  SoftPlus : {
+    Name: "SoftPlus",
+    activation : function (iInput) {
+      return Math.log(1 + Math.exp(iInput));
+    },
+
+    derivative : function (iInput) {
+      return 1/(1 + Math.exp(-iInput));
+    }
+  }
+
 }
 
-function sigmoidDerivative(iInput) {
-  var wValue = sigmoid(iInput);
-  return wValue*(1.0-wValue);
+function Layer(iNodeCount, iActivationFunction = ActivationFunction.Direct) {
+  this.NodeCount = iNodeCount;
+  
+  this.ActivationFunction = iActivationFunction;
+  if (null == this.ActivationFunction) {
+    this.ActivationFunction = ActivationFunction.Direct;
+  }
+
+  this.getSize = function () {
+    return this.NodeCount;
+  }
+  
+  this.getActivationFunction = function () {
+    return this.ActivationFunction;
+  }
 }
 
 function NeuralNetwork(iLayerSizeList = []) {
+
+  this.LayerDefinition = iLayerSizeList;
   this.LayerList = [];
   this.ZList = [];
-  this.WeightMatrixList = [];
   this.BiasList = [];
+  this.WeightMatrixList = [];
 
   {
-    for (var wi = 0; wi < iLayerSizeList.length; ++wi) {
-      this.LayerList.push(new Matrix(iLayerSizeList[wi], 1, 0));
-      this.ZList.push(new Matrix(iLayerSizeList[wi], 1, 0));
-      this.BiasList.push(new Matrix(iLayerSizeList[wi], 1, 1));
+    for (var wi = 0; wi < this.LayerDefinition.length; ++wi) {
+      this.LayerList.push(new Matrix(this.LayerDefinition[wi].getSize(), 1, 0));
+      this.ZList.push(new Matrix(this.LayerDefinition[wi].getSize(), 1, 0));
+      this.BiasList.push(new Matrix(this.LayerDefinition[wi].getSize(), 1, 1));
     }
 
-    for (var wi = 0; wi < iLayerSizeList.length - 1; ++wi) {
-      var wNewMatrix = new Matrix(iLayerSizeList[wi + 1], iLayerSizeList[wi], 0);
+    for (var wi = 0; wi < this.LayerDefinition.length - 1; ++wi) {
+      var wNewMatrix = new Matrix(this.LayerDefinition[wi + 1].getSize(), this.LayerDefinition[wi].getSize(), 0);
       wNewMatrix.setRandom(-1, 2);
       this.WeightMatrixList.push(wNewMatrix);
     }
@@ -46,12 +107,12 @@ function NeuralNetwork(iLayerSizeList = []) {
     this.ZList[0].setColumn(0, iInputVector);
     this.ZList[0].add(this.BiasList[0]);
     this.LayerList[0].copy(this.ZList[0]);
-    this.LayerList[0].applyFunctionToCell(sigmoid);
+    this.LayerList[0].applyFunctionToCell(this.LayerDefinition[0].getActivationFunction().activation);
     for (var wi = 0; wi < this.WeightMatrixList.length; ++wi) {
       this.ZList[wi+1] = this.WeightMatrixList[wi].getMultiply(this.LayerList[wi]);    
       this.ZList[wi+1].add(this.BiasList[wi + 1]);
       this.LayerList[wi + 1].copy(this.ZList[wi + 1]);
-      this.LayerList[wi+1].applyFunctionToCell(sigmoid);
+      this.LayerList[wi+1].applyFunctionToCell(this.LayerDefinition[wi + 1].getActivationFunction().activation);
     }
 
     var wOutputZ = this.ZList[this.LayerList.length-1].getColumn(0);
@@ -66,11 +127,10 @@ function NeuralNetwork(iLayerSizeList = []) {
 
     return {
       raw : wReturnRaw,
-      sigmoid : wReturnNorm
+      activation : wReturnNorm
     }
   }
   
-
   this.trainPair = function (iInputVector, iOutputVector, iLearningRate) {
 
     this.processInput(iInputVector);
@@ -80,12 +140,12 @@ function NeuralNetwork(iLayerSizeList = []) {
     for (var wi = 0; wi < this.LayerList.length; ++wi) {
       wDeltaList.push(this.LayerList[wi].getCopy());
       wZSlopList.push(this.ZList[wi].getCopy());
-      wZSlopList[wi].applyFunctionToCell(sigmoidDerivative);
+      wZSlopList[wi].applyFunctionToCell(this.LayerDefinition[wi].getActivationFunction().derivative);
     }
 
     var wEndIndex = this.LayerList.length - 1;
     wDeltaList[wEndIndex].setColumn(0,iOutputVector);
-    wDeltaList[wEndIndex].applyFunctionToCell(sigmoid);
+    wDeltaList[wEndIndex].applyFunctionToCell(this.LayerDefinition[wEndIndex].getActivationFunction().activation);
     wDeltaList[wEndIndex].subtract(this.LayerList[wEndIndex]);
     wDeltaList[wEndIndex].Schur_product(wZSlopList[wEndIndex])
 
@@ -257,6 +317,8 @@ function DrawNeuralNetwork(iCtx, iNeuralNetwork, iNodeRadius, iNodeSpacing, iLay
 }
 
 export {
+  ActivationFunction,
+  Layer,
   NeuralNetwork,
   DrawNeuralNetwork,
   PrintNeuralNetworkToString
