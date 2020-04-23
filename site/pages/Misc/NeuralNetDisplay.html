@@ -10,8 +10,8 @@
     var gIOSize = 3;
     var gGlobal = {
         NeuralNetwork: new NN.NeuralNetwork([ new NN.Layer(gIOSize, NN.ActivationFunction.Direct)
-                                            , new NN.Layer(5, NN.ActivationFunction.SoftPlus)
-                                            , new NN.Layer(5, NN.ActivationFunction.SoftPlus)
+                                            , new NN.Layer(5, NN.ActivationFunction.LeakyReLU)
+                                            , new NN.Layer(5, NN.ActivationFunction.LeakyReLU)
                                             , new NN.Layer(gIOSize, NN.ActivationFunction.Tanh)])
       , LearningRate: 0.05
       , NodeRadius: 10

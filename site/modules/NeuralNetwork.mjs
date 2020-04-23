@@ -49,6 +49,18 @@ const ActivationFunction = {
     }
   },
   
+  LeakyReLU : {
+    Name: "ReLU",
+    activation : function (iInput) {
+      if (iInput > 0.0) return iInput;
+      return 0.1*iInput;
+    },
+
+    derivative : function (iInput) {
+      if (iInput > 0.0) return 1;
+      return 0.1;
+    }
+  },
   SoftPlus : {
     Name: "SoftPlus",
     activation : function (iInput) {
