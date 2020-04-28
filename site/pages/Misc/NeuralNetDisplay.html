@@ -2,17 +2,17 @@
 
 <head>
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
-  <title>Neural Network Display</title>
+  <title>Neural Network Demo</title>
   <script type="module">
 
     import * as NN from "../../modules/NeuralNetwork.mjs"
 
-    var gIOSize = 3;
+    var gIOSize = 5;
     var gGlobal = {
-        NeuralNetwork: new NN.NeuralNetwork([ new NN.Layer(gIOSize, NN.ActivationFunction.Direct)
-                                            , new NN.Layer(5, NN.ActivationFunction.LeakyReLU)
-                                            , new NN.Layer(5, NN.ActivationFunction.LeakyReLU)
-                                            , new NN.Layer(gIOSize, NN.ActivationFunction.Tanh)])
+        NeuralNetwork: new NN.NeuralNetwork([ new NN.Layer(gIOSize, NN.ActivationFunction.Direct, false)
+                                            , new NN.Layer(gIOSize + 2, NN.ActivationFunction.LeakyReLU, true)
+                                            , new NN.Layer(gIOSize + 2, NN.ActivationFunction.LeakyReLU, true)
+                                            , new NN.Layer(gIOSize, NN.ActivationFunction.Tanh, true)])
       , LearningRate: 0.05
       , NodeRadius: 10
       , NodeDistance: 50
@@ -23,13 +23,25 @@
       , LastOutputVector: null
       , LastExpectedOutput: null
       , Id_OuputCanvasDiv: "id_OuputCanvas"
+      , Id_OuputPlotCanvasDiv: "id_OuputPlotCanvas"
       , Id_OuputTextArea: "id_TextArea"
       , Id_InputButtonTrain: "id_button_train"
       , Id_InputButtonTest: "id_button_test"
+      , Id_InputButtonLast: "id_button_last"
       , Id_InputButtonNext: "id_button_next"
       , TrainingSequence: []
       , TrainingSequenceIndex : 0
     };
+
+    function vectorToNumber(iVector) {
+      var wOutputNumber = 0;
+      for (var wi = 0; wi < iVector.length; ++wi) {
+        if (0.5 < iVector[wi]) {
+          wOutputNumber += Math.pow(2, iVector.length - 1 - wi);
+        }
+      }
+      return wOutputNumber;
+    }
 
     function processNeralNet(iInput) {
       gGlobal.LastInputVector = iInput;
@@ -46,19 +58,118 @@
       var wCtx = iDOM.getContext("2d");
       var wCanvasHeight = iDOM.height;
       var wCanvasWidth = iDOM.width;
+      var wScale = wCanvasWidth/600;
 
       wCtx.clearRect(0, 0, wCanvasWidth, wCanvasHeight);
       var wCanvasHeightCenter = wCanvasHeight / 2;
       var wCanvasWidthCenter = wCanvasWidth / 2;
 
       wCtx.translate(wCanvasWidthCenter, wCanvasHeightCenter);
+      wCtx.scale(wScale, wScale);
       wCtx.lineWidth = 3;
 
       NN.DrawNeuralNetwork(wCtx, iNeuralNet, gGlobal.NodeRadius, gGlobal.NodeDistance, gGlobal.LayerDistance, "cyan", "red");
 
+      
+      wCtx.strokeStyle = "cyan";
+      wCtx.fillStyle = "cyan";
+      wCtx.textAlign = "center";
+      wCtx.textBaseline = 'middle';
+      if (null != gGlobal.LastInputVector) {
+        var wInputNumber = vectorToNumber(gGlobal.LastInputVector);
+        wCtx.font = "30px Ariel";
+        wCtx.fillText("Input", -200, -60);
+        wCtx.font = "100px Ariel";
+        wCtx.fillText(wInputNumber, -200, 0);
+      }
+
+      if (null != gGlobal.LastOutputVector) {
+        var wOutputNumber = vectorToNumber(gGlobal.LastOutputVector.raw);
+        wCtx.font = "30px Ariel";
+        wCtx.fillText("Output", 200, -60);
+        wCtx.font = "100px Ariel";
+        wCtx.fillText(wOutputNumber, 200, 0);
+      }
+
+      wCtx.scale(1/wScale, 1/wScale);
       wCtx.translate(-wCanvasWidthCenter, -wCanvasHeightCenter);
     }
 
+    function drawComparePlot(iDOM, iNeuralNet) {
+      var wCtx = iDOM.getContext("2d");
+      var wCanvasHeight = iDOM.height;
+      var wCanvasWidth = iDOM.width;
+      var wScale = wCanvasWidth/600;
+
+      wCtx.clearRect(0, 0, wCanvasWidth, wCanvasHeight);
+      var wCanvasHeightCenter = wCanvasHeight / 2;
+      var wCanvasWidthCenter = wCanvasWidth / 2;
+
+      var wX0 = 100;
+      var wXN = 575;
+      var wXRange = wXN-wX0;
+      var wXIncrement = wXRange/gGlobal.TrainingSequence.length;
+      
+      var wY0 = 400;
+      var wYN = 25;
+      var wYRange = wYN-wY0;
+      var wYIncrement = wYRange/gGlobal.TrainingSequence.length;
+      
+      wCtx.scale(wScale, wScale);
+
+      wCtx.strokeStyle = "cyan";
+      wCtx.fillStyle = "cyan";
+      wCtx.lineWidth = 1;
+      for(var wi = 0; wi < gGlobal.TrainingSequence.length; ++wi) {
+        wCtx.beginPath();
+        wCtx.moveTo(wX0, wYN - wi* wYIncrement);
+        wCtx.lineTo(wXN, wYN - wi* wYIncrement);
+        wCtx.stroke();
+
+        wCtx.beginPath();
+        wCtx.moveTo(wXN - wi* wXIncrement, wY0);
+        wCtx.lineTo(wXN - wi* wXIncrement, wYN);
+        wCtx.stroke();
+      }
+      
+      var wOut = gGlobal.NeuralNetwork.processInput(gGlobal.TrainingSequence[0]);
+      var wNumber = vectorToNumber(wOut.raw);
+      
+      wCtx.lineWidth = 2;
+      wCtx.strokeStyle = "orange";
+      wCtx.fillStyle = "orange";
+      wCtx.beginPath();
+      wCtx.moveTo(wX0, wY0 + wNumber*wYIncrement);
+
+      for(var wi = 1; wi < gGlobal.TrainingSequence.length; ++wi) {
+        wOut = gGlobal.NeuralNetwork.processInput(gGlobal.TrainingSequence[wi]);
+        wNumber = vectorToNumber(wOut.raw);
+        wCtx.lineTo(wX0 + wi*wXIncrement, wY0 + wNumber*wYIncrement);
+      }
+      wCtx.stroke();
+
+      wCtx.strokeStyle = "cyan";
+      wCtx.fillStyle = "cyan";
+
+      wCtx.lineWidth = 2;
+      wCtx.beginPath();
+      wCtx.moveTo(wX0,wYN);
+      wCtx.lineTo(wX0,wY0);
+      wCtx.lineTo(wXN,wY0);
+      wCtx.stroke();
+
+      wCtx.textAlign = "center";
+      wCtx.textBaseline = 'middle';
+      wCtx.font = "30px Ariel";
+      wCtx.fillText("Input", wXN - 50, wY0 + 50);
+        
+      wCtx.font = "30px Ariel";
+      wCtx.rotate(-Math.PI/2);
+      wCtx.fillText("Output", -(wX0 - 25), wYN + 50);
+      wCtx.rotate(Math.PI/2);
+
+      wCtx.scale(1/wScale, 1/wScale);
+    }
     function loop() {
       //window.requestAnimationFrame(loop);
 
@@ -78,6 +189,8 @@
       
       var wCanvas = document.getElementById(gGlobal.Id_OuputCanvasDiv);
       drawNeuralNet(wCanvas, gGlobal.NeuralNetwork);
+      var wCanvas = document.getElementById(gGlobal.Id_OuputPlotCanvasDiv);
+      drawComparePlot(wCanvas, gGlobal.NeuralNetwork);
       
       if(null != gGlobal.LastInputVector){      
         var wString = "Operation Mode : " + gGlobal.OperationMode + "\n\n";
@@ -112,17 +225,34 @@
         }
       )
 
+      document.getElementById(gGlobal.Id_InputButtonLast).addEventListener(
+        "click",
+        function () {
+
+          if ("test" == gGlobal.OperationMode) {
+            
+              gGlobal.TrainingSequenceIndex--;
+              if (0 > gGlobal.TrainingSequenceIndex) {
+                gGlobal.TrainingSequenceIndex += gGlobal.TrainingSequence.length;
+                gGlobal.TrainingSequenceIndex %= gGlobal.TrainingSequence.length;
+              }
+              processNeralNet(gGlobal.TrainingSequence[gGlobal.TrainingSequenceIndex]);
+    
+              gGlobal.LastExpectedOutput = gGlobal.TrainingSequence[(gGlobal.TrainingSequenceIndex + 1)%gGlobal.TrainingSequence.length];
+          }
+        }
+      )
+
       document.getElementById(gGlobal.Id_InputButtonNext).addEventListener(
         "click",
         function () {
 
           if ("test" == gGlobal.OperationMode) {
             
+              gGlobal.TrainingSequenceIndex ++;
               gGlobal.TrainingSequenceIndex %= gGlobal.TrainingSequence.length;
-              processNeralNet(gGlobal.TrainingSequence[gGlobal.TrainingSequenceIndex]);
-              gGlobal.TrainingSequenceIndex +=1;
-              
-              gGlobal.LastExpectedOutput = gGlobal.TrainingSequence[gGlobal.TrainingSequenceIndex%gGlobal.TrainingSequence.length];
+              processNeralNet(gGlobal.TrainingSequence[gGlobal.TrainingSequenceIndex]);              
+              gGlobal.LastExpectedOutput = gGlobal.TrainingSequence[(gGlobal.TrainingSequenceIndex + 1)%gGlobal.TrainingSequence.length];
           }
         }
       )
@@ -153,6 +283,9 @@
       var wCanvas = document.getElementById(gGlobal.Id_OuputCanvasDiv);
       wCanvas.height = wCanvas.parentElement.clientHeight - 2;
       wCanvas.width = wCanvas.parentElement.clientWidth - 2;
+      wCanvas = document.getElementById(gGlobal.Id_OuputPlotCanvasDiv);
+      wCanvas.height = wCanvas.parentElement.clientHeight - 2;
+      wCanvas.width = wCanvas.parentElement.clientWidth - 2;
     }
 
 
@@ -165,9 +298,14 @@
       background-color: rgb(0, 0, 0);
     }
 
-    #id_CanvasDiv {
-      height: 100vw;
-      width: 100vw;
+    h1, p {
+      color: lightgray;
+    }
+    #id_CanvasDiv , #id_ComparePlotDiv{
+      height: 80vw;
+      width: 100%;
+      max-width: 600px;
+      max-height: 600px;
     }
 
     textArea {
@@ -176,21 +314,37 @@
       width: 100%;
     }
 
+    button {
+      padding: 3px 3px;
+      margin: 5px 5px;
+      width: 75px;
+      text-align: center;
+      border-radius: 10px;
+    }
   </style>
 </head>
 <body>
+  <div>
+    <h1>Neural Network Demo</h1>
+    <p>This is an implementation of a neural network tained to count in binary. The neural network is trained using backpropagation.</p>
+    <p>Use the "Train" button to train the network.</p>
+    <p>Use the "Test" button to switch to test mode and use the "Last" and "Next" buttons to iterate through the inputs.</p>
+    <p>The weights and bias may be views in the text box at the bottom.</p>
+  </div>
+  <div>
+    <button id="id_button_train">Train</button>
+    <br/>
+    <button id="id_button_test">Test</button>
+    <button id="id_button_last">Last</button>
+    <button id="id_button_next">Next</button>
+  </div>
   <div id="id_CanvasDiv">
     <canvas id="id_OuputCanvas"></canvas>
   </div>
+  <div id="id_ComparePlotDiv">
+    <canvas id="id_OuputPlotCanvas"></canvas>
+  </div>
   <div>
-    <div>
-      <input type="button" id="id_button_train" value="Train" />
-      <input type="button" id="id_button_test" value="Test" />
-      <input type="button" id="id_button_next" value="Next" />
-      <!--
-      <input type="range" id="timeStep" value="50" max="1000" min="50" onchange="updateSetInterval()" />
-      -->
-    </div>
     <div>
       <textarea id="id_TextArea"></textarea>
     </div>
