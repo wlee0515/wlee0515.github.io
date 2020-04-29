@@ -7,7 +7,7 @@
 
     import * as NN from "../../modules/NeuralNetwork.mjs"
 
-    var gIOSize = 5;
+    var gIOSize = 6;
     var gGlobal = {
         NeuralNetwork: new NN.NeuralNetwork([ new NN.Layer(gIOSize, NN.ActivationFunction.Direct, false)
                                             , new NN.Layer(gIOSize + 2, NN.ActivationFunction.LeakyReLU, true)
@@ -78,20 +78,35 @@
       wCtx.fillStyle = "cyan";
       wCtx.textAlign = "center";
       wCtx.textBaseline = 'middle';
+      var wShiftYCenter = 20;
+      var wShiftYSpread = 80;
+      var wShiftXSpread = 220;
+      var wShiftLabelY = -60;
+
       if (null != gGlobal.LastInputVector) {
         var wInputNumber = vectorToNumber(gGlobal.LastInputVector);
         wCtx.font = "30px Ariel";
-        wCtx.fillText("Input", -200, -60);
+        wCtx.fillText("Input", -wShiftXSpread, wShiftLabelY);
         wCtx.font = "100px Ariel";
-        wCtx.fillText(wInputNumber, -200, 0);
+        wCtx.fillText(wInputNumber, -wShiftXSpread, 0);
+
+      }
+
+      if (null != gGlobal.LastExpectedOutput) {
+      
+        var wExpectedNumber = vectorToNumber(gGlobal.LastExpectedOutput);
+        wCtx.font = "30px Ariel";
+        wCtx.fillText("Expected", wShiftXSpread, wShiftLabelY - wShiftYSpread + wShiftYCenter );
+        wCtx.font = "100px Ariel";
+        wCtx.fillText(wExpectedNumber, wShiftXSpread, 0 - wShiftYSpread + wShiftYCenter);
       }
 
       if (null != gGlobal.LastOutputVector) {
         var wOutputNumber = vectorToNumber(gGlobal.LastOutputVector.raw);
         wCtx.font = "30px Ariel";
-        wCtx.fillText("Output", 200, -60);
+        wCtx.fillText("Output", wShiftXSpread, wShiftLabelY + wShiftYSpread  + wShiftYCenter);
         wCtx.font = "100px Ariel";
-        wCtx.fillText(wOutputNumber, 200, 0);
+        wCtx.fillText(wOutputNumber, wShiftXSpread, 0 + wShiftYSpread + wShiftYCenter);
       }
 
       wCtx.scale(1/wScale, 1/wScale);
@@ -358,6 +373,7 @@
       text-align: center;
       border-radius: 10px;
       background-color: white;
+      font-size : 17px;
     }
   </style>
 </head>
