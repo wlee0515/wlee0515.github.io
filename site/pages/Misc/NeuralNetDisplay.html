@@ -13,7 +13,7 @@
                                             , new NN.Layer(gIOSize + 2, NN.ActivationFunction.LeakyReLU, true)
                                             , new NN.Layer(gIOSize + 2, NN.ActivationFunction.LeakyReLU, true)
                                             , new NN.Layer(gIOSize, NN.ActivationFunction.Tanh, true)])
-      , LearningRate: 0.02
+      , LearningRate: 0.05
       , NodeRadius: 10
       , NodeDistance: 50
       , LayerDistance: 75
@@ -221,15 +221,11 @@
         
         var wIndex1 = gGlobal.TrainingSequenceIndex ;
         var wIndex2 = (1 + gGlobal.TrainingSequenceIndex)%gGlobal.TrainingSequence.length;
-        for (var wi = 0 ; wi <100; ++wi){
-          trainNeralNet(gGlobal.TrainingSequence[wIndex1], gGlobal.TrainingSequence[wIndex2]);
-        }
+        trainNeralNet(gGlobal.TrainingSequence[wIndex1], gGlobal.TrainingSequence[wIndex2]);
       }
       
       var wCanvas = document.getElementById(gGlobal.Id_OuputCanvasDiv);
       drawNeuralNet(wCanvas, gGlobal.NeuralNetwork);
-      var wCanvas = document.getElementById(gGlobal.Id_OuputPlotCanvasDiv);
-      drawComparePlot(wCanvas, gGlobal.NeuralNetwork);
       
       if(null != gGlobal.LastInputVector){      
         var wString = "Operation Mode : " + gGlobal.OperationMode + "\n\n";
@@ -246,6 +242,8 @@
         document.getElementById(gGlobal.Id_OuputTextArea).value = wString;
       }
       
+      var wCanvas = document.getElementById(gGlobal.Id_OuputPlotCanvasDiv);
+      drawComparePlot(wCanvas, gGlobal.NeuralNetwork);
     }
 
     function init() {
