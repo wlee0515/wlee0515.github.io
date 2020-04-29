@@ -13,7 +13,7 @@
                                             , new NN.Layer(gIOSize + 2, NN.ActivationFunction.LeakyReLU, true)
                                             , new NN.Layer(gIOSize + 2, NN.ActivationFunction.LeakyReLU, true)
                                             , new NN.Layer(gIOSize, NN.ActivationFunction.Tanh, true)])
-      , LearningRate: 0.05
+      , LearningRate: 0.02
       , NodeRadius: 10
       , NodeDistance: 50
       , LayerDistance: 75
@@ -68,6 +68,9 @@
       wCtx.scale(wScale, wScale);
       wCtx.lineWidth = 3;
 
+      if(null != gGlobal.LastInputVector) {
+        processNeralNet(gGlobal.LastInputVector);
+      }
       NN.DrawNeuralNetwork(wCtx, iNeuralNet, gGlobal.NodeRadius, gGlobal.NodeDistance, gGlobal.LayerDistance, "cyan", "red");
 
       
@@ -114,7 +117,11 @@
       var wYN = 25;
       var wYRange = wYN-wY0;
       var wYIncrement = wYRange/gGlobal.TrainingSequence.length;
-      
+      var wLegendHorizon = wY0 + 50;
+      var wLegendWidth = 20;
+      var wLegendAnchor = 100;
+      var wLegendSpacing = 150;
+
       wCtx.scale(wScale, wScale);
 
       wCtx.strokeStyle = "cyan";
@@ -132,21 +139,53 @@
         wCtx.stroke();
       }
       
-      var wOut = gGlobal.NeuralNetwork.processInput(gGlobal.TrainingSequence[0]);
-      var wNumber = vectorToNumber(wOut.raw);
       
+      var wIndexValues = [];
+      var wProcessValues = [];
+      var wExpectedValues = [];
+      for(var wi = 1; wi < gGlobal.TrainingSequence.length; ++wi) {
+        wIndexValues.push(vectorToNumber(gGlobal.TrainingSequence[wi]));
+        wProcessValues.push(vectorToNumber(gGlobal.NeuralNetwork.processInput(gGlobal.TrainingSequence[wi]).raw));
+        wExpectedValues.push(vectorToNumber(gGlobal.TrainingSequence[(wi+1)%gGlobal.TrainingSequence.length]));
+      }
+
       wCtx.lineWidth = 2;
+      wCtx.strokeStyle = "lime";
+      wCtx.fillStyle = "lime";
+      
+      wCtx.beginPath();
+      wCtx.moveTo(wX0 + wIndexValues[0]* wXIncrement, wY0 + wExpectedValues[0]*wYIncrement);
+      for(var wi = 1; wi < wExpectedValues.length; ++wi) {
+        wCtx.lineTo(wX0 + wIndexValues[wi]*wXIncrement, wY0 + wExpectedValues[wi]*wYIncrement);
+      }
+
+      wCtx.moveTo(wLegendAnchor, wLegendHorizon);
+      wCtx.lineTo(wLegendAnchor + wLegendWidth, wLegendHorizon);
+      wCtx.stroke();
+
+      wCtx.textAlign = "center";
+      wCtx.textBaseline = 'middle';
+      wCtx.font = "20px Ariel";
+      wCtx.fillText("Expected", wLegendAnchor + wLegendWidth + 50, wLegendHorizon);
+        
+
       wCtx.strokeStyle = "orange";
       wCtx.fillStyle = "orange";
-      wCtx.beginPath();
-      wCtx.moveTo(wX0, wY0 + wNumber*wYIncrement);
 
-      for(var wi = 1; wi < gGlobal.TrainingSequence.length; ++wi) {
-        wOut = gGlobal.NeuralNetwork.processInput(gGlobal.TrainingSequence[wi]);
-        wNumber = vectorToNumber(wOut.raw);
-        wCtx.lineTo(wX0 + wi*wXIncrement, wY0 + wNumber*wYIncrement);
+      wCtx.beginPath();
+      wCtx.moveTo(wX0 + wIndexValues[0]* wXIncrement, wY0 + wProcessValues[0]*wYIncrement);
+      for(var wi = 1; wi < wProcessValues.length; ++wi) {
+        wCtx.lineTo(wX0 + wIndexValues[wi]*wXIncrement, wY0 + wProcessValues[wi]*wYIncrement);
       }
+
+      wCtx.moveTo(wLegendAnchor + wLegendSpacing, wLegendHorizon);
+      wCtx.lineTo(wLegendAnchor + wLegendWidth + wLegendSpacing, wLegendHorizon);
       wCtx.stroke();
+
+      wCtx.textAlign = "center";
+      wCtx.textBaseline = 'middle';
+      wCtx.font = "20px Ariel";
+      wCtx.fillText("Current", wLegendAnchor + wLegendWidth + wLegendSpacing + 50, wLegendHorizon);
 
       wCtx.strokeStyle = "cyan";
       wCtx.fillStyle = "cyan";
@@ -320,6 +359,7 @@
       width: 75px;
       text-align: center;
       border-radius: 10px;
+      background-color: white;
     }
   </style>
 </head>
