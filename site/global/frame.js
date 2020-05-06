@@ -18,7 +18,7 @@ window.addEventListener("load", function(event) {
 //	wDiv.style.background = "black";
 //	wDiv.style.border = "5px solid orange";
 	wDiv.style.position = "fixed";
-	if ((null != gFramePosition) && (1 == gFramePosition)){
+	if ((typeof gFramePosition !== 'undefined') && (1 == gFramePosition)){
 		wDiv.style.right = "10px";
 		wDiv.style.top = "10px";	
 	}
