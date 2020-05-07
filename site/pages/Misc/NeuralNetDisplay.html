@@ -123,13 +123,14 @@
       var wCanvasHeightCenter = wCanvasHeight / 2;
       var wCanvasWidthCenter = wCanvasWidth / 2;
 
-      var wX0 = 100;
-      var wXN = 575;
+      var wMargin = 75;
+      var wX0 = wMargin;
+      var wXN = 600 - wMargin;
       var wXRange = wXN-wX0;
       var wXIncrement = wXRange/gGlobal.TrainingSequence.length;
       
-      var wY0 = 400;
-      var wYN = 25;
+      var wY0 = 600 - wMargin;
+      var wYN = wMargin;
       var wYRange = wYN-wY0;
       var wYIncrement = wYRange/gGlobal.TrainingSequence.length;
       var wLegendHorizon = wY0 + 50;
@@ -219,7 +220,7 @@
         
       wCtx.font = "30px Ariel";
       wCtx.rotate(-Math.PI/2);
-      wCtx.fillText("Output", -(wX0 - 25), wYN + 50);
+      wCtx.fillText("Output", -(wX0 + 50), wYN - 50);
       wCtx.rotate(Math.PI/2);
 
       wCtx.scale(1/wScale, 1/wScale);
@@ -360,6 +361,12 @@
       max-height: 600px;
     }
 
+    @media only screen and (min-width: 1200px) {
+
+      #id_CanvasDiv , #id_ComparePlotDiv{
+        display: inline-block;
+      }
+    }
     textArea {
       background-color: rgb(255, 255, 255);
       height: 90%;
