@@ -1,0 +1,25 @@
+World
+Lightning
+Standing Guy do Nothing
+  - Plant
+      - find random square 
+          - reproduce when has enough energy
+  - Evolutionary Plant
+      - find random square 
+          - reproduce when has enough energy
+              - Slight Shift in colour when reproducing
+  
+  - Herbavor
+      - Find random square
+          - Die if no energy
+          - Eat if is plant
+          - Move if empty
+          - Reproduce if empty
+
+  - Evolving Herbavor
+      - Find random square
+          - Die if no energy
+          - Eat if is plant matchs preference colour
+          - Move if empty
+          - Reproduce if empty
+                - Slight shift in preference colour
