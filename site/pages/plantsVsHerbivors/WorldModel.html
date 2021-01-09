@@ -1,238 +1,275 @@
 <html>
+
 <head>
-  <meta name="description" content="A Demonstration of an Artificial world simulation with Dave Ackley's Plants vs Herbivors applete programmed by Wilson Lee @Heap Art">
-  <meta name="keywords" content="Heap Art, artificial life, life simulation, Plants vs Herbivors, Dave Ackley, Wilson Lee">
+  <meta name="description"
+    content="A Demonstration of an Artificial world simulation with Dave Ackley's Plants vs Herbivors applete programmed by Wilson Lee @Heap Art">
+  <meta name="keywords"
+    content="Heap Art, artificial life, life simulation, Plants vs Herbivors, Dave Ackley, Wilson Lee">
   <meta name="author" content="Wilson Lee @Heap Art">
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
   <Title>Heap Art - Prism Phone Stand</Title>
   <style>
-      body {
-        padding: 0;
-        margin: 0;
-        overflow: hidden;
-      }
+    body {
+      padding: 0;
+      margin: 0;
+      overflow: hidden;
+    }
 
-      #id_SubCount {
-        height : 110px;
-        width : 350px;
-        overflow : hidden;
-        scroll-behavior : none;
-      }
-      
-      #id_SimulationViewPoint_div {
-        padding: 0;
-        margin: 0;
-        z-index: -100;
-        width: 100vw;
-        height: 100vh;
-        background-color: black;
-      }
+    #id_SubCount {
+      height: 110px;
+      width: 350px;
+      overflow: hidden;
+      scroll-behavior: none;
+    }
 
-      canvas
-      {
-        border: 1px solid blue;
-      }
+    #id_SimulationViewPoint_div {
+      padding: 0;
+      margin: 0;
+      z-index: -100;
+      width: 100vw;
+      height: 100vh;
+      background-color: black;
+    }
 
+    canvas {
+      border: 1px solid blue;
+    }
   </style>
   <script>
 
-      //---------------------------------------------------------------
-      // Helper Functions
-      //---------------------------------------------------------------
-      
-      function getImgPixelData(iCanvas) {
+    //---------------------------------------------------------------
+    // Helper Functions
+    //---------------------------------------------------------------
 
-        var wInputWidth =  iCanvas.width;
-        var wInputHeight =  iCanvas.height;
-        var wInputCtx =  iCanvas.getContext('2d');
-        const wInputImageData = wInputCtx.getImageData(0, 0, wInputWidth, wInputHeight);
-        const wInputPixelArray = wInputImageData.data;
+    function getImgPixelData(iCanvas) {
 
-        return {
-          width : wInputWidth,
-          height : wInputHeight,
-          ctx : wInputCtx,
-          imageData : wInputImageData,
-          pixelArray : wInputPixelArray
+      var wInputWidth = iCanvas.width;
+      var wInputHeight = iCanvas.height;
+      var wInputCtx = iCanvas.getContext('2d');
+      const wInputImageData = wInputCtx.getImageData(0, 0, wInputWidth, wInputHeight);
+      const wInputPixelArray = wInputImageData.data;
+
+      return {
+        width: wInputWidth,
+        height: wInputHeight,
+        ctx: wInputCtx,
+        imageData: wInputImageData,
+        pixelArray: wInputPixelArray
+      }
+    }
+
+    function driftColor(iNumber) {
+      var wDrift = Math.round(20 * (2 * Math.random() - 1));
+      wDrift = Math.random() > 0.5 ? 1 : -1;
+      wDrift *= Math.floor(Math.random() * 50 + 10);
+      var wNewColor = iNumber + wDrift;
+      if (wNewColor > 255) wNewColor = 255;
+      else if (wNewColor < 0) wNewColor = 0;
+      return wNewColor;
+    }
+
+    //---------------------------------------------------------------
+    // Global Variables
+    //---------------------------------------------------------------
+
+    eCanvas_Layer = {
+      Lightning: 0,
+      Plants: 1,
+      Herbivores: 2,
+    }
+
+    active_Layers = {
+      Lightning: false,
+      Plants: true,
+      Herbivores: true,
+    }
+
+    gSimParameters = {
+      RandomLightning: 0.00002,
+      RandomPlantLife: 0.00002,
+      RandomHerbivoreLife: 0.00002,
+
+      PlantEnergyChangeIt: 10,
+      PlantReproductionThreshold: 250,
+      PlantReproductionCost: 100,
+      PlantBirthEnergy: 1,
+
+      HerbivoreEnergyChangeIt: -1,
+      HerbivoreEnergyChangeStep: -5,
+      HerbivoreReproductionThreshold: 250,
+      HerbivoreReproductionCost: 100,
+      HerbivoreBirthEnergy: 50,
+
+      AppetiteRange: 20,
+
+      IterationTimeMs: 50
+    }
+
+    gWorldModel = {
+      DisplayCanvas: null,
+      CanvasLayer: [],
+      SpriteScale: 5,
+      Counts: [],
+
+      DisplayLayers: [],
+      DisplayIndex: 0,
+      DisplayIndexNext: 0,
+      DisplayFrameCount: 2,
+      SpriteImg: {}
+    }
+
+    //---------------------------------------------------------------
+    // Global Variables
+    //---------------------------------------------------------------
+
+    window.addEventListener("load", function () {
+      setup();
+      setInterval(iteration, gSimParameters.IterationTimeMs);
+    })
+
+    function setup() {
+
+      var wSimulationViewPoint = document.getElementById("id_SimulationViewPoint_canvas");
+      if (null != wSimulationViewPoint) {
+        gWorldModel.DisplayCanvas = wSimulationViewPoint;
+      }
+
+      var wWorldLayers = Object.keys(eCanvas_Layer);
+      for (var wi = 0; wi < wWorldLayers.length; ++wi) {
+        var wNewArray = []
+
+        for (var wj = 0; wj < gWorldModel.DisplayFrameCount; ++wj) {
+          wNewArray.push(document.createElement("canvas"));
         }
+
+        gWorldModel.CanvasLayer.push(wNewArray);
+        gWorldModel.Counts.push(0);
       }
 
-      function driftColor(iNumber) {
-        var wDrift = Math.round(20*(2*Math.random() - 1));
-        wDrift = Math.random() > 0.5 ? 1 : -1;
-        wDrift*=Math.floor(Math.random()*50 + 10);
-        var wNewColor = iNumber + wDrift;
-        if (wNewColor > 255) wNewColor=255;
-        else if (wNewColor < 0) wNewColor = 0;
-       return wNewColor;
-      }
+      gWorldModel.DisplayLayers = Object.keys(eCanvas_Layer);
 
-      //---------------------------------------------------------------
-      // Global Variables
-      //---------------------------------------------------------------
-      
-      eCanvas_Layer = {
-        Lightning : 0,
-        Plants : 1,
-        Herbivores : 2,
-      }
 
-      gWorldModel = {
-        DisplayCanvas : null,
-        CanvasLayer : [],
-        SpriteScale : 5,
-        Counts : [],
+      gWorldModel.SpriteImg["Lightning"] =
+        [[0, 0, 0, 1, 0]
+          , [0, 0, 1, 0, 0]
+          , [0, 1, 1, 1, 0]
+          , [0, 0, 1, 0, 0]
+          , [0, 1, 0, 0, 0]]
 
-        DisplayLayers : [],
-        DisplayIndex : 0,
-        DisplayIndexNext : 0,
-        DisplayFrameCount : 2,
-        SpriteImg:{}
-      }
+      gWorldModel.SpriteImg["Plants"] =
+        [[0.3, 1.0, 0.5, 1.0, 0.3]
+          , [1.0, 0.3, 0.7, 0.3, 1.0]
+          , [0.5, 0.7, 1.0, 0.7, 0.5]
+          , [1.0, 0.3, 0.7, 0.3, 1.0]
+          , [0.3, 1.0, 0.5, 1.0, 0.3]]
 
-      //---------------------------------------------------------------
-      // Global Variables
-      //---------------------------------------------------------------
 
-      window.addEventListener("load", function(){
-        setup();
-        setInterval(iteration, 25);
-      })
+      gWorldModel.SpriteImg["Herbivores"] =
+        [[1, 0, 0, 0, 1]
+          , [1, 1, 0, 1, 1]
+          , [0, 1, 1, 1, 0]
+          , [0, 1, 1, 1, 0]
+          , [0, 0, 1, 0, 0]]
+      resizeCanvas();
+      window.addEventListener("resize", resizeCanvas);
+    }
 
-      function setup() {
 
-        var wSimulationViewPoint = document.getElementById("id_SimulationViewPoint_canvas");
-        if (null != wSimulationViewPoint) {
-          gWorldModel.DisplayCanvas = wSimulationViewPoint;
-        }
+    function resizeCanvas() {
+      if (null != gWorldModel.DisplayCanvas) {
+
+        var wWorldDisplayWidth = gWorldModel.DisplayCanvas.parentElement.clientWidth;
+        var wWorldDisplayHeight = gWorldModel.DisplayCanvas.parentElement.clientHeight;
+
+        gWorldModel.DisplayCanvas.width = wWorldDisplayWidth;
+        gWorldModel.DisplayCanvas.height = wWorldDisplayHeight;
+
+        var wWorldWidth = Math.ceil(wWorldDisplayWidth / gWorldModel.SpriteScale);
+        var wWorldHeight = Math.ceil(wWorldDisplayHeight / gWorldModel.SpriteScale);
 
         var wWorldLayers = Object.keys(eCanvas_Layer);
-        for(var wi = 0; wi < wWorldLayers.length; ++wi) {
-          var wNewArray = []
-
-          for (var wj = 0 ; wj < gWorldModel.DisplayFrameCount; ++wj) {
-            wNewArray.push(document.createElement("canvas"));
-          }
-
-          gWorldModel.CanvasLayer.push(wNewArray);
-          gWorldModel.Counts.push(0);
-        }
-
-        gWorldModel.DisplayLayers = Object.keys(eCanvas_Layer);
-
-
-        gWorldModel.SpriteImg["Lightning"] = [[0,0,0,1,0]
-                                             ,[0,0,1,0,0]
-                                             ,[0,1,1,1,0]
-                                             ,[0,0,1,0,0]
-                                             ,[0,1,0,0,0]]
-                                            
-        gWorldModel.SpriteImg["Plants"]    = [[0.3,1.0,0.5,1.0,0.3]
-                                             ,[1.0,0.3,0.7,0.3,1.0]
-                                             ,[0.5,0.7,1.0,0.7,0.5]
-                                             ,[1.0,0.3,0.7,0.3,1.0]
-                                             ,[0.3,1.0,0.5,1.0,0.3]]
-
-
-        gWorldModel.SpriteImg["Herbivores"] = [[1,0,0,0,1]
-                                              ,[1,1,0,1,1]
-                                              ,[0,1,1,1,0]
-                                              ,[0,1,1,1,0]
-                                              ,[0,0,1,0,0]]
-        resizeCanvas();
-        window.addEventListener("resize", resizeCanvas);
-      }
-
-      
-      function resizeCanvas() {
-        if (null != gWorldModel.DisplayCanvas ) {
-
-          var wWorldDisplayWidth = gWorldModel.DisplayCanvas.parentElement.clientWidth;
-          var wWorldDisplayHeight = gWorldModel.DisplayCanvas.parentElement.clientHeight;
-
-          gWorldModel.DisplayCanvas.width = wWorldDisplayWidth;
-          gWorldModel.DisplayCanvas.height = wWorldDisplayHeight;
-
-          var wWorldWidth = Math.ceil(wWorldDisplayWidth/gWorldModel.SpriteScale);
-          var wWorldHeight = Math.ceil(wWorldDisplayHeight/gWorldModel.SpriteScale);
-          
-          var wWorldLayers = Object.keys(eCanvas_Layer);
-          for(var wi = 0; wi < wWorldLayers.length; ++wi) {
-            var wKey = eCanvas_Layer[wWorldLayers[wi]];
-            for(var wj = 0; wj < gWorldModel.CanvasLayer[wKey].length; ++wj) {
-              gWorldModel.CanvasLayer[wKey][wj].width = wWorldWidth;
-              gWorldModel.CanvasLayer[wKey][wj].height = wWorldHeight;
-            }
+        for (var wi = 0; wi < wWorldLayers.length; ++wi) {
+          var wKey = eCanvas_Layer[wWorldLayers[wi]];
+          for (var wj = 0; wj < gWorldModel.CanvasLayer[wKey].length; ++wj) {
+            gWorldModel.CanvasLayer[wKey][wj].width = wWorldWidth;
+            gWorldModel.CanvasLayer[wKey][wj].height = wWorldHeight;
           }
         }
       }
+    }
 
 
-      function iteration () {
+    function iteration() {
 
-        gWorldModel.DisplayIndex = (gWorldModel.DisplayIndex + 1) %2;
-        gWorldModel.DisplayIndexNext = (gWorldModel.DisplayIndex + 1) %2;
-        
-        process();
-        render();
+      gWorldModel.DisplayIndex = (gWorldModel.DisplayIndex + 1) % 2;
+      gWorldModel.DisplayIndexNext = (gWorldModel.DisplayIndex + 1) % 2;
+
+      process();
+      render();
+    }
+
+    function process() {
+
+      for (var wi = 0; wi < gWorldModel.CanvasLayer.length; ++wi) {
+        var wCanvas = gWorldModel.CanvasLayer[wi][gWorldModel.DisplayIndexNext];
+        var wCtx = wCanvas.getContext("2d");
+        wCtx.clearRect(0, 0, wCanvas.width, wCanvas.height);
       }
 
-      function process() {
+      var wLightningImg = getImgPixelData(gWorldModel.CanvasLayer[eCanvas_Layer.Lightning][gWorldModel.DisplayIndex]);
+      var wLightningImgNew = getImgPixelData(gWorldModel.CanvasLayer[eCanvas_Layer.Lightning][gWorldModel.DisplayIndexNext]);
 
-        var wLightningImg = getImgPixelData(gWorldModel.CanvasLayer[eCanvas_Layer.Lightning][gWorldModel.DisplayIndex]);
-        var wLightningImgNew = getImgPixelData(gWorldModel.CanvasLayer[eCanvas_Layer.Lightning][gWorldModel.DisplayIndexNext]);
+      var wPlantsImg = getImgPixelData(gWorldModel.CanvasLayer[eCanvas_Layer.Plants][gWorldModel.DisplayIndex]);
+      var wPlantsImgNew = getImgPixelData(gWorldModel.CanvasLayer[eCanvas_Layer.Plants][gWorldModel.DisplayIndexNext]);
 
-        var wPlantsImg = getImgPixelData(gWorldModel.CanvasLayer[eCanvas_Layer.Plants][gWorldModel.DisplayIndex]);
-        var wPlantsImgNew = getImgPixelData(gWorldModel.CanvasLayer[eCanvas_Layer.Plants][gWorldModel.DisplayIndexNext]);
+      var wHerbivoresImg = getImgPixelData(gWorldModel.CanvasLayer[eCanvas_Layer.Herbivores][gWorldModel.DisplayIndex]);
+      var wHerbivoresImgNew = getImgPixelData(gWorldModel.CanvasLayer[eCanvas_Layer.Herbivores][gWorldModel.DisplayIndexNext]);
 
-        var wHerbivoresImg = getImgPixelData(gWorldModel.CanvasLayer[eCanvas_Layer.Herbivores][gWorldModel.DisplayIndex]);
-        var wHerbivoresImgNew = getImgPixelData(gWorldModel.CanvasLayer[eCanvas_Layer.Herbivores][gWorldModel.DisplayIndexNext]);
+      var wTargetIndicesArr = [[-1, -1], [+0, -1], [+1, -1],
+      [-1, +0], [+1, +0],
+      [-1, +1], [+0, +1], [+1, +1]];
 
-        var wTargetIndicesArr = [[-1,-1], [+0,-1], [+1,-1],
-                                 [-1,+0],          [+1,+0],
-                                 [-1,+1], [+0,+1], [+1,+1]];
+      var wInputWidth = wLightningImg.width;
+      var wInputHeight = wLightningImg.height;
+      var wIndex, wTargetIndex, wHasTarget;
+      var wNewX, wNewY;
 
-        var wInputWidth = wLightningImg.width;
-        var wInputHeight = wLightningImg.height;
-        var wIndex, wTargetIndex, wHasTarget;
-        var wNewX, wNewY;
+      var wSpawnPlant = gWorldModel.Counts[eCanvas_Layer.Plants] < 10;
+      var wSpawnHerbivore = gWorldModel.Counts[eCanvas_Layer.Herbivores] < 10;
 
-        for(var wX = 0; wX < wInputWidth; ++wX) {
-          for(var wY = 0; wY < wInputHeight; ++wY) {
+      for (var wX = 0; wX < wInputWidth; ++wX) {
+        for (var wY = 0; wY < wInputHeight; ++wY) {
 
-            var wRandomIndex = Math.floor(wTargetIndicesArr.length*Math.random());
-            if (wRandomIndex == 7) {
-              var wInt = 1;
-            }
-            var wTargetOffset = wTargetIndicesArr[wRandomIndex];
-            wNewX = wX + wTargetOffset[0];
-            wNewX = wNewX < 0? 0 : wNewX >= wInputWidth ? wInputWidth - 1 : wNewX;
-            wNewY = wY + wTargetOffset[1];
-            wNewY = wNewY < 0? 0 : wNewY >= wInputHeight ? wInputHeight - 1 : wNewY;
+          wIndex = (wY * wInputWidth + wX) * 4;
 
-            wIndex = (wY*wInputWidth + wX)*4;
-            wTargetIndex = (wNewY*wInputWidth + wNewX)*4;
-
-            wHasTarget = wIndex != wTargetIndex;
-            
+          if (true == active_Layers.Plants) {
             wPlantLife = wPlantsImg.pixelArray[wIndex + 3];
-            wPlantLifeNext = wPlantsImgNew.pixelArray[wTargetIndex + 3];
             if (0 != wPlantLife) {
-              wNewPlantLife = wPlantLife + 10;
-              
-              if (wNewPlantLife > 200) {
-                
-                if (true == wHasTarget){
+              wNewPlantLife = wPlantLife + gSimParameters.PlantEnergyChangeIt;
+
+              var wRandomIndex = Math.floor(wTargetIndicesArr.length * Math.random());
+              var wTargetOffset = wTargetIndicesArr[wRandomIndex];
+              wNewX = wX + wTargetOffset[0];
+              wNewX = wNewX < 0 ? 0 : wNewX >= wInputWidth ? wInputWidth - 1 : wNewX;
+              wNewY = wY + wTargetOffset[1];
+              wNewY = wNewY < 0 ? 0 : wNewY >= wInputHeight ? wInputHeight - 1 : wNewY;
+
+              wTargetIndex = (wNewY * wInputWidth + wNewX) * 4;
+
+              wHasTarget = wIndex != wTargetIndex;
+
+              if (true == wHasTarget) {
+                if (wNewPlantLife > gSimParameters.PlantReproductionThreshold) {
                   wTargetPlantLife = wPlantsImg.pixelArray[wTargetIndex + 3];
                   if (0 == wTargetPlantLife) {
                     wTargetPlantLifeNext = wPlantsImgNew.pixelArray[wTargetIndex + 3];
                     if (0 == wTargetPlantLifeNext) {
-                      wPlantsImgNew.pixelArray[wTargetIndex + 3] = 1;
+                      wPlantsImgNew.pixelArray[wTargetIndex + 3] = gSimParameters.PlantBirthEnergy;
                       wPlantsImgNew.pixelArray[wTargetIndex] = driftColor(wPlantsImg.pixelArray[wIndex]);      // red
                       wPlantsImgNew.pixelArray[wTargetIndex + 1] = driftColor(wPlantsImg.pixelArray[wIndex + 1]); // green
                       wPlantsImgNew.pixelArray[wTargetIndex + 2] = driftColor(wPlantsImg.pixelArray[wIndex + 2]); // blue
 
-                      wNewPlantLife -= 100
+                      wNewPlantLife -= gSimParameters.PlantReproductionCost;
                     }
                   }
                 }
@@ -241,121 +278,146 @@
               if (wNewPlantLife > 255) wNewPlantLife = 255;
 
               wPlantsImgNew.pixelArray[wIndex + 3] = wNewPlantLife;
-              wPlantsImgNew.pixelArray[wIndex]     = wPlantsImg.pixelArray[wIndex];      // red
+              wPlantsImgNew.pixelArray[wIndex] = wPlantsImg.pixelArray[wIndex];      // red
               wPlantsImgNew.pixelArray[wIndex + 1] = wPlantsImg.pixelArray[wIndex + 1]; // green
               wPlantsImgNew.pixelArray[wIndex + 2] = wPlantsImg.pixelArray[wIndex + 2]; // blue
             }
             else {
-              if (0 == wPlantLifeNext) {
+              if (true == wSpawnPlant) {
+                wPlantLifeNext = wPlantsImgNew.pixelArray[wIndex + 3];
+                if (0 == wPlantLifeNext) {
 
-                if (Math.random() < 0.00000001) {
-                  wPlantsImgNew.pixelArray[wIndex + 3] = 1;
-                  wPlantsImgNew.pixelArray[wIndex] = 0; // red
-                  wPlantsImgNew.pixelArray[wIndex + 1] = 255; // green
-                  wPlantsImgNew.pixelArray[wIndex + 2] = 0; // blue
+                  if (Math.random() < gSimParameters.RandomPlantLife) {
+                    wPlantsImgNew.pixelArray[wIndex + 3] = gSimParameters.PlantBirthEnergy;
+                    wPlantsImgNew.pixelArray[wIndex] = 0; // red
+                    wPlantsImgNew.pixelArray[wIndex + 1] = 255; // green
+                    wPlantsImgNew.pixelArray[wIndex + 2] = 0; // blue
+                  }
                 }
-                else {
-                  wPlantsImgNew.pixelArray[wIndex + 3] = 0;
-                  wPlantsImgNew.pixelArray[wIndex] = 0; // red
-                  wPlantsImgNew.pixelArray[wIndex + 1] = 0; // green
-                  wPlantsImgNew.pixelArray[wIndex + 2] = 0; // blue
-                }
-              } 
+
+              }
             }
+          }
 
+          if (true == active_Layers.Herbivores) {
             wHerbivoreLife = wHerbivoresImg.pixelArray[wIndex + 3];
-            wHerbivoreLifeNext = wHerbivoresImgNew.pixelArray[wTargetIndex + 3];
             if (0 != wHerbivoreLife) {
-              wNewHerbivoreLife = wHerbivoreLife - 1;
-              wNewHerbivoreLife += Math.floor(0.5*( wPlantsImgNew.pixelArray[wIndex + 3]));
-              wPlantsImgNew.pixelArray[wIndex + 3] = 0; 
+              wNewHerbivoreLife = wHerbivoreLife + gSimParameters.HerbivoreEnergyChangeIt;
+
+              var wInvR = 255 - wHerbivoresImg.pixelArray[wIndex];
+              var wInvG = 255 - wHerbivoresImg.pixelArray[wIndex + 1];
+              var wInvB = 255 - wHerbivoresImg.pixelArray[wIndex + 2];
+              if (Math.abs(wInvR - wPlantsImgNew.pixelArray[wIndex]) < gSimParameters.AppetiteRange) {
+                if (Math.abs(wInvG - wPlantsImgNew.pixelArray[wIndex + 1]) < gSimParameters.AppetiteRange) {
+                  if (Math.abs(wInvB - wPlantsImgNew.pixelArray[wIndex + 2]) < gSimParameters.AppetiteRange) {
+                    wNewHerbivoreLife += Math.floor(0.5 * (wPlantsImgNew.pixelArray[wIndex + 3]));
+                    wPlantsImgNew.pixelArray[wIndex + 3] = 0;
+                  }
+                }
+              }
 
               if (wNewHerbivoreLife > 255) wNewHerbivoreLife = 255;
               if (wNewHerbivoreLife < 0) wNewHerbivoreLife = 0;
 
+              var wRandomIndex = Math.floor(wTargetIndicesArr.length * Math.random());
+
+              var wTargetOffset = wTargetIndicesArr[(wRandomIndex + wi) % wTargetIndicesArr.length];
+              wNewX = wX + wTargetOffset[0];
+              wNewX = wNewX < 0 ? 0 : wNewX >= wInputWidth ? wInputWidth - 1 : wNewX;
+              wNewY = wY + wTargetOffset[1];
+              wNewY = wNewY < 0 ? 0 : wNewY >= wInputHeight ? wInputHeight - 1 : wNewY;
+
+              wTargetIndex = (wNewY * wInputWidth + wNewX) * 4;
+
+              for (var wi = 1; wi < wTargetIndicesArr.length; ++wi) {
+                var wTargetOffset = wTargetIndicesArr[(wRandomIndex + wi) % wTargetIndicesArr.length];
+                wNewX = wX + wTargetOffset[0];
+                wNewX = wNewX < 0 ? 0 : wNewX >= wInputWidth ? wInputWidth - 1 : wNewX;
+                wNewY = wY + wTargetOffset[1];
+                wNewY = wNewY < 0 ? 0 : wNewY >= wInputHeight ? wInputHeight - 1 : wNewY;
+
+                var wTempTargetIndex = (wNewY * wInputWidth + wNewX) * 4;
+                if (wIndex != wTempTargetIndex) {
+                  wTargetPlantLife = wPlantsImg.pixelArray[wTempTargetIndex + 3];
+                  wTargetPlantLifeNext = wPlantsImgNew.pixelArray[wTempTargetIndex + 3];
+                  if ((0 != wTargetPlantLife) || (0 != wTargetPlantLifeNext)) {
+                    wTargetIndex = wTempTargetIndex;
+                  }
+                }
+              }
+
+              wHasTarget = wIndex != wTargetIndex;
+
+              var wMoved = false;
               if (true == wHasTarget) {
                 wTargetHerbivoreLife = wHerbivoresImg.pixelArray[wTargetIndex + 3];
                 if (0 == wTargetHerbivoreLife) {
                   wTargetHerbivoreLifeNext = wHerbivoresImgNew.pixelArray[wTargetIndex + 3];
                   if (0 == wTargetHerbivoreLifeNext) {
-                    
-                    if (wNewHerbivoreLife > 250) {
 
-                      wNewHerbivoreLife -= 100;
+                    if (wNewHerbivoreLife > gSimParameters.HerbivoreReproductionThreshold) {
 
-                      wHerbivoresImgNew.pixelArray[wTargetIndex + 3] = 50;
+                      wNewHerbivoreLife -= gSimParameters.HerbivoreReproductionCost;
+
+                      wHerbivoresImgNew.pixelArray[wTargetIndex + 3] = gSimParameters.HerbivoreBirthEnergy;
                       wHerbivoresImgNew.pixelArray[wTargetIndex] = driftColor(wHerbivoresImg.pixelArray[wIndex]);      // red
                       wHerbivoresImgNew.pixelArray[wTargetIndex + 1] = driftColor(wHerbivoresImg.pixelArray[wIndex + 1]); // green
                       wHerbivoresImgNew.pixelArray[wTargetIndex + 2] = driftColor(wHerbivoresImg.pixelArray[wIndex + 2]); // blue
-
-                      wHerbivoresImgNew.pixelArray[wIndex + 3] = wNewHerbivoreLife;
-                      wHerbivoresImgNew.pixelArray[wIndex]     = wHerbivoresImg.pixelArray[wIndex];      // red
-                      wHerbivoresImgNew.pixelArray[wIndex + 1] = wHerbivoresImg.pixelArray[wIndex + 1]; // green
-                      wHerbivoresImgNew.pixelArray[wIndex + 2] = wHerbivoresImg.pixelArray[wIndex + 2]; // blue
-
                     }
                     else {
-                      
-                      wNewHerbivoreLife -= 1;
+                      wMoved = true;
+                      wNewHerbivoreLife += gSimParameters.HerbivoreEnergyChangeStep;
 
                       wHerbivoresImgNew.pixelArray[wTargetIndex + 3] = wNewHerbivoreLife;
                       wHerbivoresImgNew.pixelArray[wTargetIndex] = wHerbivoresImg.pixelArray[wIndex];      // red
                       wHerbivoresImgNew.pixelArray[wTargetIndex + 1] = wHerbivoresImg.pixelArray[wIndex + 1]; // green
                       wHerbivoresImgNew.pixelArray[wTargetIndex + 2] = wHerbivoresImg.pixelArray[wIndex + 2]; // blue
-                      
-                      wHerbivoresImgNew.pixelArray[wIndex + 3] = 0;
-                      wHerbivoresImgNew.pixelArray[wIndex]     = 0; // red
-                      wHerbivoresImgNew.pixelArray[wIndex + 1] = 0; // green
-                      wHerbivoresImgNew.pixelArray[wIndex + 2] = 0; // blue
 
                     }
-
                   }
                 }
               }
 
-
+              if (false == wMoved) {
+                wHerbivoresImgNew.pixelArray[wIndex + 3] = wNewHerbivoreLife;
+                wHerbivoresImgNew.pixelArray[wIndex] = wHerbivoresImg.pixelArray[wIndex];      // red
+                wHerbivoresImgNew.pixelArray[wIndex + 1] = wHerbivoresImg.pixelArray[wIndex + 1]; // green
+                wHerbivoresImgNew.pixelArray[wIndex + 2] = wHerbivoresImg.pixelArray[wIndex + 2]; // blue
+              }
             }
             else {
-              if (0 == wHerbivoreLifeNext) {
+              if (true == wSpawnHerbivore) {
+                wHerbivoreLifeNext = wHerbivoresImgNew.pixelArray[wIndex + 3];
+                if (0 == wHerbivoreLifeNext) {
 
-                if (Math.random() < 0.0000001) {
-                  wHerbivoresImgNew.pixelArray[wIndex + 3] = 255;
-                  wHerbivoresImgNew.pixelArray[wIndex] = 255; // red
-                  wHerbivoresImgNew.pixelArray[wIndex + 1] = 0; // green
-                  wHerbivoresImgNew.pixelArray[wIndex + 2] = 0; // blue
+                  if (Math.random() < gSimParameters.RandomHerbivoreLife) {
+                    wHerbivoresImgNew.pixelArray[wIndex + 3] = 255;
+                    wHerbivoresImgNew.pixelArray[wIndex] = 255; // red
+                    wHerbivoresImgNew.pixelArray[wIndex + 1] = 0; // green
+                    wHerbivoresImgNew.pixelArray[wIndex + 2] = 255; // blue
+                  }
                 }
-                else {
-                  wHerbivoresImgNew.pixelArray[wIndex + 3] = 0;
-                  wHerbivoresImgNew.pixelArray[wIndex] = 0; // red
-                  wHerbivoresImgNew.pixelArray[wIndex + 1] = 0; // green
-                  wHerbivoresImgNew.pixelArray[wIndex + 2] = 0; // blue
-                }
-              } 
+              }
             }
-            
+          }
+          if (true == active_Layers.Lightning) {
+
             var wLightningStrength = wLightningImg.pixelArray[wIndex + 3];
             if (0 != wLightningStrength) {
-              
-              var wNewLightningStrength = Math.floor(0.75* wLightningStrength);
-              
+
+              var wNewLightningStrength = Math.floor(0.75 * wLightningStrength);
+
               wLightningImgNew.pixelArray[wIndex + 3] = wNewLightningStrength;
-              wLightningImgNew.pixelArray[wIndex]     = wLightningImgNew.pixelArray[wIndex]    ; // red
-              wLightningImgNew.pixelArray[wIndex + 1] = wLightningImgNew.pixelArray[wIndex + 1]; // green
-              wLightningImgNew.pixelArray[wIndex + 2] = wLightningImgNew.pixelArray[wIndex + 2]; // blue
+              wLightningImgNew.pixelArray[wIndex] = wLightningImg.pixelArray[wIndex]; // red
+              wLightningImgNew.pixelArray[wIndex + 1] = wLightningImg.pixelArray[wIndex + 1]; // green
+              wLightningImgNew.pixelArray[wIndex + 2] = wLightningImg.pixelArray[wIndex + 2]; // blue
             }
             else {
-              if(Math.random() < 0.0001) {
+              if (Math.random() < gSimParameters.RandomLightning) {
                 wLightningImgNew.pixelArray[wIndex + 3] = 255;
-                wLightningImgNew.pixelArray[wIndex]     = 255; // red
+                wLightningImgNew.pixelArray[wIndex] = 255; // red
                 wLightningImgNew.pixelArray[wIndex + 1] = 255; // green
                 wLightningImgNew.pixelArray[wIndex + 2] = 255; // blue
-              }
-              else {        
-                wLightningImgNew.pixelArray[wIndex + 3] = 0;
-                wLightningImgNew.pixelArray[wIndex]     = 0; // red
-                wLightningImgNew.pixelArray[wIndex + 1] = 0; // green
-                wLightningImgNew.pixelArray[wIndex + 2] = 0; // blue
               }
             }
 
@@ -363,103 +425,121 @@
               wPlantsImgNew.pixelArray[wIndex + 3] = 0;
               wHerbivoresImgNew.pixelArray[wIndex + 3] = 0;
             }
-
           }
         }
-        
-        wLightningImgNew.ctx.putImageData(wLightningImgNew.imageData, 0, 0);
-        wPlantsImgNew.ctx.putImageData(wPlantsImgNew.imageData, 0, 0);
-        wHerbivoresImgNew.ctx.putImageData(wHerbivoresImgNew.imageData, 0, 0);
       }
 
+      wLightningImgNew.ctx.putImageData(wLightningImgNew.imageData, 0, 0);
+      wPlantsImgNew.ctx.putImageData(wPlantsImgNew.imageData, 0, 0);
+      wHerbivoresImgNew.ctx.putImageData(wHerbivoresImgNew.imageData, 0, 0);
 
-      function render() {
-
-        if (null == gWorldModel.DisplayCanvas) {
-          return;
+      for (var wi = 0; wi < gWorldModel.CanvasLayer.length; ++wi) {
+        var wImage = getImgPixelData(gWorldModel.CanvasLayer[wi][gWorldModel.DisplayIndexNext]);
+        gWorldModel.Counts[wi] = 0;
+        for (var wi = 0; wi < wImage.pixelArray.length; wi += 4) {
+          if (0 != wImage.pixelArray[wi + 3]) {
+            gWorldModel.Counts[wi]++;
+          }
         }
+      }
+    }
 
-        var wCtx =  gWorldModel.DisplayCanvas.getContext('2d');
-        wCtx.clearRect(0,0,gWorldModel.DisplayCanvas.width, gWorldModel.DisplayCanvas.height);
+    function render() {
 
-        for(var wi = 0; wi < gWorldModel.DisplayLayers.length; ++wi) {
-
-            var wEnum = gWorldModel.DisplayLayers[wi];
-            var wKey = eCanvas_Layer[wEnum];
-            var wInputLayer = gWorldModel.CanvasLayer[wKey][gWorldModel.DisplayIndexNext];
-            var wSprite = gWorldModel.SpriteImg[wEnum];
-
-            drawWorldElements(gWorldModel.DisplayCanvas, wInputLayer, wSprite)
-        }        
+      if (null == gWorldModel.DisplayCanvas) {
+        return;
       }
 
-      function drawWorldElements(iDisplayCanvas, iElementCanvas, iDrawArray) {
+      var wCtx = gWorldModel.DisplayCanvas.getContext('2d');
+      wCtx.clearRect(0, 0, gWorldModel.DisplayCanvas.width, gWorldModel.DisplayCanvas.height);
 
-        if ((null ==iDrawArray) || (null == iDisplayCanvas) || (null == iElementCanvas)) {
-          return;
-        }
+      for (var wi = 0; wi < gWorldModel.DisplayLayers.length; ++wi) {
 
-        var wInputImg = getImgPixelData(iElementCanvas);
-        var wOutputImg = getImgPixelData(iDisplayCanvas);
+        var wEnum = gWorldModel.DisplayLayers[wi];
+        var wKey = eCanvas_Layer[wEnum];
+        var wInputLayer = gWorldModel.CanvasLayer[wKey][gWorldModel.DisplayIndexNext];
+        var wSprite = gWorldModel.SpriteImg[wEnum];
 
-        var wScale = Math.round( wOutputImg.width/wInputImg.width);
+        drawWorldElements(gWorldModel.DisplayCanvas, wInputLayer, wSprite)
+      }
+    }
 
-        var wIndex = 0;
-        for(var wX = 0; wX < wInputImg.width; ++wX) {
+    function drawWorldElements(iDisplayCanvas, iElementCanvas, iDrawArray) {
 
-          for(var wY = 0; wY < wInputImg.height; ++wY) {
-            wIndex = (wY*wInputImg.width + wX)*4;
-            wA = wInputImg.pixelArray[wIndex + 3]; // alpha
-            if (0 != wA) {
-              wR = wInputImg.pixelArray[wIndex] ; // red
-              wG = wInputImg.pixelArray[wIndex + 1]; // green
-              wB = wInputImg.pixelArray[wIndex + 2]; // blue
+      if ((null == iDrawArray) || (null == iDisplayCanvas) || (null == iElementCanvas)) {
+        return;
+      }
 
-              var wDrawAnchorX = wX*wScale;
-              var wDrawAnchorY = wY*wScale;
+      var wInputImg = getImgPixelData(iElementCanvas);
+      var wOutputImg = getImgPixelData(iDisplayCanvas);
 
-              var wOX,wOY,wOIndex;
+      var wScale = Math.round(wOutputImg.width / wInputImg.width);
 
-              for (var wSY = 0; wSY < iDrawArray.length; ++wSY) {
-                wOY = wDrawAnchorY + wSY;
-                for (var wSX = 0; wSX < iDrawArray[wSY].length; ++wSX) {
-                  wOX = wDrawAnchorX + wSX;
-                  wOIndex = (wOY * wOutputImg.width + wOX) * 4;
+      var wIndex = 0;
+      for (var wX = 0; wX < wInputImg.width; ++wX) {
 
-                  wOutputImg.pixelArray[wOIndex] = wR;
-                  wOutputImg.pixelArray[wOIndex + 1] = wG;
-                  wOutputImg.pixelArray[wOIndex + 2] = wB;
+        for (var wY = 0; wY < wInputImg.height; ++wY) {
+          wIndex = (wY * wInputImg.width + wX) * 4;
+          wA = wInputImg.pixelArray[wIndex + 3]; // alpha
+          if (0 != wA) {
+            wR = wInputImg.pixelArray[wIndex]; // red
+            wG = wInputImg.pixelArray[wIndex + 1]; // green
+            wB = wInputImg.pixelArray[wIndex + 2]; // blue
 
-                  wOAlpha = (wA) * iDrawArray[wSY][wSX];
-                  wOAlpha = wOAlpha > 255 ? 255 : wOAlpha < 0 ? 0 : wOAlpha;
-                  wOutputImg.pixelArray[wOIndex + 3] = wOAlpha;
+            var wDrawAnchorX = wX * wScale;
+            var wDrawAnchorY = wY * wScale;
 
+            var wOX, wOY, wOIndex;
+
+            for (var wSY = 0; wSY < iDrawArray.length; ++wSY) {
+              wOY = wDrawAnchorY + wSY;
+              if (wOY >= wOutputImg.height) {
+                continue;
+              }
+
+              for (var wSX = 0; wSX < iDrawArray[wSY].length; ++wSX) {
+                wOX = wDrawAnchorX + wSX;
+                if (wOX >= wOutputImg.width) {
+                  continue;
                 }
+
+                wOIndex = (wOY * wOutputImg.width + wOX) * 4;
+
+                wOutputImg.pixelArray[wOIndex] = wR;
+                wOutputImg.pixelArray[wOIndex + 1] = wG;
+                wOutputImg.pixelArray[wOIndex + 2] = wB;
+
+                wOAlpha = (wA) * iDrawArray[wSY][wSX];
+                wOAlpha = wOAlpha > 255 ? 255 : wOAlpha < 0 ? 0 : wOAlpha;
+                wOutputImg.pixelArray[wOIndex + 3] = wOAlpha;
+
               }
             }
           }
         }
-        /*
-        for (var wX = 0; wX < wOutputImg.width; ++wX) {
+      }
+      /*
+      for (var wX = 0; wX < wOutputImg.width; ++wX) {
 
-          for (var wY = 0; wY < wOutputImg.height; ++wY) {
-            wIndex = (wY * wOutputImg.width + wX) * 4;
-            wOutputImg.pixelArray[wIndex + 3] = 255; // alpha
-            wOutputImg.pixelArray[wIndex] = Math.floor(255*wX/wOutputImg.width) ; // red
-            wOutputImg.pixelArray[wIndex + 1] = 0; // green
-            wOutputImg.pixelArray[wIndex + 2] = Math.floor(255*wY/wOutputImg.height); // blue
+        for (var wY = 0; wY < wOutputImg.height; ++wY) {
+          wIndex = (wY * wOutputImg.width + wX) * 4;
+          wOutputImg.pixelArray[wIndex + 3] = 255; // alpha
+          wOutputImg.pixelArray[wIndex] = Math.floor(255*wX/wOutputImg.width) ; // red
+          wOutputImg.pixelArray[wIndex + 1] = 0; // green
+          wOutputImg.pixelArray[wIndex + 2] = Math.floor(255*wY/wOutputImg.height); // blue
 
 
-          }
         }
+      }
 
 */
 
-        wOutputImg.ctx.putImageData(wOutputImg.imageData, 0, 0);
-      }
+      wOutputImg.ctx.putImageData(wOutputImg.imageData, 0, 0);
+    }
 
   </script>
 </head>
+
 <body>
   <!--
     <iframe id="id_SubCount" frameborder="0" src="https://freewebtools.com/live-sub-count/Heap%20Art/" allowfullscreen></iframe>
