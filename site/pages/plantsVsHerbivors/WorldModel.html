@@ -68,16 +68,17 @@
       PlantReproductionThreshold: 250,
       PlantReproductionCost: 100,
       PlantBirthEnergy: 1,
-      PlantGeneDrift: 5,
+      PlantGeneDrift: 1,
 
       HerbivoreEnergyChangeIt: -1,
       HerbivoreEnergyChangeStep: -5,
+      HerbivoreEnergyConversionRate: 0.20,
       HerbivoreReproductionThreshold: 250,
       HerbivoreReproductionCost: 100,
       HerbivoreBirthEnergy: 100,
-      HerbivoreGeneDrift: 5,
+      HerbivoreGeneDrift: 15,
 
-      AppetiteRange: 50,
+      AppetiteRange: 40,
 
       IterationTimeMs: 50
     }
@@ -256,7 +257,7 @@
       var wSpawnPlant = gWorldModel.Counts[eWorld_Layer.Plants] < 2;
       var wSpawnHerbivore = gWorldModel.Counts[eWorld_Layer.Herbivores] < 2;
 
-      var wAppetiteRangeSq = gSimParameters.AppetiteRange*gSimParameters.AppetiteRange;
+      var wAppetiteRangeSq = 3*gSimParameters.AppetiteRange*gSimParameters.AppetiteRange;
 
       for (var wX = 0; wX < wInputWidth; ++wX) {
         for (var wY = 0; wY < wInputHeight; ++wY) {
@@ -335,7 +336,7 @@
               var wEDist = wEDiffR * wEDiffR + wEDiffG * wEDiffG + wEDiffB * wEDiffB;
 
               if (wEDist < wAppetiteRangeSq) {
-                wNewHerbivoreLife += Math.floor(0.1 * (wPlantsImgNew[wIndex + 3]));
+                wNewHerbivoreLife += Math.ceil(gSimParameters.HerbivoreEnergyConversionRate * (wPlantsImgNew[wIndex + 3]));
                 wPlantsImgNew[wIndex + 3] = 0;
               }
 
