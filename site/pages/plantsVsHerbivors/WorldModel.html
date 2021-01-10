@@ -8,33 +8,6 @@
   <meta name="author" content="Wilson Lee @Heap Art">
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
   <Title>Heap Art - Prism Phone Stand</Title>
-  <style>
-    body {
-      padding: 0;
-      margin: 0;
-      overflow: hidden;
-    }
-
-    #id_SubCount {
-      height: 110px;
-      width: 350px;
-      overflow: hidden;
-      scroll-behavior: none;
-    }
-
-    #id_SimulationViewPoint_div {
-      padding: 0;
-      margin: 0;
-      z-index: -100;
-      width: 100vw;
-      height: 100vh;
-      background-color: black;
-    }
-
-    canvas {
-      border: 1px solid blue;
-    }
-  </style>
   <script>
 
     //---------------------------------------------------------------
@@ -59,12 +32,10 @@
     }
 
     function driftColor(iNumber) {
-      var wDrift = Math.round(20 * (2 * Math.random() - 1));
-      wDrift = Math.random() > 0.5 ? 1 : -1;
-      wDrift *= Math.floor(Math.random() * 50 + 10);
+      var wDrift = -1;
       var wNewColor = iNumber + wDrift;
       if (wNewColor > 255) wNewColor = 255;
-      else if (wNewColor < 0) wNewColor = 0;
+      else if (wNewColor < 0) wNewColor = 255;
       return wNewColor;
     }
 
@@ -81,13 +52,13 @@
     active_Layers = {
       Lightning: false,
       Plants: true,
-      Herbivores: true,
+      Herbivores: false,
     }
 
     gSimParameters = {
-      RandomLightning: 0.00002,
-      RandomPlantLife: 0.00002,
-      RandomHerbivoreLife: 0.00002,
+      RandomLightning: 0.0001,
+      RandomPlantLife: 0.1,
+      RandomHerbivoreLife: 0.1,
 
       PlantEnergyChangeIt: 10,
       PlantReproductionThreshold: 250,
@@ -98,9 +69,10 @@
       HerbivoreEnergyChangeStep: -5,
       HerbivoreReproductionThreshold: 250,
       HerbivoreReproductionCost: 100,
-      HerbivoreBirthEnergy: 50,
+      HerbivoreBirthEnergy: 10,
 
       AppetiteRange: 20,
+      GeneticDrift : 20,
 
       IterationTimeMs: 50
     }
@@ -134,12 +106,17 @@
         gWorldModel.DisplayCanvas = wSimulationViewPoint;
       }
 
+      var wDebugCanvasDiv =  document.getElementById("idDebugCanvasDiv");
       var wWorldLayers = Object.keys(eCanvas_Layer);
       for (var wi = 0; wi < wWorldLayers.length; ++wi) {
         var wNewArray = []
 
         for (var wj = 0; wj < gWorldModel.DisplayFrameCount; ++wj) {
-          wNewArray.push(document.createElement("canvas"));
+          var wNewCanvas = document.createElement("canvas");
+          if (null != wDebugCanvasDiv) {
+            wDebugCanvasDiv.append(wNewCanvas)
+          }
+          wNewArray.push(wNewCanvas);
         }
 
         gWorldModel.CanvasLayer.push(wNewArray);
@@ -206,6 +183,8 @@
 
       process();
       render();
+      outputHtml();
+
     }
 
     function process() {
@@ -234,8 +213,8 @@
       var wIndex, wTargetIndex, wHasTarget;
       var wNewX, wNewY;
 
-      var wSpawnPlant = gWorldModel.Counts[eCanvas_Layer.Plants] < 10;
-      var wSpawnHerbivore = gWorldModel.Counts[eCanvas_Layer.Herbivores] < 10;
+      var wSpawnPlant = gWorldModel.Counts[eCanvas_Layer.Plants] < 2;
+      var wSpawnHerbivore = gWorldModel.Counts[eCanvas_Layer.Herbivores] < 2;
 
       for (var wX = 0; wX < wInputWidth; ++wX) {
         for (var wY = 0; wY < wInputHeight; ++wY) {
@@ -243,6 +222,7 @@
           wIndex = (wY * wInputWidth + wX) * 4;
 
           if (true == active_Layers.Plants) {
+
             wPlantLife = wPlantsImg.pixelArray[wIndex + 3];
             if (0 != wPlantLife) {
               wNewPlantLife = wPlantLife + gSimParameters.PlantEnergyChangeIt;
@@ -265,9 +245,10 @@
                     wTargetPlantLifeNext = wPlantsImgNew.pixelArray[wTargetIndex + 3];
                     if (0 == wTargetPlantLifeNext) {
                       wPlantsImgNew.pixelArray[wTargetIndex + 3] = gSimParameters.PlantBirthEnergy;
-                      wPlantsImgNew.pixelArray[wTargetIndex] = driftColor(wPlantsImg.pixelArray[wIndex]);      // red
-                      wPlantsImgNew.pixelArray[wTargetIndex + 1] = driftColor(wPlantsImg.pixelArray[wIndex + 1]); // green
-                      wPlantsImgNew.pixelArray[wTargetIndex + 2] = driftColor(wPlantsImg.pixelArray[wIndex + 2]); // blue
+                      
+                      wPlantsImgNew.pixelArray[wTargetIndex] = wPlantsImg.pixelArray[wIndex];      // red
+                      wPlantsImgNew.pixelArray[wTargetIndex + 1] = wPlantsImg.pixelArray[wIndex + 1] - 20; // green
+                      wPlantsImgNew.pixelArray[wTargetIndex + 2] = wPlantsImg.pixelArray[wIndex + 2] + 10; // blue
 
                       wNewPlantLife -= gSimParameters.PlantReproductionCost;
                     }
@@ -275,7 +256,7 @@
                 }
               }
 
-              if (wNewPlantLife > 255) wNewPlantLife = 255;
+              if (wNewPlantLife > 254) wNewPlantLife = 254;
 
               wPlantsImgNew.pixelArray[wIndex + 3] = wNewPlantLife;
               wPlantsImgNew.pixelArray[wIndex] = wPlantsImg.pixelArray[wIndex];      // red
@@ -286,15 +267,13 @@
               if (true == wSpawnPlant) {
                 wPlantLifeNext = wPlantsImgNew.pixelArray[wIndex + 3];
                 if (0 == wPlantLifeNext) {
-
                   if (Math.random() < gSimParameters.RandomPlantLife) {
                     wPlantsImgNew.pixelArray[wIndex + 3] = gSimParameters.PlantBirthEnergy;
                     wPlantsImgNew.pixelArray[wIndex] = 0; // red
-                    wPlantsImgNew.pixelArray[wIndex + 1] = 255; // green
+                    wPlantsImgNew.pixelArray[wIndex + 1] = 150; // green
                     wPlantsImgNew.pixelArray[wIndex + 2] = 0; // blue
                   }
                 }
-
               }
             }
           }
@@ -436,8 +415,8 @@
       for (var wi = 0; wi < gWorldModel.CanvasLayer.length; ++wi) {
         var wImage = getImgPixelData(gWorldModel.CanvasLayer[wi][gWorldModel.DisplayIndexNext]);
         gWorldModel.Counts[wi] = 0;
-        for (var wi = 0; wi < wImage.pixelArray.length; wi += 4) {
-          if (0 != wImage.pixelArray[wi + 3]) {
+        for (var wj = 0; wj < wImage.pixelArray.length; wj += 4) {
+          if (0 != wImage.pixelArray[wj + 3]) {
             gWorldModel.Counts[wi]++;
           }
         }
@@ -537,7 +516,68 @@
       wOutputImg.ctx.putImageData(wOutputImg.imageData, 0, 0);
     }
 
+    function outputHtml() {
+      var wOutputDiv = document.getElementById("id_SimulationData_div");
+
+      if (null != wOutputDiv) {
+        var wHtml = "<h2>Element Counts</h2>";
+
+        var wWorldLayers = Object.keys(eCanvas_Layer);
+        for (var wi = 0; wi < wWorldLayers.length; ++wi) {
+          wHtml += "<span>" + wWorldLayers[wi] +"</span>";
+          wHtml += "<span>" + gWorldModel.Counts[wi] +"</span>";
+          wHtml += "</br>";
+        }
+
+        wOutputDiv.innerHTML = wHtml;
+      }
+    }
+
   </script>
+  <style>
+    body {
+      padding: 0;
+      margin: 0;
+/*      overflow: hidden;*/
+    }
+
+    #id_SubCount {
+      height: 110px;
+      width: 350px;
+      overflow: hidden;
+      scroll-behavior: none;
+    }
+
+    #id_SimulationViewPoint_div {
+      padding: 0;
+      margin: 0;
+      z-index: -100;
+      width: 100vw;
+      height: 100vh;
+      background-color: black;
+    }
+
+    #id_SimulationData_div {
+      position: fixed;
+      top: 0px;
+      left: 0px;
+      background-color: rgba(255,255,255, 0.5);
+      padding: 5px;
+    }
+    span {
+      margin: 5px;
+    }
+
+    #idDebugCanvasDiv canvas {
+      
+      border: 1px solid blue;
+    } 
+    /*
+    canvas {
+      border: 1px solid blue;
+    }
+    */
+  </style>
 </head>
 
 <body>
@@ -546,6 +586,11 @@
   -->
   <div id="id_SimulationViewPoint_div">
     <canvas id="id_SimulationViewPoint_canvas"></canvas>
+  </div>
+  <div id="id_SimulationData_div">
+  </div>
+
+  <div id="idDebugCanvasDiv">
   </div>
 </body>
 
