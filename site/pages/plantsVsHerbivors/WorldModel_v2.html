@@ -47,6 +47,56 @@
     // Global Variables
     //---------------------------------------------------------------
 
+    c120Deg = (2/3)*Math.PI;
+    cCos120Deg = Math.cos(c120Deg);
+    cSin120Deg = Math.sin(c120Deg);
+
+    gVRed = [1,0];
+    gVGreen = [Math.cos(c120Deg), Math.sin(c120Deg)];
+    gVBlue = [Math.cos(2*c120Deg), Math.sin(2*c120Deg)];
+    
+    gColorMap = [];
+    for (var wi = 0; wi < 256; ++wi){
+      var wAngle = (wi/256) * 2*Math.PI;
+      var wR=0.0, wG=0.0, wB=0.0; 
+      if (wAngle < c120Deg) {
+        var wP = wAngle/c120Deg;
+        wR = 1 - wP;
+        wG = wP;
+        wB = 0;
+      }
+      else if  (wAngle < 2*c120Deg) {
+        var wP = (wAngle - c120Deg) /c120Deg;
+        wR = 0;
+        wG = 1 - wP;
+        wB = wP;
+      }
+      else {
+        var wP = (wAngle - 2*c120Deg) /c120Deg;
+        wR = wP;
+        wG = 0;
+        wB = 1 - wP;
+      }
+
+      var wMag = Math.sqrt(wR*wR + wG*wG + wB*wB);
+      wR /= wMag;
+      wG /= wMag;
+      wB /= wMag;
+      
+      gColorMap.push([Math.round(wR*255), Math.round(wG*255), Math.round(wB*255)]);
+    }
+
+    function calculateAngleDiff(iColor1, iColor2) {
+      var wDiff = (iColor1 - iColor2);
+      while(wDiff < -128) {
+        wDiff += 128;
+      }
+      while(wDiff > 128) {
+        wDiff -= 128;
+      }
+      return wDiff;
+    }
+
     eWorld_Layer = {
       Lightning: 0,
       Plants: 1,
@@ -68,17 +118,17 @@
       PlantReproductionThreshold: 250,
       PlantReproductionCost: 100,
       PlantBirthEnergy: 1,
-      PlantGeneDrift: 5,
+      PlantGeneDrift: 1,
 
       HerbivoreEnergyChangeIt: -1,
       HerbivoreEnergyChangeStep: -5,
       HerbivoreEnergyConversionRate: 0.20,
       HerbivoreReproductionThreshold: 250,
       HerbivoreReproductionCost: 100,
-      HerbivoreBirthEnergy: 100,
+      HerbivoreBirthEnergy: 50,
       HerbivoreGeneDrift: 15,
 
-      AppetiteRange: 40,
+      AppetiteRange: 30,
 
       IterationTimeMs: 50
     }
@@ -95,7 +145,29 @@
       DisplayIndex: 0,
       DisplayIndexNext: 0,
       DisplayFrameCount: 2,
-      SpriteImg: {}
+      SpriteImg: {
+        Lightning:
+          [ [0, 0, 0, 1, 0]
+          , [0, 0, 1, 0, 0]
+          , [0, 1, 1, 1, 0]
+          , [0, 0, 1, 0, 0]
+          , [0, 1, 0, 0, 0] ]
+
+        , Plants:
+          [ [0.3, 1.0, 0.5, 1.0, 0.3]
+          , [1.0, 0.3, 0.7, 0.3, 1.0]
+          , [0.5, 0.7, 1.0, 0.7, 0.5]
+          , [1.0, 0.3, 0.7, 0.3, 1.0]
+          , [0.3, 1.0, 0.5, 1.0, 0.3] ]
+
+        , Herbivores:
+          [ [1, 0, 0, 0, 1]
+          , [1, 1, 0, 1, 1]
+          , [0, 1, 1, 1, 0]
+          , [0, 1, 1, 1, 0]
+          , [0, 0, 1, 0, 0] ]
+
+      }
     }
 
     //---------------------------------------------------------------
@@ -109,6 +181,7 @@
 
     function setup() {
 
+
       var wSimulationViewPoint = document.getElementById("id_SimulationViewPoint_canvas");
       if (null != wSimulationViewPoint) {
         gWorldModel.DisplayCanvas = wSimulationViewPoint;
@@ -116,7 +189,7 @@
         gWorldModel.height = Math.ceil(gWorldModel.DisplayCanvas.height / gWorldModel.SpriteScale);
       }
 
-      var wArrayLength = gWorldModel.width * gWorldModel.height * 4;
+      var wArrayLength = gWorldModel.width * gWorldModel.height * 2;
 
       var wWorldLayers = Object.keys(eWorld_Layer);
       for (var wi = 0; wi < wWorldLayers.length; ++wi) {
@@ -136,28 +209,6 @@
 
       gWorldModel.DisplayLayers = Object.keys(eWorld_Layer);
 
-
-      gWorldModel.SpriteImg["Lightning"] =
-        [[0, 0, 0, 1, 0]
-          , [0, 0, 1, 0, 0]
-          , [0, 1, 1, 1, 0]
-          , [0, 0, 1, 0, 0]
-          , [0, 1, 0, 0, 0]]
-
-      gWorldModel.SpriteImg["Plants"] =
-        [[0.3, 1.0, 0.5, 1.0, 0.3]
-          , [1.0, 0.3, 0.7, 0.3, 1.0]
-          , [0.5, 0.7, 1.0, 0.7, 0.5]
-          , [1.0, 0.3, 0.7, 0.3, 1.0]
-          , [0.3, 1.0, 0.5, 1.0, 0.3]]
-
-
-      gWorldModel.SpriteImg["Herbivores"] =
-        [[1, 0, 0, 0, 1]
-          , [1, 1, 0, 1, 1]
-          , [0, 1, 1, 1, 0]
-          , [0, 1, 1, 1, 0]
-          , [0, 0, 1, 0, 0]]
 
       resizeCanvas();
       window.addEventListener("resize", resizeCanvas);
@@ -179,7 +230,7 @@
         gWorldModel.width = Math.ceil(wWorldDisplayWidth / gWorldModel.SpriteScale);
         gWorldModel.height = Math.ceil(wWorldDisplayHeight / gWorldModel.SpriteScale);
 
-        var wArrayLength = gWorldModel.width * gWorldModel.height * 4;
+        var wArrayLength = gWorldModel.width * gWorldModel.height * 2;
 
         for (var wi = 0; wi < gWorldModel.Layer.length; ++wi) {
           for (var wj = 0; wj < gWorldModel.Layer[wi].length; ++wj) {
@@ -189,22 +240,18 @@
             var wIndex, wOldIndex;
             for (var wX = 0; wX < gWorldModel.width; ++wX) {
               for (var wY = 0; wY < gWorldModel.height; ++wY) {
-                wIndex = (wY * gWorldModel.width + wX) * 4;
+                wIndex = (wY * gWorldModel.width + wX) * 2;
 
                 if ((wX < wOldWorldWidth) && (wY < wOldWorldHeight)) {
-                  wOldIndex = (wY * wOldWorldWidth + wX) * 4;
+                  wOldIndex = (wY * wOldWorldWidth + wX) * 2;
 
                   wNewLayer[wIndex] = wOldLayer[wOldIndex];
                   wNewLayer[wIndex + 1] = wOldLayer[wOldIndex + 1];
-                  wNewLayer[wIndex + 2] = wOldLayer[wOldIndex + 2];
-                  wNewLayer[wIndex + 3] = wOldLayer[wOldIndex + 3];
                 }
                 else {
 
                   wNewLayer[wIndex] = 0;
                   wNewLayer[wIndex + 1] = 0;
-                  wNewLayer[wIndex + 2] = 0;
-                  wNewLayer[wIndex + 3] = 0;
                 }
               }
             }
@@ -257,17 +304,16 @@
       var wSpawnPlant = gWorldModel.Counts[eWorld_Layer.Plants] < 2;
       var wSpawnHerbivore = gWorldModel.Counts[eWorld_Layer.Herbivores] < 2;
 
-      var wAppetiteRangeSq = 3*gSimParameters.AppetiteRange*gSimParameters.AppetiteRange;
-
       for (var wX = 0; wX < wInputWidth; ++wX) {
         for (var wY = 0; wY < wInputHeight; ++wY) {
 
-          wIndex = (wY * wInputWidth + wX) * 4;
+          wIndex = (wY * wInputWidth + wX) * 2;
 
           if (true == active_Layers.Plants) {
 
-            wPlantLife = wPlantsImg[wIndex + 3];
+            wPlantLife = wPlantsImg[wIndex];
             if (0 != wPlantLife) {
+
               wNewPlantLife = wPlantLife + gSimParameters.PlantEnergyChangeIt;
 
               var wRandomIndex = Math.floor(wTargetIndicesArr.length * Math.random());
@@ -277,22 +323,19 @@
               wNewY = wY + wTargetOffset[1];
               wNewY = wNewY < 0 ? 0 : wNewY >= wInputHeight ? wInputHeight - 1 : wNewY;
 
-              wTargetIndex = (wNewY * wInputWidth + wNewX) * 4;
+              wTargetIndex = (wNewY * wInputWidth + wNewX) * 2;
 
               wHasTarget = wIndex != wTargetIndex;
 
               if (true == wHasTarget) {
                 if (wNewPlantLife > gSimParameters.PlantReproductionThreshold) {
-                  wTargetPlantLife = wPlantsImg[wTargetIndex + 3];
+                  wTargetPlantLife = wPlantsImg[wTargetIndex];
                   if (0 == wTargetPlantLife) {
-                    wTargetPlantLifeNext = wPlantsImgNew[wTargetIndex + 3];
+                    wTargetPlantLifeNext = wPlantsImgNew[wTargetIndex];
                     if (0 == wTargetPlantLifeNext) {
-                      wPlantsImgNew[wTargetIndex + 3] = gSimParameters.PlantBirthEnergy;
+                      wPlantsImgNew[wTargetIndex] = gSimParameters.PlantBirthEnergy;
 
-                      wPlantsImgNew[wTargetIndex] = driftColor(gSimParameters.PlantGeneDrift, wPlantsImg[wIndex]);      // red
-                      wPlantsImgNew[wTargetIndex + 1] = driftColor(gSimParameters.PlantGeneDrift, wPlantsImg[wIndex + 1]); // green
-                      wPlantsImgNew[wTargetIndex + 2] = driftColor(gSimParameters.PlantGeneDrift, wPlantsImg[wIndex + 2]); // blue
-
+                      wPlantsImgNew[wTargetIndex + 1] = driftColor(gSimParameters.PlantGeneDrift, wPlantsImg[wIndex + 1]);
                       wNewPlantLife -= gSimParameters.PlantReproductionCost;
                     }
                   }
@@ -301,20 +344,16 @@
 
               if (wNewPlantLife > 255) wNewPlantLife = 255;
 
-              wPlantsImgNew[wIndex + 3] = wNewPlantLife;
-              wPlantsImgNew[wIndex] = wPlantsImg[wIndex];      // red
-              wPlantsImgNew[wIndex + 1] = wPlantsImg[wIndex + 1]; // green
-              wPlantsImgNew[wIndex + 2] = wPlantsImg[wIndex + 2]; // blue
+              wPlantsImgNew[wIndex] = wNewPlantLife;
+              wPlantsImgNew[wIndex + 1] = wPlantsImg[wIndex + 1];
             }
             else {
               if (true == wSpawnPlant) {
-                wPlantLifeNext = wPlantsImgNew[wIndex + 3];
+                wPlantLifeNext = wPlantsImgNew[wIndex];
                 if (0 == wPlantLifeNext) {
                   if (Math.random() < gSimParameters.RandomPlantLife) {
-                    wPlantsImgNew[wIndex + 3] = gSimParameters.PlantBirthEnergy;
-                    wPlantsImgNew[wIndex] = 0; // red
-                    wPlantsImgNew[wIndex + 1] = 255; // green
-                    wPlantsImgNew[wIndex + 2] = 0; // blue
+                    wPlantsImgNew[wIndex] = gSimParameters.PlantBirthEnergy;
+                    wPlantsImgNew[wIndex+1] = 85;
                   }
                 }
               }
@@ -322,23 +361,16 @@
           }
 
           if (true == active_Layers.Herbivores) {
-            wHerbivoreLife = wHerbivoresImg[wIndex + 3];
+            wHerbivoreLife = wHerbivoresImg[wIndex];
             if (0 != wHerbivoreLife) {
               wNewHerbivoreLife = wHerbivoreLife + gSimParameters.HerbivoreEnergyChangeIt;
 
-              var wInvR = 255 - wHerbivoresImg[wIndex];
-              var wInvG = 255 - wHerbivoresImg[wIndex + 1];
-              var wInvB = 255 - wHerbivoresImg[wIndex + 2];
-              
-              var wEDiffR = wInvR - wPlantsImgNew[wIndex];
-              var wEDiffG = wInvG - wPlantsImgNew[wIndex + 1];
-              var wEDiffB = wInvB - wPlantsImgNew[wIndex + 2];
-              var wEDist = wEDiffR * wEDiffR + wEDiffG * wEDiffG + wEDiffB * wEDiffB;
+              if (0 != wPlantsImgNew[wIndex]) {
+                var wPlantDiff = calculateAngleDiff(wHerbivoresImg[wIndex + 1], wPlantsImgNew[wIndex + 1])
 
-              if (0 < wPlantsImgNew[wIndex + 3]) {
-                if (wEDist < wAppetiteRangeSq) {
-                  wNewHerbivoreLife += Math.ceil(gSimParameters.HerbivoreEnergyConversionRate * (wPlantsImgNew[wIndex + 3]));
-                  wPlantsImgNew[wIndex + 3] = 0;
+                if (Math.abs(wPlantDiff) > (128 - gSimParameters.AppetiteRange)) {
+                  wNewHerbivoreLife += Math.ceil(gSimParameters.HerbivoreEnergyConversionRate * (wPlantsImgNew[wIndex]));
+                  wPlantsImgNew[wIndex] = 0;
                 }
               }
 
@@ -353,12 +385,10 @@
               wNewY = wY + wTargetOffset[1];
               wNewY = wNewY < 0 ? 0 : wNewY >= wInputHeight ? wInputHeight - 1 : wNewY;
 
-              wTargetIndex = (wNewY * wInputWidth + wNewX) * 4;
-              var wDiffA = 255 - wPlantsImgNew[wTargetIndex + 3];
-              var wDiffR = wInvR - wPlantsImgNew[wTargetIndex];
-              var wDiffG = wInvG - wPlantsImgNew[wTargetIndex + 1];
-              var wDiffB = wInvB - wPlantsImgNew[wTargetIndex + 2];
-              var wDist = wDiffA*wDiffA + wDiffR * wDiffR + wDiffG * wDiffG + wDiffB * wDiffB;
+              wTargetIndex = (wNewY * wInputWidth + wNewX) * 2;
+
+              var wTPlantDiff = calculateAngleDiff(wHerbivoresImg[wIndex + 1], wPlantsImg[wTargetIndex + 1]);
+              var wDist = wTPlantDiff*wTPlantDiff + wPlantsImg[wTargetIndex]*wPlantsImg[wTargetIndex]
 
               for (var wi = 0; wi < wTargetIndicesArr.length; ++wi) {
                 var wTargetOffset = wTargetIndicesArr[(wTargetIndicesArr.length + wRandomIndex - wi) % wTargetIndicesArr.length];
@@ -367,16 +397,13 @@
                 wNewY = wY + wTargetOffset[1];
                 wNewY = wNewY < 0 ? 0 : wNewY >= wInputHeight ? wInputHeight - 1 : wNewY;
 
-                var wTempTargetIndex = (wNewY * wInputWidth + wNewX) * 4;
+                var wTempTargetIndex = (wNewY * wInputWidth + wNewX) * 2;
                 if (wIndex != wTempTargetIndex) {
-                  var wTDiffA = 255 - wPlantsImg[wTargetIndex + 3];
-                  var wTDiffR = wInvR - wPlantsImg[wTargetIndex];
-                  var wTDiffG = wInvG - wPlantsImg[wTargetIndex + 1];
-                  var wTDiffB = wInvB - wPlantsImg[wTargetIndex + 2];
-                  var wTDist = wTDiffA * wTDiffA + wTDiffR * wTDiffR + wTDiffG * wTDiffG + wTDiffB * wTDiffB;
+                  var wTestTPlantDiff = calculateAngleDiff(wHerbivoresImg[wIndex + 1], wPlantsImg[wTempTargetIndex + 1]);
+                  var wTestDist = wTestTPlantDiff*wTestTPlantDiff + wPlantsImg[wTempTargetIndex]*wPlantsImg[wTempTargetIndex]
 
-                  if (wTDist < wDist) {
-                    wDist = wTDist;
+                  if (wTestDist > wDist) {
+                    wDist = wTestDist;
                     wTargetIndex = wTempTargetIndex;
                   }
                 }
@@ -386,28 +413,24 @@
 
               var wMoved = false;
               if (true == wHasTarget) {
-                wTargetHerbivoreLife = wHerbivoresImg[wTargetIndex + 3];
+                wTargetHerbivoreLife = wHerbivoresImg[wTargetIndex];
                 if (0 == wTargetHerbivoreLife) {
-                  wTargetHerbivoreLifeNext = wHerbivoresImgNew[wTargetIndex + 3];
+                  wTargetHerbivoreLifeNext = wHerbivoresImgNew[wTargetIndex];
                   if (0 == wTargetHerbivoreLifeNext) {
 
                     if (wNewHerbivoreLife > gSimParameters.HerbivoreReproductionThreshold) {
 
                       wNewHerbivoreLife -= gSimParameters.HerbivoreReproductionCost;
 
-                      wHerbivoresImgNew[wTargetIndex + 3] = gSimParameters.HerbivoreBirthEnergy;
-                      wHerbivoresImgNew[wTargetIndex] = driftColor(gSimParameters.HerbivoreGeneDrift, wHerbivoresImg[wIndex]);      // red
-                      wHerbivoresImgNew[wTargetIndex + 1] = driftColor(gSimParameters.HerbivoreGeneDrift, wHerbivoresImg[wIndex + 1]); // green
-                      wHerbivoresImgNew[wTargetIndex + 2] = driftColor(gSimParameters.HerbivoreGeneDrift, wHerbivoresImg[wIndex + 2]); // blue
+                      wHerbivoresImgNew[wTargetIndex] = gSimParameters.HerbivoreBirthEnergy;
+                      wHerbivoresImgNew[wTargetIndex + 1] = driftColor(gSimParameters.HerbivoreGeneDrift, wHerbivoresImg[wIndex +1]);
                     }
                     else {
                       wMoved = true;
                       wNewHerbivoreLife += gSimParameters.HerbivoreEnergyChangeStep;
 
-                      wHerbivoresImgNew[wTargetIndex + 3] = wNewHerbivoreLife;
-                      wHerbivoresImgNew[wTargetIndex] = wHerbivoresImg[wIndex];      // red
-                      wHerbivoresImgNew[wTargetIndex + 1] = wHerbivoresImg[wIndex + 1]; // green
-                      wHerbivoresImgNew[wTargetIndex + 2] = wHerbivoresImg[wIndex + 2]; // blue
+                      wHerbivoresImgNew[wTargetIndex] = wNewHerbivoreLife;
+                      wHerbivoresImgNew[wTargetIndex + 1] = wHerbivoresImg[wIndex + 1];
 
                     }
                   }
@@ -415,38 +438,28 @@
               }
 
               if (false == wMoved) {
-                wHerbivoresImgNew[wIndex + 3] = wNewHerbivoreLife;
-                wHerbivoresImgNew[wIndex] = wHerbivoresImg[wIndex];      // red
-                wHerbivoresImgNew[wIndex + 1] = wHerbivoresImg[wIndex + 1]; // green
-                wHerbivoresImgNew[wIndex + 2] = wHerbivoresImg[wIndex + 2]; // blue
+                wHerbivoresImgNew[wIndex] = wNewHerbivoreLife;
+                wHerbivoresImgNew[wIndex + 1] = wHerbivoresImg[wIndex + 1];
               }
             }
             else {
               if (true == wSpawnHerbivore) {
-                wHerbivoreLifeNext = wHerbivoresImgNew[wIndex + 3];
+                wHerbivoreLifeNext = wHerbivoresImgNew[wIndex];
                 if (0 == wHerbivoreLifeNext) {
 
                   if (Math.random() < gSimParameters.RandomHerbivoreLife) {
 
-                    if (0 != wPlantsImg[wIndex + 3]) {
-                      wHerbivoresImgNew[wIndex + 3] = gSimParameters.HerbivoreBirthEnergy;
-                      wHerbivoresImgNew[wIndex] = 255 - wPlantsImg[wIndex]; // red
-                      wHerbivoresImgNew[wIndex + 1] = 255 - wPlantsImg[wIndex + 1]; // green
-                      wHerbivoresImgNew[wIndex + 2] = 255 - wPlantsImg[wIndex + 2]; // blue                  
+                    if (0 != wPlantsImg[wIndex]) {
+                      wHerbivoresImgNew[wIndex] = gSimParameters.HerbivoreBirthEnergy;
+                      wHerbivoresImgNew[wIndex + 1] = (128 + wPlantsImg[wIndex + 1]) % 256;                  
                     }
-                    else if (0 != wPlantsImgNew[wIndex + 3]) {
-                      wHerbivoresImgNew[wIndex + 3] = gSimParameters.HerbivoreBirthEnergy;
-                      wHerbivoresImgNew[wIndex] = 255 - wPlantsImgNew[wIndex]; // red
-                      wHerbivoresImgNew[wIndex + 1] = 255 - wPlantsImgNew[wIndex + 1]; // green
-                      wHerbivoresImgNew[wIndex + 2] = 255 - wPlantsImgNew[wIndex + 2]; // blue   
-
+                    else if (0 != wPlantsImgNew[wIndex]) {
+                      wHerbivoresImgNew[wIndex] = gSimParameters.HerbivoreBirthEnergy;
+                      wHerbivoresImgNew[wIndex + 1] = (128 + wPlantsImgNew[wIndex + 1]) % 256;      
                     }
                     else {
-                      wHerbivoresImgNew[wIndex + 3] = gSimParameters.HerbivoreBirthEnergy;
-                      wHerbivoresImgNew[wIndex] = Math.round(Math.random() * 255); // red
-                      wHerbivoresImgNew[wIndex + 1] = Math.round(Math.random() * 255); // green
-                      wHerbivoresImgNew[wIndex + 2] = Math.round(Math.random() * 255); // blue
-
+                      wHerbivoresImgNew[wIndex] = gSimParameters.HerbivoreBirthEnergy;
+                      wHerbivoresImgNew[wIndex + 1] = 213;
                     }
                   }
                 }
@@ -455,28 +468,24 @@
           }
           if (true == active_Layers.Lightning) {
 
-            var wLightningStrength = wLightningImg[wIndex + 3];
+            var wLightningStrength = wLightningImg[wIndex];
             if (0 != wLightningStrength) {
 
               var wNewLightningStrength = Math.floor(0.75 * wLightningStrength);
 
-              wLightningImgNew[wIndex + 3] = wNewLightningStrength;
-              wLightningImgNew[wIndex] = wLightningImg[wIndex]; // red
-              wLightningImgNew[wIndex + 1] = wLightningImg[wIndex + 1]; // green
-              wLightningImgNew[wIndex + 2] = wLightningImg[wIndex + 2]; // blue
+              wLightningImgNew[wIndex] = wNewLightningStrength;
+              wLightningImgNew[wIndex + 1] = wNewLightningStrength;
             }
             else {
               if (Math.random() < gSimParameters.RandomLightning) {
-                wLightningImgNew[wIndex + 3] = 255;
-                wLightningImgNew[wIndex] = 255; // red
-                wLightningImgNew[wIndex + 1] = 255; // green
-                wLightningImgNew[wIndex + 2] = 255; // blue
+                wLightningImgNew[wIndex] = 255;
+                wLightningImgNew[wIndex + 1] = 255; // red
               }
             }
 
             if (0 != wLightningImgNew[wIndex + 3]) {
-              wPlantsImgNew[wIndex + 3] = 0;
-              wHerbivoresImgNew[wIndex + 3] = 0;
+              wPlantsImgNew[wIndex] = 0;
+              wHerbivoresImgNew[wIndex] = 0;
             }
           }
         }
@@ -487,7 +496,7 @@
 
         gWorldModel.Counts[wi] = 0;
         for (var wj = 0; wj < wWorkingLayer.length; wj += 4) {
-          if (0 != wWorkingLayer[wj + 3]) {
+          if (0 != wWorkingLayer[wj]) {
             gWorldModel.Counts[wi]++;
           }
         }
@@ -524,17 +533,16 @@
       var wOutputImg = getImgPixelData(iDisplayCanvas);
 
       var wScale = Math.round(wOutputImg.width / gWorldModel.width);
-
       var wIndex = 0;
+      var wColor = [];
+
       for (var wX = 0; wX < gWorldModel.width; ++wX) {
 
         for (var wY = 0; wY < gWorldModel.height; ++wY) {
-          wIndex = (wY * gWorldModel.width + wX) * 4;
-          wA = wInputImg[wIndex + 3]; // alpha
-          if (0 != wA) {
-            wR = wInputImg[wIndex]; // red
-            wG = wInputImg[wIndex + 1]; // green
-            wB = wInputImg[wIndex + 2]; // blue
+          wIndex = (wY * gWorldModel.width + wX) * 2;
+          var wA = wInputImg[wIndex]; // alpha
+          if (0 != wInputImg[wIndex]) {
+            var wColor = gColorMap[wInputImg[wIndex + 1]];
 
             var wDrawAnchorX = wX * wScale;
             var wDrawAnchorY = wY * wScale;
@@ -555,9 +563,9 @@
 
                 wOIndex = (wOY * wOutputImg.width + wOX) * 4;
 
-                wOutputImg.pixelArray[wOIndex] = wR;
-                wOutputImg.pixelArray[wOIndex + 1] = wG;
-                wOutputImg.pixelArray[wOIndex + 2] = wB;
+                wOutputImg.pixelArray[wOIndex] = wColor[0];
+                wOutputImg.pixelArray[wOIndex + 1] = wColor[1];
+                wOutputImg.pixelArray[wOIndex + 2] = wColor[2];
 
                 wOAlpha = (wA) * iDrawArray[wSY][wSX];
                 wOAlpha = wOAlpha > 255 ? 255 : wOAlpha < 0 ? 0 : wOAlpha;
