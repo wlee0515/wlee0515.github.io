@@ -78,21 +78,25 @@
         wB = 1 - wP;
       }
 
-      var wMag = Math.sqrt(wR*wR + wG*wG + wB*wB);
-      wR /= wMag;
-      wG /= wMag;
-      wB /= wMag;
-      
+      var wLargest = wR > wG ? wR : wG;
+      wLargest = wLargest > wB ? wLargest : wB;
+
+      if (wLargest != 0) {
+        wR /= wLargest;
+        wG /= wLargest;
+        wB /= wLargest;
+      }
+
       gColorMap.push([Math.round(wR*255), Math.round(wG*255), Math.round(wB*255)]);
     }
 
     function calculateAngleDiff(iColor1, iColor2) {
       var wDiff = (iColor1 - iColor2);
       while(wDiff < -128) {
-        wDiff += 128;
+        wDiff += 256;
       }
       while(wDiff > 128) {
-        wDiff -= 128;
+        wDiff -= 256;
       }
       return wDiff;
     }
@@ -128,7 +132,7 @@
       HerbivoreBirthEnergy: 50,
       HerbivoreGeneDrift: 5,
 
-      AppetiteRange: 30,
+      AppetiteRange: 10,
 
       IterationTimeMs: 50
     }
@@ -367,6 +371,9 @@
 
               if (0 != wPlantsImgNew[wIndex]) {
                 var wPlantDiff = calculateAngleDiff(wHerbivoresImg[wIndex + 1], wPlantsImgNew[wIndex + 1])
+                if (wPlantDiff < 0) {
+                  var w =232;
+                }
 
                 if (Math.abs(wPlantDiff) > (128 - gSimParameters.AppetiteRange)) {
                   wNewHerbivoreLife += Math.ceil(gSimParameters.HerbivoreEnergyConversionRate * (wPlantsImgNew[wIndex]));
@@ -423,7 +430,7 @@
                       wNewHerbivoreLife -= gSimParameters.HerbivoreReproductionCost;
 
                       wHerbivoresImgNew[wTargetIndex] = gSimParameters.HerbivoreBirthEnergy;
-                      wHerbivoresImgNew[wTargetIndex + 1] = driftColor(gSimParameters.HerbivoreGeneDrift, wHerbivoresImg[wIndex +1]);
+                      wHerbivoresImgNew[wTargetIndex + 1] = driftColor(gSimParameters.HerbivoreGeneDrift, wHerbivoresImg[wIndex + 1]);
                     }
                     else {
                       wMoved = true;
