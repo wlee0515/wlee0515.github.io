@@ -16,7 +16,8 @@
       PopulationSize: 25,
       Population: [],
 
-      MaxCircleRadius : 50,
+      MaxElementSize : 50,
+      HideReferenceImg : false,
       debugMode: false
     }
 
@@ -33,7 +34,6 @@
     }
 
     function render() {
-      window.requestAnimationFrame(render);
 
       var wLoadImgCanvas = document.getElementById('id_LoadImg');
       var wGenImgCanvas = document.getElementById('id_GeneratedImg');
@@ -64,6 +64,16 @@
       var wLoadImageData = wLoadImgCtx.getImageData(0, 0, wLoadImgCanvas.width, wLoadImgCanvas.height);
       var wLoadPixelArray = wLoadImageData.data;
 
+      var wElementSelector = document.getElementById("id_ElementShapeSelector");
+      var wShape = 0;
+      if (null != wElementSelector) {
+        if ("circle" == wElementSelector.value){
+          wShape = 0;
+        }
+        if ("square" == wElementSelector.value){
+          wShape = 1;
+        }
+      }
 
       for (var wi = 0; wi < gGlobal.Population.length; ++wi) {
 
@@ -73,14 +83,20 @@
         wSpecimenCtx.fillRect(0,0, wSpecimenCanvas.width, wSpecimenCanvas.height);
         wSpecimenCtx.drawImage(wGenImgCanvas, 0, 0);
         
-        wSpecimenCtx.beginPath();
-        wSpecimenCtx.arc(wCanvasWidth*Math.random(), wCanvasHeight*Math.random(), gGlobal.MaxCircleRadius*Math.random(), 0, 2 * Math.PI);
-
-        //wSpecimenCtx.stroke();
-
         if (wi != 0) {
+          
           wSpecimenCtx.fillStyle = "rgba(" + Math.floor(Math.random()*256) + "," + Math.floor(Math.random()*256) +"," + Math.floor(Math.random()*256) +"," + Math.random() +")";
-          wSpecimenCtx.fill();        
+
+          var wSize = gGlobal.MaxElementSize*Math.random();
+          
+          if (0 == wShape) {
+            wSpecimenCtx.beginPath();
+            wSpecimenCtx.arc(wCanvasWidth*Math.random(), wCanvasHeight*Math.random(), wSize, 0, 2 * Math.PI);
+            wSpecimenCtx.fill(); 
+          }
+          else if (1 == wShape) {
+            wSpecimenCtx.fillRect(wCanvasWidth*Math.random(), wCanvasHeight*Math.random(), wSize, wSize );
+          }
         }
 
         var wSpecimenImageData = wSpecimenCtx.getImageData(0, 0, wLoadImgCanvas.width, wLoadImgCanvas.height);
@@ -125,6 +141,9 @@
     }
 
     function init() {
+
+      gGlobal.RefImage.src = "/site/images/background01.jpg";
+
       document.getElementById('id_Img_upload').addEventListener("click",
         function () {
           var wRefAddress = document.getElementById('id_Img_address')
@@ -145,37 +164,107 @@
       }
 
       resize();
-      render();
+      setInterval(render, 25);
+
+      toggleReferenceImg();
+      while (true == gGlobal.HideReferenceImg) {
+        toggleReferenceImg();
+      }
     }
 
     function resize() {
 
+      var wInputForm = document.getElementById("id_ImageInput");
+
       var wLoadImgCanvasCanvas = document.getElementById("id_LoadImg");
       var wGenImgCanvasCanvas = document.getElementById("id_GeneratedImg");
-
-      wLoadImgCanvasCanvas.height = wLoadImgCanvasCanvas.parentElement.offsetHeight;
-      wLoadImgCanvasCanvas.width = wLoadImgCanvasCanvas.parentElement.offsetWidth;
 
       var wTempCanvas = document.createElement("canvas");
       wTempCanvas.height = wGenImgCanvasCanvas.height;
       wTempCanvas.width = wGenImgCanvasCanvas.width;
-
       wTempCanvasCtx = wTempCanvas.getContext("2d");
       wTempCanvasCtx.drawImage(wGenImgCanvasCanvas, 0, 0);
+
+      var wWindowWidth = window.innerWidth;
+      var wWindowHeight = window.innerHeight;
+      var wContainerWidth = window.innerWidth;
+      var wContainerHeight = wWindowHeight - wInputForm.offsetHeight;
+      var wAspectRatio = wContainerHeight/wContainerWidth;
+
+      var wCanvasWidth = wContainerWidth;
+      var wCanvasHeight = wContainerHeight;
+
+
+      if (false == gGlobal.HideReferenceImg) {
+        
+        wGenImgCanvasCanvas.parentElement.style.position = "fixed";
+        wGenImgCanvasCanvas.parentElement.style.top = wInputForm.offsetHeight + "px";
+        wGenImgCanvasCanvas.parentElement.style.left = "0px";
+        
+        wLoadImgCanvasCanvas.parentElement.style.visibility = "visible";
+        wLoadImgCanvasCanvas.parentElement.style.position = "fixed";
+
+        if (wAspectRatio > 1) {
+          // Vertical Screen
+          wCanvasHeight/=2;
+          wLoadImgCanvasCanvas.parentElement.style.top = (wInputForm.offsetHeight + wCanvasHeight) + "px";
+          wLoadImgCanvasCanvas.parentElement.style.left = "0px";
+        }
+        else {
+          // Horizontal Screen
+          wCanvasWidth/=2;
+          wLoadImgCanvasCanvas.parentElement.style.top = wInputForm.offsetHeight + "px";
+          wLoadImgCanvasCanvas.parentElement.style.left =  wCanvasWidth + "px";
+        }
+        
+      }
+      else {
+        wLoadImgCanvasCanvas.parentElement.style.visibility = "hidden";
+      }
+
       
-      wGenImgCanvasCanvas.height = wGenImgCanvasCanvas.parentElement.offsetHeight;
-      wGenImgCanvasCanvas.width = wGenImgCanvasCanvas.parentElement.offsetWidth;
+      wLoadImgCanvasCanvas.height = wCanvasHeight;
+      wLoadImgCanvasCanvas.width = wCanvasWidth;
+
+      wGenImgCanvasCanvas.height = wCanvasHeight;
+      wGenImgCanvasCanvas.width = wCanvasWidth;
 
       wGenCanvasCtx = wGenImgCanvasCanvas.getContext("2d");
-      wGenCanvasCtx.drawImage(wTempCanvas, 0.5*(wGenImgCanvasCanvas.width - wTempCanvas.width), 0.5*(wGenImgCanvasCanvas.height - wTempCanvas.height));
+      wGenCanvasCtx.drawImage(wTempCanvas, 0.5*(wCanvasWidth - wTempCanvas.width), 0.5*(wCanvasHeight - wTempCanvas.height));
 
       for (var wi = 0; wi < gGlobal.Population.length; ++wi) {
 
-        gGlobal.Population[wi].canvas.height = wGenImgCanvasCanvas.height;
-        gGlobal.Population[wi].canvas.width = wGenImgCanvasCanvas.width;
+        gGlobal.Population[wi].canvas.height = wCanvasHeight;
+        gGlobal.Population[wi].canvas.width = wCanvasWidth;
 
       }
     }
+
+    function clearGeneratedImg() {
+      
+      var wGenImgCanvasCanvas = document.getElementById("id_GeneratedImg");
+      var wGenCanvasCtx = wGenImgCanvasCanvas.getContext("2d");
+      wGenCanvasCtx.clearRect(0,0,wGenImgCanvasCanvas.width, wGenImgCanvasCanvas.height);
+
+      for (var wi = 0; wi < gGlobal.Population.length; ++wi) {
+
+        var wTempCtx = gGlobal.Population[wi].canvas.getContext("2d");
+        wTempCtx.clearRect(0,0,gGlobal.Population[wi].canvas.width, gGlobal.Population[wi].canvas.height);
+      }
+    }
+    
+    function toggleReferenceImg() {
+      var wCheckmark = document.getElementById("id_ShowRefImg");
+      if (false == wCheckmark.checked) {
+        gGlobal.HideReferenceImg = true;
+      }
+      else {
+        gGlobal.HideReferenceImg = false;
+      }
+      resize();
+    }
+
+
 
     window.addEventListener("load", init);
     window.addEventListener("resize", resize);
@@ -200,9 +289,6 @@
     }
 
     #id_ImageInput {
-      position: fixed;
-      top: 0px;
-      left: 0px;
       width: 100vw;
       background-color: blue;
       color: white;
@@ -212,34 +298,6 @@
       margin: auto;
     }
 
-    #id_GeneratedImg_Div,
-    #id_LoadImg_Div {
-      width: 100vw;
-      height: 50vh;
-    }
-
-
-    @media (min-aspect-ratio: 1/1) {
-
-      #id_GeneratedImg_Div,
-      #id_LoadImg_Div {
-        width: 50vw;
-        height: 100vh;
-      }
-
-      #id_GeneratedImg_Div {
-        position: fixed;
-        top: 0px;
-        left: 0vw;
-      }
-
-
-      #id_LoadImg_Div {
-        position: fixed;
-        top: 0px;
-        left: 50vw;
-      }
-    }
   </style>
 </head>
 
@@ -248,7 +306,15 @@
     <div id="id_ImageInputForm">
       <span>Image Selection: </span><input id="id_Img_address" type="file" value="" />
       <button id="id_Img_upload">Load</button>
-      <button id="id_Img_hide">Hide Reference Image</button>  
+      <select name="ElementShapeSelector" id="id_ElementShapeSelector" >
+        <option selected="selected" value="circle">Circle</option>
+        <option value="square">Square</option>
+      </select>
+      <button onclick="clearGeneratedImg()">Clear Image</button>
+    </div>  
+    <div>
+      <input type="checkbox" name="my-checkbox" id="id_ShowRefImg" onchange="toggleReferenceImg()" checked="true">
+      <label for="id_ShowRefImg" >Show Reference image</label>  
     </div>
   </div>
   <div id="id_CanvasDivContainer">
