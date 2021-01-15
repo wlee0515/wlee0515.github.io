@@ -1,0 +1,264 @@
+<!DOCTYPE HTML>
+<html>
+
+<head>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
+  <title>Genetic Algorithm, Evolving Images</title>
+  <script>
+
+    var gGlobal = {
+      RefImage: document.createElement("img"),
+      RefImageSrc: "",
+      RefImageLoaded: false,
+      RefImgWidth: 0,
+      RefImgHeight: 0,
+
+      PopulationSize: 25,
+      Population: [],
+
+      MaxCircleRadius : 50,
+      debugMode: false
+    }
+
+    function Specimen() {
+      var wNewCanvas = document.createElement("canvas");
+      return {
+        error: 0.0,
+        canvas: wNewCanvas
+      }
+    }
+
+    gGlobal.RefImage.onload = function () {
+      gGlobal.RefImageLoaded = true;
+    }
+
+    function render() {
+      window.requestAnimationFrame(render);
+
+      var wLoadImgCanvas = document.getElementById('id_LoadImg');
+      var wGenImgCanvas = document.getElementById('id_GeneratedImg');
+
+      var wCanvasWidth = wLoadImgCanvas.width
+      var wCanvasHeight = wLoadImgCanvas.height
+
+      if (false == gGlobal.RefImageLoaded) {
+        return
+      }
+
+      var wScaleW = gGlobal.RefImage.width / wCanvasWidth;
+      var wScaleH = gGlobal.RefImage.height / wCanvasHeight;
+
+      var wScale = wScaleW > wScaleH ? wScaleW : wScaleH;
+      wScale = 1 / wScale;
+
+
+      var wXOffset = (wCanvasWidth - wScale * gGlobal.RefImage.width) / 2.0;
+      var wYOffset = (wCanvasHeight - wScale * gGlobal.RefImage.height) / 2.0;
+
+      var wLoadImgCtx = wLoadImgCanvas.getContext("2d");
+      wLoadImgCtx.fillStyle = "white";
+      wLoadImgCtx.fillRect(0,0, wLoadImgCanvas.width, wLoadImgCanvas.height);
+      wLoadImgCtx.drawImage(gGlobal.RefImage, wXOffset, wYOffset, wScale * gGlobal.RefImage.width, wScale * gGlobal.RefImage.height);
+
+      
+      var wLoadImageData = wLoadImgCtx.getImageData(0, 0, wLoadImgCanvas.width, wLoadImgCanvas.height);
+      var wLoadPixelArray = wLoadImageData.data;
+
+
+      for (var wi = 0; wi < gGlobal.Population.length; ++wi) {
+
+        var wSpecimenCanvas = gGlobal.Population[wi].canvas;
+        var wSpecimenCtx = wSpecimenCanvas.getContext("2d");
+        wSpecimenCtx.fillStyle = "white";
+        wSpecimenCtx.fillRect(0,0, wSpecimenCanvas.width, wSpecimenCanvas.height);
+        wSpecimenCtx.drawImage(wGenImgCanvas, 0, 0);
+        
+        wSpecimenCtx.beginPath();
+        wSpecimenCtx.arc(wCanvasWidth*Math.random(), wCanvasHeight*Math.random(), gGlobal.MaxCircleRadius*Math.random(), 0, 2 * Math.PI);
+
+        //wSpecimenCtx.stroke();
+
+        if (wi != 0) {
+          wSpecimenCtx.fillStyle = "rgba(" + Math.floor(Math.random()*256) + "," + Math.floor(Math.random()*256) +"," + Math.floor(Math.random()*256) +"," + Math.random() +")";
+          wSpecimenCtx.fill();        
+        }
+
+        var wSpecimenImageData = wSpecimenCtx.getImageData(0, 0, wLoadImgCanvas.width, wLoadImgCanvas.height);
+        var wSpecimenPixelArray = wSpecimenImageData.data;
+
+        var wCount = 0;
+        var wError = 0;
+        for(var wj = 0; wj < wSpecimenPixelArray.length; wj +=4) {
+            var wDiffR = (wLoadPixelArray[wj] - wSpecimenPixelArray[wj]) / 255;
+            var wDiffG = (wLoadPixelArray[wj+1] - wSpecimenPixelArray[wj+1]) / 255;
+            var wDiffB = (wLoadPixelArray[wj+2] - wSpecimenPixelArray[wj+2]) / 255;
+            wCError = wDiffR*wDiffR + wDiffG*wDiffG + wDiffB*wDiffB;
+            
+            if (wCError != 0) {
+              var w = 2;
+            }
+
+            wError = (wCount/(wCount+1))*wError + wCError/(wCount+1);
+            wCount += 1;            
+        }
+        
+
+        gGlobal.Population[wi].error = wError;
+        
+      }
+
+
+      if (0 != gGlobal.Population.length) {
+        var wMinError = gGlobal.Population[0].error;
+        var wImg = gGlobal.Population[0].canvas;
+        for (var wi = 1; wi < gGlobal.Population.length; ++wi) {
+          if (wMinError > gGlobal.Population[wi].error) {
+            wMinError = gGlobal.Population[wi].error;
+            wImg = gGlobal.Population[wi].canvas;
+          }
+        }
+
+        var wGenImgCtx = wGenImgCanvas.getContext("2d");
+        wGenImgCtx.clearRect(0,0, wGenImgCanvas.width, wGenImgCanvas.height);
+        wGenImgCtx.drawImage(wImg, 0, 0);
+      }
+    }
+
+    function init() {
+      document.getElementById('id_Img_upload').addEventListener("click",
+        function () {
+          var wRefAddress = document.getElementById('id_Img_address')
+          if (wRefAddress.files && wRefAddress.files[0]) {
+            gGlobal.RefImage.src = URL.createObjectURL(wRefAddress.files[0]);
+          }
+        }
+      )
+      
+      for (var wi = 0; wi < gGlobal.PopulationSize; ++wi) {
+        var wNewSpecimen = new Specimen()
+        gGlobal.Population.push(wNewSpecimen);
+
+        if (true == gGlobal.debugMode){
+          document.body.appendChild(wNewSpecimen.canvas);
+          document.body.style.overflow = "scroll";
+        }
+      }
+
+      resize();
+      render();
+    }
+
+    function resize() {
+
+      var wLoadImgCanvasCanvas = document.getElementById("id_LoadImg");
+      var wGenImgCanvasCanvas = document.getElementById("id_GeneratedImg");
+
+      wLoadImgCanvasCanvas.height = wLoadImgCanvasCanvas.parentElement.offsetHeight;
+      wLoadImgCanvasCanvas.width = wLoadImgCanvasCanvas.parentElement.offsetWidth;
+
+      var wTempCanvas = document.createElement("canvas");
+      wTempCanvas.height = wGenImgCanvasCanvas.height;
+      wTempCanvas.width = wGenImgCanvasCanvas.width;
+
+      wTempCanvasCtx = wTempCanvas.getContext("2d");
+      wTempCanvasCtx.drawImage(wGenImgCanvasCanvas, 0, 0);
+      
+      wGenImgCanvasCanvas.height = wGenImgCanvasCanvas.parentElement.offsetHeight;
+      wGenImgCanvasCanvas.width = wGenImgCanvasCanvas.parentElement.offsetWidth;
+
+      wGenCanvasCtx = wGenImgCanvasCanvas.getContext("2d");
+      wGenCanvasCtx.drawImage(wTempCanvas, 0.5*(wGenImgCanvasCanvas.width - wTempCanvas.width), 0.5*(wGenImgCanvasCanvas.height - wTempCanvas.height));
+
+      for (var wi = 0; wi < gGlobal.Population.length; ++wi) {
+
+        gGlobal.Population[wi].canvas.height = wGenImgCanvasCanvas.height;
+        gGlobal.Population[wi].canvas.width = wGenImgCanvasCanvas.width;
+
+      }
+    }
+
+    window.addEventListener("load", init);
+    window.addEventListener("resize", resize);
+  </script>
+  <style>
+    body {
+      padding: 0px;
+      margin: 0px;
+      overflow: hidden;
+      background-color: black;
+    }
+
+    div {
+      padding: 0px;
+      margin: 0px;
+    }
+
+    canvas {
+      border: 1px solid blue;
+      padding: 0px;
+      margin: 0px;
+    }
+
+    #id_ImageInput {
+      position: fixed;
+      top: 0px;
+      left: 0px;
+      width: 100vw;
+      background-color: blue;
+      color: white;
+      padding: 3px;
+      z-index: 1000;
+      vertical-align: middle;
+      margin: auto;
+    }
+
+    #id_GeneratedImg_Div,
+    #id_LoadImg_Div {
+      width: 100vw;
+      height: 50vh;
+    }
+
+
+    @media (min-aspect-ratio: 1/1) {
+
+      #id_GeneratedImg_Div,
+      #id_LoadImg_Div {
+        width: 50vw;
+        height: 100vh;
+      }
+
+      #id_GeneratedImg_Div {
+        position: fixed;
+        top: 0px;
+        left: 0vw;
+      }
+
+
+      #id_LoadImg_Div {
+        position: fixed;
+        top: 0px;
+        left: 50vw;
+      }
+    }
+  </style>
+</head>
+
+<body>
+  <div id="id_ImageInput">
+    <div id="id_ImageInputForm">
+      <span>Image Selection: </span><input id="id_Img_address" type="file" value="" />
+      <button id="id_Img_upload">Load</button>
+      <button id="id_Img_hide">Hide Reference Image</button>  
+    </div>
+  </div>
+  <div id="id_CanvasDivContainer">
+    <div id="id_GeneratedImg_Div">
+      <canvas id="id_GeneratedImg"></canvas>
+    </div>
+    <div id="id_LoadImg_Div">
+      <canvas id="id_LoadImg"></canvas>
+    </div>
+  </div>
+</body>
+
+</html>
