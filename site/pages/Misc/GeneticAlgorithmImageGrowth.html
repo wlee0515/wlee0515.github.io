@@ -35,7 +35,14 @@
       wTemp = (wTemp - wSeconds) / 60;
       var wMinutes = wTemp % 60;
       var wHours = (wTemp - wMinutes) / 60;
-
+      
+      if(wMs < 10) wMs = "00" +wMs;
+      else if(wMs < 100) wMs = "0" +wMs;
+      
+      if(wSeconds < 10) wSeconds = "0" +wSeconds;
+      if(wMinutes < 10) wMinutes = "0" +wMinutes;
+      if(wHours < 10) wHours = "0" +wHours;
+      
       return wHours + ':' + wMinutes + ':' + wSeconds + '.' + wMs;
     }
 
