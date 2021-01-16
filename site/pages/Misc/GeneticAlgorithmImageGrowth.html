@@ -5,6 +5,9 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
   <title>Genetic Algorithm, Evolving Images</title>
   <script>
+    //-------------------------------------------
+    // Helper functions
+
     function randomFromString(iLength, iSet) {
       var wResult = '';
       var wSetLength = iSet.length;
@@ -13,7 +16,7 @@
       }
       return wResult;
     }
-    
+
     function randomNumbers(iLength) {
       return randomFromString(iLength, "0123456789");
     }
@@ -25,7 +28,20 @@
       return randomFromString(iLength, "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789");
     }
 
+    function msToTime(iTimeMs) {
+      var wMs = iTimeMs % 1000;
+      var wTemp = (iTimeMs - wMs) / 1000;
+      var wSeconds = wTemp % 60;
+      wTemp = (wTemp - wSeconds) / 60;
+      var wMinutes = wTemp % 60;
+      var wHours = (wTemp - wMinutes) / 60;
 
+      return wHours + ':' + wMinutes + ':' + wSeconds + '.' + wMs;
+    }
+
+    //-------------------------------------------
+    // Global Variables
+    
     var gGlobal = {
       RefImage: document.createElement("img"),
       RefImageSrc: "",
@@ -36,12 +52,21 @@
 
       PopulationSize: 10,
       Population: [],
-
       MaxElementSize: 100,
+      CustomElementText: document.createElement("input"),
+
       HideReferenceImg: false,
+
+      StartTime: 0,
+      IterationCount: 0,
+      ElementCount: 0,
+
       debugMode: false
     }
 
+    //-------------------------------------------
+    // Program Code
+    
     function Specimen() {
       var wNewCanvas = document.createElement("canvas");
       return {
@@ -56,6 +81,13 @@
     }
 
     function render() {
+
+      if (0 == gGlobal.IterationCount) {
+        var wData = new Date();
+        gGlobal.StartTime = wData.getTime();
+        gGlobal.ElementCount = 0;
+      }
+      gGlobal.IterationCount++;
 
       var wLoadImgCanvas = document.getElementById('id_LoadImg');
       var wGenImgCanvas = document.getElementById('id_GeneratedImg');
@@ -135,6 +167,10 @@
           wShape = 3;
           wStringValue = randomNumbersAndLetters(1);
         }
+        else if ("customText" == wElementSelector.value) {
+          wShape = 3;
+          wStringValue = gGlobal.CustomElementText.value;
+        }
       }
 
       for (var wi = 0; wi < gGlobal.Population.length; ++wi) {
@@ -203,20 +239,37 @@
 
       }
 
-
       if (0 != gGlobal.Population.length) {
         var wMinError = gGlobal.Population[0].error;
         var wImg = gGlobal.Population[0].canvas;
+        var wIndex = 0;
         for (var wi = 1; wi < gGlobal.Population.length; ++wi) {
           if (wMinError > gGlobal.Population[wi].error) {
             wMinError = gGlobal.Population[wi].error;
             wImg = gGlobal.Population[wi].canvas;
+            wIndex = wi;
           }
         }
 
         var wGenImgCtx = wGenImgCanvas.getContext("2d");
         wGenImgCtx.clearRect(0, 0, wGenImgCanvas.width, wGenImgCanvas.height);
         wGenImgCtx.drawImage(wImg, 0, 0);
+
+        if (0 != wIndex) {
+          gGlobal.ElementCount++;
+        }
+
+        var wData = new Date();
+        var wDTime = (new Date()).getTime() - gGlobal.StartTime;
+          var wStatusOutput = document.getElementById("id_StatusBox");
+          var wOutputString = "";
+          wOutputString += "<b>Time : </b>" + msToTime(wDTime);
+          wOutputString += "</br>";
+          wOutputString += "<b>Iterations : </b>" + gGlobal.IterationCount;
+          wOutputString += "</br>";
+          wOutputString += "<b>Elements : </b>" + gGlobal.ElementCount;
+          wStatusOutput.innerHTML = wOutputString;
+
       }
     }
 
@@ -242,6 +295,9 @@
           document.body.style.overflow = "scroll";
         }
       }
+
+      gGlobal.CustomElementText = document.createElement("input");
+      gGlobal.CustomElementText.type = "text";
 
       resize();
       setInterval(render, 25);
@@ -276,7 +332,6 @@
 
 
       if (false == gGlobal.HideReferenceImg) {
-
         wGenImgCanvasCanvas.parentElement.style.position = "absolute";
         wGenImgCanvasCanvas.parentElement.style.top = wInputForm.offsetHeight + "px";
         wGenImgCanvasCanvas.parentElement.style.left = "0px";
@@ -323,7 +378,6 @@
     }
 
     function clearGeneratedImg() {
-
       var wGenImgCanvasCanvas = document.getElementById("id_GeneratedImg");
       var wGenCanvasCtx = wGenImgCanvasCanvas.getContext("2d");
       wGenCanvasCtx.clearRect(0, 0, wGenImgCanvasCanvas.width, wGenImgCanvasCanvas.height);
@@ -333,6 +387,8 @@
         var wTempCtx = gGlobal.Population[wi].canvas.getContext("2d");
         wTempCtx.clearRect(0, 0, gGlobal.Population[wi].canvas.width, gGlobal.Population[wi].canvas.height);
       }
+
+      gGlobal.IterationCount = 0;
     }
 
     function toggleReferenceImg() {
@@ -346,6 +402,16 @@
       resize();
     }
 
+    function elementChange() {
+      var wInputForm = document.getElementById("id_ImageGenerationForm");
+      var wInputSelector = document.getElementById("id_ElementShapeSelector");
+      if ("customText" == wInputSelector.value) {
+        wInputForm.appendChild(gGlobal.CustomElementText);
+      }
+      else {
+        wInputForm.removeChild(gGlobal.CustomElementText)
+      }
+    }
 
 
     window.addEventListener("load", init);
@@ -374,10 +440,25 @@
       width: 100vw;
       background-color: blue;
       color: white;
-      padding: 3px;
+      padding: 5px;
       z-index: 1000;
       vertical-align: middle;
       margin: auto;
+    }
+
+    #id_StatusBox {
+      background: rgba(255, 255, 255, 0.85);
+      padding: 10px;
+      position: fixed;
+      bottom: 0;
+      right: 0;
+      width: 150px;
+    }
+
+    button {
+      height: 30px;
+      width: 120px;
+      padding: 3px;
     }
   </style>
 </head>
@@ -387,7 +468,10 @@
     <div id="id_ImageInputForm">
       <span>Image Selection: </span><input id="id_Img_address" type="file" value="" />
       <button id="id_Img_upload">Load</button>
-      <select name="ElementShapeSelector" id="id_ElementShapeSelector">
+    </div>
+    <div id="id_ImageGenerationForm">
+      <button onclick="clearGeneratedImg()">Clear Image</button>
+      <select name="ElementShapeSelector" id="id_ElementShapeSelector" onchange="elementChange()">
         <optgroup label="Basic Geometry">
           <option selected="selected" value="circle">Circles</option>
           <option value="square">Squares</option>
@@ -404,8 +488,10 @@
           <option value="randomNumbers">Random Numbers</option>
           <option value="randomNumbersAndLetters">Random Numbers & Letters</option>
         </optgroup>
+        <optgroup label="Custom">
+          <option value="customText">Custom Text</option>
+        </optgroup>
       </select>
-      <button onclick="clearGeneratedImg()">Clear Image</button>
     </div>
     <div>
       <input type="checkbox" name="my-checkbox" id="id_ShowRefImg" onchange="toggleReferenceImg()" checked="true">
@@ -419,6 +505,9 @@
     <div id="id_LoadImg_Div">
       <canvas id="id_LoadImg"></canvas>
     </div>
+  </div>
+  <div id="id_StatusBox">
+
   </div>
 </body>
 
