@@ -164,7 +164,7 @@
       }
 
       resize();
-      setInterval(render, 25);
+      //setInterval(render, 25);
 
       toggleReferenceImg();
       while (true == gGlobal.HideReferenceImg) {
@@ -197,12 +197,12 @@
 
       if (false == gGlobal.HideReferenceImg) {
         
-        wGenImgCanvasCanvas.parentElement.style.position = "fixed";
+        wGenImgCanvasCanvas.parentElement.style.position = "absolute";
         wGenImgCanvasCanvas.parentElement.style.top = wInputForm.offsetHeight + "px";
         wGenImgCanvasCanvas.parentElement.style.left = "0px";
         
         wLoadImgCanvasCanvas.parentElement.style.visibility = "visible";
-        wLoadImgCanvasCanvas.parentElement.style.position = "fixed";
+        wLoadImgCanvasCanvas.parentElement.style.position = "absolute";
 
         if (wAspectRatio > 1) {
           // Vertical Screen
@@ -274,7 +274,7 @@
       padding: 0px;
       margin: 0px;
       overflow: hidden;
-      background-color: black;
+      background-color: white;
     }
 
     div {
@@ -283,7 +283,7 @@
     }
 
     canvas {
-      border: 1px solid blue;
+      border: 1px solid grey;
       padding: 0px;
       margin: 0px;
     }
