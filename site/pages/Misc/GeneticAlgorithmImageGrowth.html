@@ -12,8 +12,9 @@
       RefImageLoaded: false,
       RefImgWidth: 0,
       RefImgHeight: 0,
+      RefImageReload: true,
 
-      PopulationSize: 25,
+      PopulationSize: 10,
       Population: [],
 
       MaxElementSize : 50,
@@ -45,22 +46,29 @@
         return
       }
 
-      var wScaleW = gGlobal.RefImage.width / wCanvasWidth;
-      var wScaleH = gGlobal.RefImage.height / wCanvasHeight;
-
-      var wScale = wScaleW > wScaleH ? wScaleW : wScaleH;
-      wScale = 1 / wScale;
-
-
-      var wXOffset = (wCanvasWidth - wScale * gGlobal.RefImage.width) / 2.0;
-      var wYOffset = (wCanvasHeight - wScale * gGlobal.RefImage.height) / 2.0;
-
       var wLoadImgCtx = wLoadImgCanvas.getContext("2d");
-      wLoadImgCtx.fillStyle = "white";
-      wLoadImgCtx.fillRect(0,0, wLoadImgCanvas.width, wLoadImgCanvas.height);
-      wLoadImgCtx.drawImage(gGlobal.RefImage, wXOffset, wYOffset, wScale * gGlobal.RefImage.width, wScale * gGlobal.RefImage.height);
 
-      
+      if (true == gGlobal.RefImageReload) {
+        gGlobal.RefImageReload = false;
+        
+        var wScaleW = gGlobal.RefImage.width / wCanvasWidth;
+        var wScaleH = gGlobal.RefImage.height / wCanvasHeight;
+
+        var wScale = wScaleW > wScaleH ? wScaleW : wScaleH;
+        wScale = 1 / wScale;
+
+
+        var wXOffset = (wCanvasWidth - wScale * gGlobal.RefImage.width) / 2.0;
+        var wYOffset = (wCanvasHeight - wScale * gGlobal.RefImage.height) / 2.0;
+
+        var wLoadImgCtx = wLoadImgCanvas.getContext("2d");
+        wLoadImgCtx.fillStyle = "white";
+        wLoadImgCtx.fillRect(0, 0, wLoadImgCanvas.width, wLoadImgCanvas.height);
+        wLoadImgCtx.drawImage(gGlobal.RefImage, wXOffset, wYOffset, wScale * gGlobal.RefImage.width, wScale * gGlobal.RefImage.height);
+
+
+      }
+
       var wLoadImageData = wLoadImgCtx.getImageData(0, 0, wLoadImgCanvas.width, wLoadImgCanvas.height);
       var wLoadPixelArray = wLoadImageData.data;
 
@@ -164,7 +172,7 @@
       }
 
       resize();
-      //setInterval(render, 25);
+      setInterval(render, 25);
 
       toggleReferenceImg();
       while (true == gGlobal.HideReferenceImg) {
@@ -238,6 +246,8 @@
         gGlobal.Population[wi].canvas.width = wCanvasWidth;
 
       }
+
+      gGlobal.RefImageReload = true;
     }
 
     function clearGeneratedImg() {
