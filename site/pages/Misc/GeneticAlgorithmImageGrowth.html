@@ -35,20 +35,20 @@
       wTemp = (wTemp - wSeconds) / 60;
       var wMinutes = wTemp % 60;
       var wHours = (wTemp - wMinutes) / 60;
-      
-      if(wMs < 10) wMs = "00" +wMs;
-      else if(wMs < 100) wMs = "0" +wMs;
-      
-      if(wSeconds < 10) wSeconds = "0" +wSeconds;
-      if(wMinutes < 10) wMinutes = "0" +wMinutes;
-      if(wHours < 10) wHours = "0" +wHours;
-      
+
+      if (wMs < 10) wMs = "00" + wMs;
+      else if (wMs < 100) wMs = "0" + wMs;
+
+      if (wSeconds < 10) wSeconds = "0" + wSeconds;
+      if (wMinutes < 10) wMinutes = "0" + wMinutes;
+      if (wHours < 10) wHours = "0" + wHours;
+
       return wHours + ':' + wMinutes + ':' + wSeconds + '.' + wMs;
     }
 
     //-------------------------------------------
     // Global Variables
-    
+
     var gGlobal = {
       RefImage: document.createElement("img"),
       RefImageSrc: "",
@@ -73,7 +73,7 @@
 
     //-------------------------------------------
     // Program Code
-    
+
     function Specimen() {
       var wNewCanvas = document.createElement("canvas");
       return {
@@ -268,14 +268,14 @@
 
         var wData = new Date();
         var wDTime = (new Date()).getTime() - gGlobal.StartTime;
-          var wStatusOutput = document.getElementById("id_StatusBox");
-          var wOutputString = "";
-          wOutputString += "<b>Time : </b>" + msToTime(wDTime);
-          wOutputString += "</br>";
-          wOutputString += "<b>Iterations : </b>" + gGlobal.IterationCount;
-          wOutputString += "</br>";
-          wOutputString += "<b>Elements : </b>" + gGlobal.ElementCount;
-          wStatusOutput.innerHTML = wOutputString;
+        var wStatusOutput = document.getElementById("id_StatusBox");
+        var wOutputString = "";
+        wOutputString += "<b>Time : </b>" + msToTime(wDTime);
+        wOutputString += "</br>";
+        wOutputString += "<b>Iterations : </b>" + gGlobal.IterationCount;
+        wOutputString += "</br>";
+        wOutputString += "<b>Elements : </b>" + gGlobal.ElementCount;
+        wStatusOutput.innerHTML = wOutputString;
 
       }
     }
@@ -317,8 +317,6 @@
 
     function resize() {
 
-      var wInputForm = document.getElementById("id_ImageInput");
-
       var wLoadImgCanvasCanvas = document.getElementById("id_LoadImg");
       var wGenImgCanvasCanvas = document.getElementById("id_GeneratedImg");
 
@@ -331,7 +329,7 @@
       var wWindowWidth = window.innerWidth;
       var wWindowHeight = window.innerHeight;
       var wContainerWidth = window.innerWidth;
-      var wContainerHeight = wWindowHeight - wInputForm.offsetHeight;
+      var wContainerHeight = wWindowHeight;
       var wAspectRatio = wContainerHeight / wContainerWidth;
 
       var wCanvasWidth = wContainerWidth;
@@ -422,18 +420,13 @@
     }
 
     function toggleHideImgInputForm() {
-      var wInputForm =  document.getElementById("id_ImageInputForm");
-      var wButton = document.getElementById("id_Hide");
+      var wInputForm = document.getElementById("id_ImageInput");
       if ("none" != wInputForm.style.display) {
-        wInputForm.style.display="none";
-        wButton.innerText = "Show Menu";
+        wInputForm.style.display = "none";
       }
       else {
-        wInputForm.style.display="block";  
-        wButton.innerText = "Hide Menu";
+        wInputForm.style.display = "block";
       }
-
-      resize();
     }
 
     window.addEventListener("load", init);
@@ -463,16 +456,20 @@
       background-color: blue;
       color: white;
       padding: 5px;
-      z-index: 1000;
+      z-index: 100;
       vertical-align: middle;
       margin: auto;
+
+      position: fixed;
+      top: 0px;
+      left: 0px;
     }
 
     #id_CanvasDivContainer {
       position: relative;
       top: 0px;
       left: 0px;
-      width: 0vw;
+      width: 100vw;
       height: 0vh;
       overflow: show;
     }
@@ -484,10 +481,31 @@
       bottom: 0;
       right: 0;
       width: 150px;
+      cursor: pointer;
     }
 
-    button, input {
+    button,
+    input {
       padding: 3px;
+    }
+
+    #id_IconImage_div {
+      position: absolute;
+      top: 0px;
+      right: 0px;
+      z-index: 1000;
+      padding: 5px;
+      cursor: pointer;
+    }
+
+    #id_IconImage {
+      width: 5vw;
+      height: 5vw;
+      min-width: 50px;
+      min-height: 50px;
+      
+      max-width: 150px;
+      max-height: 150px;
     }
   </style>
 </head>
@@ -495,13 +513,18 @@
 <body>
   <div id="id_ImageInput">
     <div id="id_ImageInputForm">
-      <span>Image Selection: </span><input id="id_Img_address" type="file" value="" accept="image/*" />
-      <button id="id_Img_upload">Load</button>
-      <input type="checkbox" name="my-checkbox" id="id_ShowRefImg" onchange="toggleReferenceImg()" checked="true">
-      <label for="id_ShowRefImg">Show Reference image</label>
+      <span>Image Selection: </span>
+      <div style="display: inline-block;">
+        <input id="id_Img_address" type="file" value="" accept="image/*" />
+        <button id="id_Img_upload">Load</button>
+      </div>
+      <div style="display: inline-block;">
+        <input type="checkbox" id="id_ShowRefImg" onchange="toggleReferenceImg()" checked="true">
+        <label for="id_ShowRefImg">Show Reference image</label>
+        </input>
+      </div>
     </div>
     <div id="id_ImageGenerationForm">
-      <button id="id_Hide" onclick="toggleHideImgInputForm()">Hide Menu</button>
       <button onclick="clearGeneratedImg()">Clear Image</button>
       <select name="ElementShapeSelector" id="id_ElementShapeSelector" onchange="elementChange()">
         <optgroup label="Basic Geometry">
@@ -526,7 +549,11 @@
       </select>
     </div>
   </div>
+
   <div id="id_CanvasDivContainer">
+    <div id="id_IconImage_div" onclick="toggleHideImgInputForm()">
+      <img id="id_IconImage" src="../../images/favicon.ico"></img>
+    </div>
     <div id="id_GeneratedImg_Div">
       <canvas id="id_GeneratedImg"></canvas>
     </div>
@@ -534,7 +561,7 @@
       <canvas id="id_LoadImg"></canvas>
     </div>
   </div>
-  <div id="id_StatusBox">
+  <div id="id_StatusBox" onclick="clearGeneratedImg()">
 
   </div>
 </body>
