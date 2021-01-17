@@ -338,7 +338,7 @@
       var wCanvasHeight = wContainerHeight;
 
       wGenImgCanvasCanvas.parentElement.style.position = "absolute";
-      wGenImgCanvasCanvas.parentElement.style.top = wInputForm.offsetHeight + "px";
+      wGenImgCanvasCanvas.parentElement.style.top = 0 + "px";
       wGenImgCanvasCanvas.parentElement.style.left = "0px";
 
       if (false == gGlobal.HideReferenceImg) {
@@ -349,13 +349,13 @@
         if (wAspectRatio > 1) {
           // Vertical Screen
           wCanvasHeight /= 2;
-          wLoadImgCanvasCanvas.parentElement.style.top = (wInputForm.offsetHeight + wCanvasHeight) + "px";
+          wLoadImgCanvasCanvas.parentElement.style.top = (0 + wCanvasHeight) + "px";
           wLoadImgCanvasCanvas.parentElement.style.left = "0px";
         }
         else {
           // Horizontal Screen
           wCanvasWidth /= 2;
-          wLoadImgCanvasCanvas.parentElement.style.top = wInputForm.offsetHeight + "px";
+          wLoadImgCanvasCanvas.parentElement.style.top = 0 + "px";
           wLoadImgCanvasCanvas.parentElement.style.left = wCanvasWidth + "px";
         }
 
@@ -466,6 +466,15 @@
       z-index: 1000;
       vertical-align: middle;
       margin: auto;
+    }
+
+    #id_CanvasDivContainer {
+      position: relative;
+      top: 0px;
+      left: 0px;
+      width: 0vw;
+      height: 0vh;
+      overflow: show;
     }
 
     #id_StatusBox {
