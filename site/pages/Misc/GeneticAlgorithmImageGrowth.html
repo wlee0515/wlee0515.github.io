@@ -423,11 +423,14 @@
 
     function toggleHideImgInputForm() {
       var wInputForm =  document.getElementById("id_ImageInputForm");
+      var wButton = document.getElementById("id_Hide");
       if ("none" != wInputForm.style.display) {
         wInputForm.style.display="none";
+        wButton.innerText = "Show Menu";
       }
       else {
         wInputForm.style.display="block";  
+        wButton.innerText = "Hide Menu";
       }
 
       resize();
