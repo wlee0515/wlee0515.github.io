@@ -337,11 +337,11 @@
       var wCanvasWidth = wContainerWidth;
       var wCanvasHeight = wContainerHeight;
 
+      wGenImgCanvasCanvas.parentElement.style.position = "absolute";
+      wGenImgCanvasCanvas.parentElement.style.top = wInputForm.offsetHeight + "px";
+      wGenImgCanvasCanvas.parentElement.style.left = "0px";
 
       if (false == gGlobal.HideReferenceImg) {
-        wGenImgCanvasCanvas.parentElement.style.position = "absolute";
-        wGenImgCanvasCanvas.parentElement.style.top = wInputForm.offsetHeight + "px";
-        wGenImgCanvasCanvas.parentElement.style.left = "0px";
 
         wLoadImgCanvasCanvas.parentElement.style.visibility = "visible";
         wLoadImgCanvasCanvas.parentElement.style.position = "absolute";
