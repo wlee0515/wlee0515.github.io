@@ -148,7 +148,7 @@
         }
         else if ("heart" == wElementSelector.value) {
           wShape = 3;
-          wStringValue = "\u2764";
+          wStringValue = "\u2665";
         }
         else if ("diamond" == wElementSelector.value) {
           wShape = 3;
@@ -421,9 +421,15 @@
       }
     }
 
-    function hideImgInputForm() {
+    function toggleHideImgInputForm() {
       var wInputForm =  document.getElementById("id_ImageInputForm");
-      wInputForm.style.display="none";
+      if ("none" != wInputForm.style.display) {
+        wInputForm.style.display="none";
+      }
+      else {
+        wInputForm.style.display="block";  
+      }
+
       resize();
     }
 
@@ -481,9 +487,9 @@
       <button id="id_Img_upload">Load</button>
       <input type="checkbox" name="my-checkbox" id="id_ShowRefImg" onchange="toggleReferenceImg()" checked="true">
       <label for="id_ShowRefImg">Show Reference image</label>
-      <button id="id_Hide" onclick="hideImgInputForm()">Hide</button>
     </div>
     <div id="id_ImageGenerationForm">
+      <button id="id_Hide" onclick="toggleHideImgInputForm()">Hide Menu</button>
       <button onclick="clearGeneratedImg()">Clear Image</button>
       <select name="ElementShapeSelector" id="id_ElementShapeSelector" onchange="elementChange()">
         <optgroup label="Basic Geometry">
