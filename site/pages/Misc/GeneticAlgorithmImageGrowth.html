@@ -414,12 +414,18 @@
       var wInputSelector = document.getElementById("id_ElementShapeSelector");
       if ("customText" == wInputSelector.value) {
         wInputForm.appendChild(gGlobal.CustomElementText);
+        resize();
       }
       else {
         wInputForm.removeChild(gGlobal.CustomElementText)
       }
     }
 
+    function hideImgInputForm() {
+      var wInputForm =  document.getElementById("id_ImageInputForm");
+      wInputForm.style.display="none";
+      resize();
+    }
 
     window.addEventListener("load", init);
     window.addEventListener("resize", resize);
@@ -462,9 +468,7 @@
       width: 150px;
     }
 
-    button {
-      height: 30px;
-      width: 120px;
+    button, input {
       padding: 3px;
     }
   </style>
@@ -475,6 +479,9 @@
     <div id="id_ImageInputForm">
       <span>Image Selection: </span><input id="id_Img_address" type="file" value="" accept="image/*" />
       <button id="id_Img_upload">Load</button>
+      <input type="checkbox" name="my-checkbox" id="id_ShowRefImg" onchange="toggleReferenceImg()" checked="true">
+      <label for="id_ShowRefImg">Show Reference image</label>
+      <button id="id_Hide" onclick="hideImgInputForm()">Hide</button>
     </div>
     <div id="id_ImageGenerationForm">
       <button onclick="clearGeneratedImg()">Clear Image</button>
@@ -499,10 +506,6 @@
           <option value="customText">Custom Text</option>
         </optgroup>
       </select>
-    </div>
-    <div>
-      <input type="checkbox" name="my-checkbox" id="id_ShowRefImg" onchange="toggleReferenceImg()" checked="true">
-      <label for="id_ShowRefImg">Show Reference image</label>
     </div>
   </div>
   <div id="id_CanvasDivContainer">
