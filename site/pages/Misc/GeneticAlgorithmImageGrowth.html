@@ -455,14 +455,18 @@
       width: 100vw;
       background-color: blue;
       color: white;
-      padding: 5px;
-      z-index: 100;
-      vertical-align: middle;
-      margin: auto;
-
       position: fixed;
       top: 0px;
       left: 0px;
+    }
+
+    #id_ImageInput_Inner {
+      padding: 5px;
+      z-index: 100;
+      vertical-align: middle;
+      width : 93vw;
+      max-width : calc( 100vw - 60px);
+
     }
 
     #id_CanvasDivContainer {
@@ -512,6 +516,7 @@
 
 <body>
   <div id="id_ImageInput">
+    <div id="id_ImageInput_Inner">
     <div id="id_ImageInputForm">
       <span>Image Selection: </span>
       <div style="display: inline-block;">
@@ -548,6 +553,7 @@
         </optgroup>
       </select>
     </div>
+    </div>  
   </div>
 
   <div id="id_CanvasDivContainer">
