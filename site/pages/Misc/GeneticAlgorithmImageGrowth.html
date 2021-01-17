@@ -462,7 +462,7 @@
 
     #id_ImageInput_Inner {
       padding: 5px;
-      z-index: 100;
+      z-index: 500;
       vertical-align: middle;
       width : 93vw;
       max-width : calc( 100vw - 60px);
@@ -476,6 +476,7 @@
       width: 100vw;
       height: 0vh;
       overflow: show;
+      z-index: -1;
     }
 
     #id_StatusBox {
@@ -515,6 +516,9 @@
 </head>
 
 <body>
+  <div id="id_IconImage_div" onclick="toggleHideImgInputForm()">
+    <img id="id_IconImage" src="../../images/favicon.ico"></img>
+  </div>
   <div id="id_ImageInput">
     <div id="id_ImageInput_Inner">
     <div id="id_ImageInputForm">
@@ -555,11 +559,7 @@
     </div>
     </div>  
   </div>
-
   <div id="id_CanvasDivContainer">
-    <div id="id_IconImage_div" onclick="toggleHideImgInputForm()">
-      <img id="id_IconImage" src="../../images/favicon.ico"></img>
-    </div>
     <div id="id_GeneratedImg_Div">
       <canvas id="id_GeneratedImg"></canvas>
     </div>
