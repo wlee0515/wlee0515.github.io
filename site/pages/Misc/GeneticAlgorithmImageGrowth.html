@@ -4,6 +4,7 @@
 <head>
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
   <title>Genetic Algorithm, Evolving Images</title>
+  <script src="\site\javascript\utility.js"></script>
   <script>
     //-------------------------------------------
     // Helper functions
@@ -191,6 +192,7 @@
         if (wi != 0) {
 
           var wColour = "rgba(" + Math.floor(Math.random() * 256) + "," + Math.floor(Math.random() * 256) + "," + Math.floor(Math.random() * 256) + "," + Math.random() + ")";
+          //          var wColour = "rgb(" + Math.floor(Math.random() * 256) + "," + Math.floor(Math.random() * 256) + "," + Math.floor(Math.random() * 256) +  ")";
           wSpecimenCtx.fillStyle = wColour;
           wSpecimenCtx.strokeStyle = wColour;
 
@@ -313,6 +315,15 @@
       while (true == gGlobal.HideReferenceImg) {
         toggleReferenceImg();
       }
+
+      var wIcon = getUrlParameter("SRC");
+
+      if (wIcon == "1") {
+        var wIconDOM = document.getElementById("id_IconImage");
+        wIconDOM.src = "../../images/HeapArtLogo.png"
+      }
+
+      HeapArtLogo
     }
 
     function resize() {
@@ -429,6 +440,21 @@
       }
     }
 
+    function downloadImage(iButton) {
+
+      var wGenImgCanvasCanvas = document.getElementById("id_GeneratedImg");
+      var dataURL = wGenImgCanvasCanvas.toDataURL('image/png');
+
+      var wData = new Date();
+      var wDTime = (new Date()).getTime() - gGlobal.StartTime;
+
+      var wLink = document.createElement("a");
+      wLink.download = "generatedImage_iterations_" + gGlobal.IterationCount + "_elements_" + gGlobal.ElementCount + "_time_" + msToTime(wDTime).replace(":", "_") + ".png";
+      wLink.href = dataURL;
+      wLink.click();
+    }
+
+
     window.addEventListener("load", init);
     window.addEventListener("resize", resize);
   </script>
@@ -453,7 +479,7 @@
 
     #id_ImageInput {
       width: 100vw;
-      background-color: blue;
+      background-color: cornflowerblue;
       color: white;
       position: fixed;
       top: 0px;
@@ -464,8 +490,8 @@
       padding: 5px;
       z-index: 500;
       vertical-align: middle;
-      width : 93vw;
-      max-width : calc( 100vw - 60px);
+      width: 93vw;
+      max-width: calc(100vw - 60px);
 
     }
 
@@ -499,7 +525,7 @@
       top: 0px;
       right: 0px;
       z-index: 1000;
-      padding: 5px;
+      padding: 10px;
       cursor: pointer;
     }
 
@@ -508,9 +534,10 @@
       height: 5vw;
       min-width: 50px;
       min-height: 50px;
-      
+
       max-width: 150px;
       max-height: 150px;
+      border: solid black 1px;
     }
   </style>
 </head>
@@ -521,43 +548,46 @@
   </div>
   <div id="id_ImageInput">
     <div id="id_ImageInput_Inner">
-    <div id="id_ImageInputForm">
-      <span>Image Selection: </span>
-      <div style="display: inline-block;">
-        <input id="id_Img_address" type="file" value="" accept="image/*" />
-        <button id="id_Img_upload">Load</button>
+      <div id="id_ImageInputForm">
+        <span>Image Selection: </span>
+        <div style="display: inline-block;">
+          <input id="id_Img_address" type="file" value="" accept="image/*" />
+          <button id="id_Img_upload">Load</button>
+        </div>
+        <div style="display: inline-block;">
+          <input type="checkbox" id="id_ShowRefImg" onchange="toggleReferenceImg()" checked="true">
+          <label for="id_ShowRefImg">Show Reference image</label>
+          </input>
+        </div>
       </div>
-      <div style="display: inline-block;">
-        <input type="checkbox" id="id_ShowRefImg" onchange="toggleReferenceImg()" checked="true">
-        <label for="id_ShowRefImg">Show Reference image</label>
-        </input>
+      <div id="id_ImageGenerationForm">
+        <button onclick="clearGeneratedImg()">Clear Image</button>
+        <select name="ElementShapeSelector" id="id_ElementShapeSelector" onchange="elementChange()">
+          <optgroup label="Basic Geometry">
+            <option selected="selected" value="circle">Circles</option>
+            <option value="square">Squares</option>
+            <option value="line">Lines</option>
+          </optgroup>
+          <optgroup label="Suits">
+            <option value="spade">Spades</option>
+            <option value="heart">Hearts</option>
+            <option value="club">Clubs</option>
+            <option value="diamond">Diamonds</option>
+          </optgroup>
+          <optgroup label="Numbers & Letters">
+            <option value="randomLetters">Random Letters</option>
+            <option value="randomNumbers">Random Numbers</option>
+            <option value="randomNumbersAndLetters">Random Numbers & Letters</option>
+          </optgroup>
+          <optgroup label="Custom">
+            <option value="customText">Custom Text</option>
+          </optgroup>
+        </select>
+      </div>
+      <div>
+        <button onclick="downloadImage(this)" href="test" download="generatedImage.png">Save Image</button>
       </div>
     </div>
-    <div id="id_ImageGenerationForm">
-      <button onclick="clearGeneratedImg()">Clear Image</button>
-      <select name="ElementShapeSelector" id="id_ElementShapeSelector" onchange="elementChange()">
-        <optgroup label="Basic Geometry">
-          <option selected="selected" value="circle">Circles</option>
-          <option value="square">Squares</option>
-          <option value="line">Lines</option>
-        </optgroup>
-        <optgroup label="Suits">
-          <option value="spade">Spades</option>
-          <option value="heart">Hearts</option>
-          <option value="club">Clubs</option>
-          <option value="diamond">Diamonds</option>
-        </optgroup>
-        <optgroup label="Numbers & Letters">
-          <option value="randomLetters">Random Letters</option>
-          <option value="randomNumbers">Random Numbers</option>
-          <option value="randomNumbersAndLetters">Random Numbers & Letters</option>
-        </optgroup>
-        <optgroup label="Custom">
-          <option value="customText">Custom Text</option>
-        </optgroup>
-      </select>
-    </div>
-    </div>  
   </div>
   <div id="id_CanvasDivContainer">
     <div id="id_GeneratedImg_Div">
