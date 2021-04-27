@@ -1,0 +1,114 @@
+<html>
+  <head>
+
+    <script>
+
+      var gGlobal = {
+        SpeachSynthsizer : {
+          volume : 1.0,
+          rate : 1.0,
+          pitch : 1.0,
+        }
+      }
+
+      function speak() {
+        if (null ==  gGlobal.SpeachSynthsizer)
+        {
+          return;
+        }
+
+        var msg = new SpeechSynthesisUtterance();
+        msg.volume = gGlobal.SpeachSynthsizer.volume;
+        msg.rate = gGlobal.SpeachSynthsizer.rate;
+        msg.pitch = gGlobal.SpeachSynthsizer.pitch;
+        msg.voice = window.speechSynthesis.getVoices()[2];
+
+        var wText = document.getElementById("idTextInput").value;
+        if ("" != wText) 
+        {
+          msg.text = wText;
+          window.speechSynthesis.speak(msg);
+        }
+      }
+
+      function updateVoice () {
+
+        { 
+          var wParam = document.getElementById("idVolume");
+          if (null != wParam) {
+            gGlobal.SpeachSynthsizer.volume = parseFloat(wParam.value);
+          }
+        }
+        
+        { 
+          var wParam = document.getElementById("idRate");
+          if (null != wParam) {
+            gGlobal.SpeachSynthsizer.rate = parseInt(wParam.value);
+          }
+        }
+        
+        { 
+          var wParam = document.getElementById("idPitch");
+          if (null != wParam) {
+            gGlobal.SpeachSynthsizer.pitch = parseFloat(wParam.value);
+          }
+        }
+
+      }
+
+      function init() {
+          if ('speechSynthesis' in window) {
+            // Speech Synthesis supported 🎉
+          } else {
+            // Speech Synthesis Not Supported 😣
+            alert("Sorry, your browser doesn't support text to speech!");
+            return;
+          }
+
+          
+          /*
+          gGlobal.SpeachSynthsizer.voice = window.speechSynthesis.getVoices()[2];
+          gGlobal.SpeachSynthsizer.volume = 1; // From 0 to 1
+          gGlobal.SpeachSynthsizer.rate = 1; // From 0.1 to 10
+          gGlobal.SpeachSynthsizer.pitch = 2; // From 0 to 2
+          gGlobal.SpeachSynthsizer.text = "Como estas Joel";
+          gGlobal.SpeachSynthsizer.lang = 'es';
+*/
+
+          var wText = document.getElementById("idTextInput").value = "This is a Test";
+
+          
+        { 
+          var wParam = document.getElementById("idVolume");
+          if (null != wParam) {
+            wParam.value = gGlobal.SpeachSynthsizer.volume;
+          }
+        }
+        
+        { 
+          var wParam = document.getElementById("idRate");
+          if (null != wParam) {
+            wParam.value = gGlobal.SpeachSynthsizer.rate;
+          }
+        }
+        
+        { 
+          var wParam = document.getElementById("idPitch");
+          if (null != wParam) {
+            wParam.value = gGlobal.SpeachSynthsizer.pitch;
+          }
+        }
+
+      }
+
+      window.addEventListener("load", init);
+    </script>
+  </head>
+  <body>
+    <textarea id="idTextInput" ></textarea></br>
+    <input type="button" onclick="speak()" value="Test"></input></br>
+    <spam>Volume</spam><input type="range" id="idVolume" onchange="updateVoice()" max="1.0" min="0.0" step="0.1"/></br>
+    <spam>Rate</spam><input type="range" id="idRate" onchange="updateVoice()" max="2.9" min="0.1" step="0.1"/></br>
+    <spam>Pitch</spam><input type="range" id="idPitch" onchange="updateVoice()" max="2.0" min="0.0" step="0.1"/></br>
+  </body>
+</html>
