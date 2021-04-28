@@ -73,23 +73,26 @@
 
       var wVoices = speechSynthesis.getVoices();
 
-      var wDefault = "";
+      var wDefault = -1;
       for (var i = 0; i < wVoices.length; i++) {
         var option = document.createElement('option');
         option.textContent = wVoices[i].name + ' (' + wVoices[i].lang + ')';
         option.value = i;
 
-        if (wVoices[i].default) {
-          option.textContent += ' -- DEFAULT';
-          wDefault = i;
+        if (-1 == wDefault) {
+          if ("en-US" == wVoices[i].lang) {
+            wDefault = i;
+          }
         }
 
         option.setAttribute('data-lang', wVoices[i].lang);
         option.setAttribute('data-name', wVoices[i].name);
         document.getElementById("idVoiceSelect").appendChild(option);
       }
-      document.getElementById("idVoiceSelect").value = wDefault;
-      gGlobal.SpeachSynthsizer.voice = wDefault;
+      if (-1 != wDefault){
+        document.getElementById("idVoiceSelect").value = wDefault;
+        gGlobal.SpeachSynthsizer.voice = wDefault;
+      }
 
     }
 
