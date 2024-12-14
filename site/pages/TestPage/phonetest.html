@@ -1,0 +1,67 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <title>Scrollable Timeline Example</title>
+    <script type="text/javascript" src="https://www.gstatic.com/charts/loader.js"></script>
+    <script type="text/javascript">
+      google.charts.load('current', {'packages':['timeline']});
+      google.charts.setOnLoadCallback(drawChart);
+
+      var chart;
+      var dataTable;
+      var startYear = 1789;
+      var endYear = 1825;
+
+      function drawChart() {
+        var container = document.getElementById('chart_div');
+        chart = new google.visualization.Timeline(container);
+        dataTable = new google.visualization.DataTable();
+
+        dataTable.addColumn({ type: 'string', id: 'Position' });
+        dataTable.addColumn({ type: 'string', id: 'Name' });
+        dataTable.addColumn({ type: 'date', id: 'Start' });
+        dataTable.addColumn({ type: 'date', id: 'End' });
+        dataTable.addRows([
+          [ 'President', 'Washington', new Date(1789, 3, 29), new Date(1797, 2, 3) ],
+          [ 'President', 'Adams', new Date(1797, 2, 3), new Date(1801, 2, 3) ],
+          [ 'President', 'Jefferson', new Date(1801, 2, 3), new Date(1809, 2, 3) ],
+          [ 'President', 'Madison', new Date(1809, 2, 3), new Date(1817, 2, 3) ],
+          [ 'President', 'Monroe', new Date(1817, 2, 3), new Date(1825, 2, 3) ]
+        ]);
+
+        updateChart();
+      }
+
+      function updateChart() {
+        document.getElementById('chart_div').innerHTML = '';
+        
+        var options = {
+          hAxis: {
+            minValue: new Date(startYear, 0, 1),
+            maxValue: new Date(endYear, 11, 31)
+          },
+          timeline: { colorByRowLabel: true }
+        };
+
+        chart.draw(dataTable, options);
+      }
+
+      function updateYearRange() {
+        var minYearInput = document.getElementById('minYear');
+        var maxYearInput = document.getElementById('maxYear');
+        startYear = parseInt(minYearInput.value);
+        endYear = parseInt(maxYearInput.value);
+        updateChart();
+      }
+    </script>
+  </head>
+  <body>
+    <div id="chart_div" style="height: 400px;"></div>
+    <div>
+      <label for="minYear">Start Year:</label>
+      <input type="number" id="minYear" value="1780" min="1780" max="1840" oninput="updateYearRange()">
+      <label for="maxYear">End Year:</label>
+      <input type="number" id="maxYear" value="1840" min="1780" max="1840" oninput="updateYearRange()">
+    </div>
+  </body>
+</html>

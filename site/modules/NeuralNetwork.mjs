@@ -46,7 +46,7 @@ const ActivationFunction = {
   },
 
   LeakyReLU: {
-    Name: "ReLU",
+    Name: "LeakyReLU",
     activation: function (iInput) {
       if (iInput > 0.0) return iInput;
       return 0.1 * iInput;
